@@ -1,0 +1,192 @@
+import React, { useRef } from 'react';
+import { CartItem, Currency } from '../types';
+import { formatPrice } from '../utils/currency';
+
+interface InvoiceModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  cartItems: CartItem[];
+  customerName: string;
+  address: string;
+  currency: Currency;
+  subtotal: number;
+  discountAmount: number;
+  total: number;
+}
+
+export const InvoiceModal: React.FC<InvoiceModalProps> = ({
+  isOpen,
+  onClose,
+  cartItems,
+  customerName,
+  address,
+  currency,
+  subtotal,
+  discountAmount,
+  total,
+}) => {
+  const contentRef = useRef<HTMLDivElement>(null);
+
+  if (!isOpen) return null;
+
+  const invoiceNumber = Math.floor(10000 + Math.random() * 90000);
+  const today = new Date();
+  const dateString = today.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  
+  const payByDate = new Date();
+  payByDate.setDate(payByDate.getDate() + 7);
+  const payByString = payByDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+
+  const handlePrint = () => {
+    window.print();
+  };
+
+  return (
+    <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 sm:p-6 print:p-0 print:block">
+      <div 
+        className="absolute inset-0 bg-[#1c1b1b]/60 backdrop-blur-sm print:hidden"
+        onClick={onClose}
+      />
+      
+      <div className="relative bg-[#F9F7F3] w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl flex flex-col print:shadow-none print:w-full print:h-full print:max-w-none print:max-h-none print:bg-white custom-scrollbar">
+        <div className="absolute top-4 right-4 flex gap-2 print:hidden">
+          <button 
+            onClick={handlePrint}
+            className="bg-white p-2 rounded-full text-[#444748] hover:text-[#1c1b1b] shadow-sm hover:shadow-md transition-all flex items-center justify-center"
+            title="Print Invoice"
+          >
+            <span className="material-symbols-outlined text-sm">print</span>
+          </button>
+          <button 
+            onClick={onClose}
+            className="bg-white p-2 rounded-full text-[#444748] hover:text-[#1c1b1b] shadow-sm hover:shadow-md transition-all flex items-center justify-center"
+          >
+            <span className="material-symbols-outlined text-sm">close</span>
+          </button>
+        </div>
+
+        <div className="p-8 sm:p-12 text-[#1c1b1b] bg-[#F9F7F3] min-h-[800px] flex flex-col font-sans" ref={contentRef}>
+          {/* Header */}
+          <div className="flex justify-between items-start mb-16">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 flex-shrink-0">
+              <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full text-[#C8A97E]">
+                <path d="M50 15 C55 35 75 40 85 55 C90 62 85 75 75 80 C60 88 55 70 50 60 C45 70 40 88 25 80 C15 75 10 62 15 55 C25 40 45 35 50 15 Z" stroke="currentColor" strokeWidth="2" fill="transparent"/>
+                <path d="M50 25 C53 40 68 45 75 55 C78 60 75 68 68 70 C58 75 53 62 50 55 C47 62 42 75 32 70 C25 68 22 60 25 55 C32 45 47 40 50 25 Z" stroke="currentColor" strokeWidth="2" fill="transparent"/>
+                <path d="M50 40 C52 50 60 52 65 60 C67 63 65 67 60 68 C54 70 52 63 50 58 C48 63 46 70 40 68 C35 67 33 63 35 60 C40 52 48 50 50 40 Z" stroke="currentColor" strokeWidth="2" fill="transparent"/>
+                <path d="M50 15 L50 60" stroke="currentColor" strokeWidth="2"/>
+                <path d="M38 82 C42 85 48 85 50 85 C52 85 58 85 62 82" stroke="currentColor" strokeWidth="2" fill="transparent" strokeLinecap="round"/>
+              </svg>
+            </div>
+            <h1 className="text-4xl sm:text-5xl tracking-widest text-[#1c1b1b]" style={{ fontFamily: 'Times New Roman, serif' }}>INVOICE</h1>
+          </div>
+
+          {/* Billing Info */}
+          <div className="flex justify-between items-start mb-12 text-sm sm:text-base">
+            <div>
+              <h2 className="font-bold mb-1 tracking-wider text-xs sm:text-sm uppercase">BILLED TO:</h2>
+              <div className="whitespace-pre-line text-[#444748] leading-relaxed">
+                {customerName ? customerName + '\n' : ''}
+                {address || '145 Bay 79th St.\nManhattan, NY, 11221'}
+              </div>
+            </div>
+            <div className="text-right text-[#444748]">
+              <div>Invoice No. {invoiceNumber}</div>
+              <div>{dateString}</div>
+            </div>
+          </div>
+
+          {/* Items Table */}
+          <div className="mb-12">
+            <div className="flex border-b border-t border-[#1c1b1b] py-3 text-xs sm:text-sm font-bold tracking-wide">
+              <div className="flex-1 text-left">Item</div>
+              <div className="w-20 text-center">Quantity</div>
+              <div className="w-24 text-right">Unit Price</div>
+              <div className="w-24 text-right">Total</div>
+            </div>
+            
+            {cartItems.length > 0 ? (
+              cartItems.map((item, index) => (
+                <div key={`${item.product.id}-${index}`} className="flex border-b border-[#c4c7c7] py-4 text-sm text-[#444748]">
+                  <div className="flex-1 text-left pr-4">{item.product.name} {item.selectedTimber ? `(${item.selectedTimber})` : ''}</div>
+                  <div className="w-20 text-center">{item.quantity}</div>
+                  <div className="w-24 text-right">{formatPrice(item.product.priceINR, currency)}</div>
+                  <div className="w-24 text-right">{formatPrice(item.product.priceINR * item.quantity, currency)}</div>
+                </div>
+              ))
+            ) : (
+              // Mock data for preview if cart is empty
+              <>
+                <div className="flex border-b border-[#c4c7c7] py-4 text-sm text-[#444748]">
+                  <div className="flex-1 text-left pr-4">Handmade wooden tablet</div>
+                  <div className="w-20 text-center">1</div>
+                  <div className="w-24 text-right">$123</div>
+                  <div className="w-24 text-right">$123</div>
+                </div>
+                <div className="flex border-b border-[#c4c7c7] py-4 text-sm text-[#444748]">
+                  <div className="flex-1 text-left pr-4">White framed mirror</div>
+                  <div className="w-20 text-center">2</div>
+                  <div className="w-24 text-right">$127</div>
+                  <div className="w-24 text-right">$254</div>
+                </div>
+                <div className="flex border-b border-[#c4c7c7] py-4 text-sm text-[#444748]">
+                  <div className="flex-1 text-left pr-4">Twin size bed</div>
+                  <div className="w-20 text-center">1</div>
+                  <div className="w-24 text-right">$123</div>
+                  <div className="w-24 text-right">$123</div>
+                </div>
+              </>
+            )}
+
+            {/* Totals */}
+            <div className="flex justify-end pt-4">
+              <div className="w-48 space-y-3 text-sm">
+                <div className="flex justify-between text-[#444748]">
+                  <span className="font-bold text-[#1c1b1b]">Subtotal</span>
+                  <span>{formatPrice(subtotal, currency)}</span>
+                </div>
+                {discountAmount > 0 && (
+                  <div className="flex justify-between text-[#444748]">
+                    <span>Discount</span>
+                    <span>-{formatPrice(discountAmount, currency)}</span>
+                  </div>
+                )}
+                <div className="flex justify-between text-[#444748] border-b border-[#c4c7c7] pb-3">
+                  <span className="font-bold text-[#1c1b1b]">Tax (0%)</span>
+                  <span>{formatPrice(0, currency)}</span>
+                </div>
+                <div className="flex justify-between font-bold text-lg sm:text-xl pt-2 text-[#1c1b1b]">
+                  <span>Total</span>
+                  <span>{formatPrice(total, currency)}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex-1"></div>
+
+          {/* Footer */}
+          <div className="mt-8">
+            <h3 className="text-2xl text-[#1c1b1b] mb-12">Thank you!</h3>
+            
+            <div className="flex flex-col sm:flex-row justify-between items-end text-sm">
+              <div className="w-full sm:w-auto mb-6 sm:mb-0">
+                <h4 className="font-bold text-xs sm:text-sm uppercase tracking-wider mb-2">PAYMENT INFORMATION</h4>
+                <div className="text-[#444748] leading-relaxed">
+                  <div>Briard Bank</div>
+                  <div>Account Name: Irisjev Crafts</div>
+                  <div>Account No.: 9876543210</div>
+                  <div>Pay by: {payByString}</div>
+                </div>
+              </div>
+              
+              <div className="text-right w-full sm:w-auto">
+                <div className="text-lg text-[#1c1b1b] mb-1" style={{ fontFamily: 'Times New Roman, serif' }}>Samantha Jordan</div>
+                <div className="text-[#444748]">123 Anywhere St., Any City, ST 12345</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};

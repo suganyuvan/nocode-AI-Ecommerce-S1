@@ -1,0 +1,6 @@
+{
+  "name": "Swarna Wooden Crafts",
+  "description": "Luxury Artisanal Wooden Sculptures, Temple Mandapams & Sustainable Heritage Woodcrafts",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

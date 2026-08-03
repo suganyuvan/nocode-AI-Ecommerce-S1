@@ -1,0 +1,373 @@
+import React from 'react';
+import { Product, Currency, ActiveTab } from '../types';
+import { PRODUCTS } from '../data/products';
+import { formatPrice } from '../utils/currency';
+
+interface HomeViewProps {
+  setActiveTab: (tab: ActiveTab) => void;
+  onSelectProduct: (product: Product) => void;
+  onAddToCart: (product: Product) => void;
+  currency: Currency;
+}
+
+export const HomeView: React.FC<HomeViewProps> = ({
+  setActiveTab,
+  onSelectProduct,
+  onAddToCart,
+  
+  currency,
+}) => {
+  const spotlightProducts = PRODUCTS.filter((p) => p.featuredInSpotlight);
+  const heroGanesha = PRODUCTS.find((p) => p.id === 'ganesha-sculpture-01') || PRODUCTS[0];
+
+  return (
+    <div className="space-y-20 animate-fadeIn">
+      {/* Hero Section - Screen 3 Desktop & Screen 1 Mobile */}
+      <section className="relative overflow-hidden bg-[#fbf9f8] px-4 md:px-8 py-8 md:py-16">
+        <div className="max-w-[1200px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+          {/* Left Column - Featured Hero Sculpture Card */}
+          <div className="lg:col-span-7 relative group">
+            <div className="relative overflow-hidden rounded-xs border border-[#c4c7c7]/40 shadow-xl bg-white">
+              <img
+                src={heroGanesha.image}
+                alt="Lord Ganesha Wooden Sculpture"
+                className="w-full h-[380px] sm:h-[480px] md:h-[560px] object-cover object-center group-hover:scale-102 transition-transform duration-700"
+              />
+              {/* Badge overlay */}
+              <div className="absolute top-6 left-6 bg-[#1c1b1b]/80 backdrop-blur-xs text-white px-3.5 py-1.5 rounded-xs text-xs font-label-caps uppercase tracking-widest border border-white/20">
+                Est. 1995 • Irisjev Wooden Crafts
+              </div>
+
+              {/* Quick action floating panel */}
+              <div className="absolute bottom-6 left-6 right-6 bg-[#fbf9f8]/90 backdrop-blur-md p-4 sm:p-6 rounded-xs border border-[#c4c7c7]/50 shadow-lg flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                  <span className="text-[10px] font-label-caps uppercase tracking-widest text-[#735c00] font-bold block">
+                    Featured Masterpiece
+                  </span>
+                  <h3 className="font-headline-md text-lg sm:text-xl font-bold text-[#1b1c1c]">
+                    {heroGanesha.name}
+                  </h3>
+                  <p className="text-xs font-body-md text-[#444748]">
+                    {heroGanesha.material} • {heroGanesha.dimensions}
+                  </p>
+                </div>
+                <div className="flex gap-2 w-full sm:w-auto">
+                  <button
+                    onClick={() => onSelectProduct(heroGanesha)}
+                    className="flex-1 sm:flex-initial px-4 py-2 bg-[#1c1b1b] text-white text-xs font-label-caps uppercase tracking-wider hover:opacity-90 cursor-pointer text-center"
+                  >
+                    View Details
+                  </button>
+                  <button
+                    onClick={() => onAddToCart(heroGanesha)}
+                    className="px-3 py-2 bg-[#fed65b] text-[#745c00] text-xs font-label-caps uppercase font-bold hover:bg-[#fed65b]/80 cursor-pointer"
+                    title="Add to Basket"
+                  >
+                    <span className="material-symbols-outlined text-sm">shopping_bag</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column - Brand Headline & Story */}
+          <div className="lg:col-span-5 space-y-6">
+            <div className="inline-block border-b-2 border-[#735c00] pb-1">
+              <span className="font-label-caps text-xs uppercase tracking-widest text-[#735c00] font-bold">
+                Handcrafted Heritage Woodcrafts
+              </span>
+            </div>
+
+            <h1 className="font-display-lg text-3xl sm:text-4xl lg:text-5xl font-bold text-[#1b1c1c] leading-tight italic">
+              Ancient Artistry for Modern Spaces
+            </h1>
+
+            <p className="font-body-lg text-[#444748] leading-relaxed">
+              At Irisjev Wooden Crafts, every piece is hand-carved by 8th-generation master sculptors using centuries-old temple traditions. We preserve sacred heritage through ethically sourced aged teak, red sandalwood, and Indian rosewood.
+            </p>
+
+            <div className="pt-4 flex flex-col sm:flex-row gap-4 font-label-caps text-xs uppercase tracking-widest">
+              <button
+                onClick={() => setActiveTab('shop')}
+                className="px-8 py-4 bg-[#1c1b1b] text-white font-bold hover:bg-black transition-all cursor-pointer shadow-md text-center flex items-center justify-center gap-2 group"
+              >
+                <span>Explore Collection</span>
+                <span className="material-symbols-outlined text-sm group-hover:translate-x-1 transition-transform">
+                  arrow_forward
+                </span>
+              </button>
+            </div>
+
+            {/* Quick Stats Banner */}
+            <div className="grid grid-cols-3 gap-4 pt-8 border-t border-[#c4c7c7]/40 text-center font-body-md">
+              <div>
+                <span className="font-display-lg text-xl font-bold text-[#1b1c1c] block">48+ Yrs</span>
+                <span className="text-[11px] text-[#444748] font-label-caps uppercase">Carving Legacy</span>
+              </div>
+              <div>
+                <span className="font-display-lg text-xl font-bold text-[#1b1c1c] block">100%</span>
+                <span className="text-[11px] text-[#444748] font-label-caps uppercase">Ethical Timber</span>
+              </div>
+              <div>
+                <span className="font-display-lg text-xl font-bold text-[#1b1c1c] block">4,500+</span>
+                <span className="text-[11px] text-[#444748] font-label-caps uppercase">Global Shrines</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Spotlight Section - Screen 3 & Screen 1 Showcase */}
+      <section className="max-w-[1200px] mx-auto px-4 md:px-8 space-y-8">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 border-b border-[#c4c7c7]/40 pb-4">
+          <div>
+            <span className="text-xs font-label-caps uppercase tracking-widest text-[#735c00] font-bold block mb-1">
+              Handpicked Collections
+            </span>
+            <h2 className="font-display-lg text-2xl md:text-3xl font-bold text-[#1b1c1c] italic">
+              In the Spotlight...
+            </h2>
+          </div>
+
+          <button
+            onClick={() => setActiveTab('shop')}
+            className="text-xs font-label-caps uppercase tracking-widest text-[#1c1b1b] font-bold hover:text-[#735c00] flex items-center gap-1 cursor-pointer"
+          >
+            <span>View All {spotlightProducts.length + 4} Sculptures</span>
+            <span className="material-symbols-outlined text-sm">arrow_forward</span>
+          </button>
+        </div>
+
+        {/* Product Cards Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+          {spotlightProducts.map((product) => (
+            <div
+              key={product.id}
+              className="bg-white rounded-xs border border-[#e4e2e2] overflow-hidden hover-lift flex flex-col justify-between group cursor-pointer"
+              onClick={() => onSelectProduct(product)}
+            >
+              <div className="relative aspect-4/3 overflow-hidden bg-[#f5f3f3]">
+                <img
+                  src={product.image}
+                  alt={product.name}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                />
+
+                {/* Badges */}
+                <div className="absolute top-3 left-3 flex flex-col gap-1">
+                  {product.isNewArrival && (
+                    <span className="bg-[#1c1b1b] text-white text-[9px] font-label-caps uppercase px-2 py-0.5 rounded-xs font-bold tracking-wider">
+                      New Arrival
+                    </span>
+                  )}
+                  {product.isLimitedEdition && (
+                    <span className="bg-[#fed65b] text-[#745c00] text-[9px] font-label-caps uppercase px-2 py-0.5 rounded-xs font-bold tracking-wider">
+                      Limited Edition
+                    </span>
+                  )}
+                  {product.isBestSeller && (
+                    <span className="bg-[#735c00] text-white text-[9px] font-label-caps uppercase px-2 py-0.5 rounded-xs font-bold tracking-wider">
+                      Best Seller
+                    </span>
+                  )}
+                </div>
+
+                <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <span className="bg-white/90 p-1.5 rounded-full text-[#1b1c1c] shadow-md hover:text-[#735c00]">
+                    <span className="material-symbols-outlined text-base">visibility</span>
+                  </span>
+                </div>
+              </div>
+
+              {/* Card Body */}
+              <div className="p-5 flex-1 flex flex-col justify-between space-y-3">
+                <div>
+                  <span className="text-[10px] font-label-caps uppercase tracking-wider text-[#735c00] font-bold block mb-1">
+                    {product.category}
+                  </span>
+                  <h3 className="font-headline-md font-semibold text-lg text-[#1b1c1c] group-hover:text-[#735c00] transition-colors">
+                    {product.name}
+                  </h3>
+                  <p className="text-xs font-body-md text-[#444748] line-clamp-2 mt-1">
+                    {product.shortDescription || product.description}
+                  </p>
+                </div>
+
+                <div className="pt-3 border-t border-[#e4e2e2] flex justify-between items-center">
+                  <div>
+                    <span className="font-headline-md font-bold text-base text-[#000000]">
+                      {formatPrice(product.priceINR, currency)}
+                    </span>
+                    <span className="block text-[10px] text-[#747878] font-body-md">
+                      {product.material}
+                    </span>
+                  </div>
+
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onAddToCart(product);
+                    }}
+                    className="px-3 py-1.5 bg-[#1c1b1b] text-white text-[11px] font-label-caps uppercase tracking-wider hover:opacity-90 cursor-pointer rounded-xs flex items-center gap-1"
+                  >
+                    <span className="material-symbols-outlined text-xs">shopping_bag</span>
+                    <span>Reserve</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Sacred Temple Collection Feature Section */}
+      <section className="bg-[#1c1b1b] text-white py-16 px-4 md:px-8">
+        <div className="max-w-[1200px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+          <div className="lg:col-span-6 space-y-6">
+            <span className="text-xs font-label-caps uppercase tracking-widest text-[#fed65b] font-bold block">
+              Architectural Temple Craftsmanship
+            </span>
+
+            <h2 className="font-display-lg text-3xl md:text-4xl font-bold italic leading-tight">
+              The Sacred Temple Collection & Mandapams
+            </h2>
+
+            <p className="font-body-lg text-[#e5e2e1] leading-relaxed">
+              Designed for luxury private homes and spiritual sanctuaries. Inspired by the UNESCO heritage temples of Hampi, Belur, and Tanjore. Every mandapam features hand-turned pillars, brass oil lamp brackets, concealed drawers, and LED lattice illumination.
+            </p>
+
+            <div className="space-y-3 font-body-md text-sm text-[#e5e2e1]">
+              <div className="flex items-center gap-3">
+                <span className="material-symbols-outlined text-[#fed65b]">check_circle</span>
+                <span>100% Sustainable Aged Burmese & Indian Teak Wood</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="material-symbols-outlined text-[#fed65b]">check_circle</span>
+                <span>Custom CAD 3D Blueprints provided prior to hand carving</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="material-symbols-outlined text-[#fed65b]">check_circle</span>
+                <span>White-Glove Worldwide Delivery & Assembly Support</span>
+              </div>
+            </div>
+
+            <div className="pt-4 flex flex-col sm:flex-row gap-4 font-label-caps text-xs uppercase tracking-widest">
+              <button
+                onClick={() => setActiveTab('temple-projects')}
+                className="px-8 py-4 bg-[#fed65b] text-[#745c00] font-bold hover:bg-[#fed65b]/90 cursor-pointer text-center"
+              >
+                View Temple Portfolio
+              </button>
+            </div>
+          </div>
+
+          <div className="lg:col-span-6 relative">
+            <div className="relative overflow-hidden rounded-xs border border-white/20 shadow-2xl">
+              <img
+                src="https://lh3.googleusercontent.com/aida-public/AB6AXuCopiZFKKw0hGQPYG_mLJdJ5OB7pOHQxsc3Z1QMibWen6WwhVBTKcCX8q6DR76oTyFF2Ya7jXDFMdIHUWPvL0KHHsQ98AdTlT59EjnWnqwWqqYHrJDWISDmnviw_egcQEkqqmzjpjPgubHoVVY7mySXhS-McHYfNe0WiLyTw7jKsBOMWUdNItg8AjA76PraiU4VURKLncMTXH1mbmJ369jGX9-62e8B7aI0rbQE4dSxe-Zv2Uczn_gmeA"
+                alt="Sacred Temple Mandapam"
+                className="w-full h-[400px] object-cover"
+              />
+              <div className="absolute bottom-4 right-4 bg-black/80 px-4 py-2 text-xs font-label-caps text-white rounded-xs">
+                Mandapam Model: Hampi Royal Sanctuary
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Our Eco Credentials */}
+      <section className="max-w-[1200px] mx-auto px-4 md:px-8 space-y-12">
+        <div className="text-center max-w-2xl mx-auto space-y-3">
+          <span className="text-xs font-label-caps uppercase tracking-widest text-[#735c00] font-bold block">
+            Sustainability & Ethics
+          </span>
+          <h2 className="font-display-lg text-3xl font-bold text-[#1b1c1c] italic">
+            Our Eco Credentials
+          </h2>
+          <p className="font-body-md text-[#444748]">
+            We honor the trees that grant us their timber. Every piece carved is paired with active reforestation and fair artisan support.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 font-body-md text-center">
+          <div className="bg-white p-8 rounded-xs border border-[#e4e2e2] space-y-4 hover:border-[#1c1b1b] transition-colors">
+            <div className="w-14 h-14 bg-[#f5f3f3] rounded-full flex items-center justify-center mx-auto text-[#735c00]">
+              <span className="material-symbols-outlined text-2xl">park</span>
+            </div>
+            <h3 className="font-headline-md text-xl font-bold text-[#1b1c1c]">
+              1-for-1 Reforestation
+            </h3>
+            <p className="text-sm text-[#444748]">
+              We plant five teak and rosewood saplings in Karnataka forestry reserves for every single sculpture commissioned.
+            </p>
+          </div>
+
+          <div className="bg-white p-8 rounded-xs border border-[#e4e2e2] space-y-4 hover:border-[#1c1b1b] transition-colors">
+            <div className="w-14 h-14 bg-[#f5f3f3] rounded-full flex items-center justify-center mx-auto text-[#735c00]">
+              <span className="material-symbols-outlined text-2xl">recycling</span>
+            </div>
+            <h3 className="font-headline-md text-xl font-bold text-[#1b1c1c]">
+              Reclaimed Vintage Beams
+            </h3>
+            <p className="text-sm text-[#444748]">
+              Our wall panels and mirrors utilize 80+ year old seasoned teak salvaged from ancient South Indian ancestral homes.
+            </p>
+          </div>
+
+          <div className="bg-white p-8 rounded-xs border border-[#e4e2e2] space-y-4 hover:border-[#1c1b1b] transition-colors">
+            <div className="w-14 h-14 bg-[#f5f3f3] rounded-full flex items-center justify-center mx-auto text-[#735c00]">
+              <span className="material-symbols-outlined text-2xl">handshake</span>
+            </div>
+            <h3 className="font-headline-md text-xl font-bold text-[#1b1c1c]">
+              Direct Artisan Guild
+            </h3>
+            <p className="text-sm text-[#444748]">
+              We empower 80+ artisan families with fair living wages, health coverage, and traditional craft apprenticeships.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Instagram Feed Grid */}
+      <section className="max-w-[1200px] mx-auto px-4 md:px-8 space-y-8">
+        <div className="text-center space-y-2">
+          <span className="text-xs font-label-caps uppercase tracking-widest text-[#735c00] font-bold block">
+            Follow Our Craft Journey
+          </span>
+          <h2 className="font-display-lg text-2xl font-bold text-[#1b1c1c]">
+            @swarna_wooden_crafts
+          </h2>
+          <p className="font-body-md text-sm text-[#444748]">
+            Tag your home shrines with #IrisjevCrafts to be featured in our monthly circle gallery.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
+          {[
+            'https://lh3.googleusercontent.com/aida-public/AB6AXuBeK7OKa4S77fALp3MU5L9NH0gUHmQRzi-AW2uYLfAXuAa5d4auqSgKarq3yGCCRHPRh2lTGGtxUpYVYBcstbF9c4Nz8wUfq8UmEnNWncE-TduzzQcuUe8rc-pz4enVZ6xzav7mXuTtxd5PILaLNETSmFJ0u-kZVfQ63qtPkKmMo42ciLE4DZydgHp3MYiQBBuzMNU5i-PygNcb3217pT3GOrWYmtFilyN9wYaEE48AAg5WMCOiIKzmeg',
+            'https://lh3.googleusercontent.com/aida-public/AB6AXuBS1ELlckSMDlqJ1YXaEkUx7yAMpnOUG0wSOgFPuBit9lC4XD9DBl1Q8BG3LvLRbB9hzZuuRKJgW_2u05do-W3VljhE2jtNEk7rqW5mphJw6SybKHl3RLE5kyodeV56ff9bNGaMzMI4Ch_lkBuA20zWlbdM7TfsLP4fQ6Maf6SGNj58O2Ph2TMzHuHDf_XAH7dKIhcmdpEtBfjehjHf6LuIjEhlRkre8aZY7KL7KmcZ3Vh9ADlmq5HzIQ',
+            'https://lh3.googleusercontent.com/aida-public/AB6AXuBaen1JgbPQ50iJvvmonLoEqTq-cTEs-yICskF4AzzNWCGrb2yJfec-2LLhfWgW-ZRdfvM9P2GwBnjP4ac0TxfDLa-ycEl-ZjH2HS860tJdeT9Hsd8N4V40ahyrDcxyJfGQUlZ3l3AGAbBf6nIW-AKRlX8ezJxWGvPWnbGiyPgOXMieXuNXWgVIS97KMzp4pd9PcSymqyhVmSBrihU7UXhY_fB-JXEbhye14jGRyezYmoMGbajeIF0huA',
+            'https://lh3.googleusercontent.com/aida-public/AB6AXuA_YuhgcG5heo6xKcyUpgaAeJASCdnVZP0kln-_gUwqWfNMlxPopZMoftXy6mswafTasS6mi-jCx_9m-RlP9OEQHWeEbMsi9sV4ShHVk4JPv8uWXdONoKXIX-36VH66IXGug3ZE_7nqL1kOluNB9T0pqhYi2ijwKI_KniaIe_Bi1kZBnsjl_3P1oP677NIuZyBsB85KteVKDTc5h_pVBAabEWGgHt_3jvdgfPZy7nKA6uOEWmEPazYM7w',
+            'https://lh3.googleusercontent.com/aida-public/AB6AXuAAFRkdOaQU4PHApGgQbo_FJRUjh1MWNQbeVUOa8g25g4gGXpzYkjcrLVV0NykvQULzI9wUoTnbhcTMzjwK3pH91RxnlfZhy63kwiJEJni-4LQZ-9k31P5aPfvagrzdNUBtxnm-XKqTToXMfYS5Cj-kT8a5q8M4o47IkDCqCDHERKbjuhLd0linMoTLJJCDotqMNol3iSK-sJnWWCwPWGL70TEZdU9k3iRqszpyCTM0CR9QHZwUvwNIOg',
+            'https://lh3.googleusercontent.com/aida-public/AB6AXuAmALo1Snt4ZAeuLAwz94vm83laWqK2Jh-zDKqq2g6Wv2kvToPHycHkEtafvRKtcgB0F7c5QMdM7ltZqmLA2MWnTiNlkwCX5wc0CsGPLDdOI3RSAAFuW-3SZmQMehLWHCcbU8huLonlGQ-XgJMq3riiW4FR35otXB2noePwRyg5QiWsiYn7rE_xmZxcc1wCAvuSsXlNscHOUEMOlhu4q7HZ9LbeeZhA1AzB6Lugm_ZdhPavrwZypRmmFg',
+          ].map((src, idx) => (
+            <div
+              key={idx}
+              className="relative aspect-square overflow-hidden group rounded-xs border border-[#e4e2e2]"
+            >
+              <img
+                src={src}
+                alt={`Instagram Post ${idx + 1}`}
+                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+              />
+              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white">
+                <span className="material-symbols-outlined">photo_camera</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+    </div>
+  );
+};
