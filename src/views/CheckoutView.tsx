@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { CartItem, Currency } from '../types';
 import { formatPrice } from '../utils/currency';
 import { InvoiceModal } from '../components/InvoiceModal';
@@ -10,6 +10,8 @@ interface CheckoutViewProps {
   currency: Currency;
   onClearCart: () => void;
   setActiveTab: (tab: ActiveTab) => void;
+  onUpdateQuantity: (productId: string, delta: number) => void;
+  onRemoveItem: (productId: string) => void;
 }
 
 export const CheckoutView: React.FC<CheckoutViewProps> = ({
@@ -17,6 +19,8 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
   currency,
   onClearCart,
   setActiveTab,
+  onUpdateQuantity,
+  onRemoveItem,
 }) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [showInvoice, setShowInvoice] = useState(false);
@@ -34,6 +38,15 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
   const [cardExpiry, setCardExpiry] = useState('');
   const [cardCvv, setCardCvv] = useState('');
 
+  // Shipping & GST
+  const [shippingCharge, setShippingCharge] = useState(0);
+  const [gstRate, setGstRate] = useState(0);
+
+  useEffect(() => {
+    setShippingCharge((Math.floor(Math.random() * 8) + 15) * 10);
+    setGstRate(Math.floor(Math.random() * 3) + 3);
+  }, []);
+
   const getCardBrand = (number: string) => {
     if (number.startsWith('4')) return 'Visa';
     if (number.startsWith('5')) return 'Mastercard';
@@ -49,7 +62,9 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
   // We'll keep it simple: no discount applied in checkout view unless we pass it.
   const appliedDiscount = 0; 
   const discountAmountINR = (rawTotalINR * appliedDiscount) / 100;
-  const finalTotalINR = rawTotalINR - discountAmountINR;
+  
+  const gstAmountINR = ((rawTotalINR - discountAmountINR) * gstRate) / 100;
+  const finalTotalINR = rawTotalINR - discountAmountINR + gstAmountINR + shippingCharge;
 
   const handlePlaceOrder = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -128,6 +143,9 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
         address,
         subtotal: rawTotalINR,
         discountAmount: discountAmountINR,
+        shipping: shippingCharge,
+        gstAmount: gstAmountINR,
+        gstRate: gstRate,
         total: finalTotalINR,
         invoiceNumber: orderNumber,
       });
@@ -343,23 +361,52 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
               
               <div className="space-y-4 max-h-[400px] overflow-y-auto custom-scrollbar pr-2">
                 {cartItems.map((item) => (
-                  <div key={item.product.id} className="flex gap-3 items-center">
+                  <div key={item.product.id} className="flex gap-3 items-center bg-[#fbf9f8] p-2 rounded-xs border border-[#e4e2e2] relative group">
                     <img
                       src={item.product.image}
                       alt={item.product.name}
                       className="w-16 h-16 object-cover rounded-xs border border-[#c4c7c7]/30"
                     />
                     <div className="flex-1">
-                      <h5 className="font-headline-md font-semibold text-sm text-[#1b1c1c] leading-tight">
+                      <h5 className="font-headline-md font-semibold text-sm text-[#1b1c1c] leading-tight pr-6">
                         {item.product.name}
                       </h5>
-                      <span className="text-[11px] font-body-md text-[#747878] block">
-                        Qty: {item.quantity} | {item.selectedTimber}
+                      <span className="text-[11px] font-body-md text-[#735c00] block mt-0.5">
+                        {item.selectedTimber}
                       </span>
-                      <span className="font-headline-md font-bold text-sm text-[#000000] block mt-1">
+                      <span className="font-headline-md font-bold text-sm text-[#000000] block mt-1.5">
                         {formatPrice(item.product.priceINR * item.quantity, currency)}
                       </span>
+                      
+                      <div className="flex items-center gap-2 mt-2">
+                        <button
+                          type="button"
+                          onClick={() => onUpdateQuantity(item.product.id, -1)}
+                          className="w-6 h-6 rounded-full border border-[#c4c7c7] flex items-center justify-center text-xs hover:bg-[#efeded] cursor-pointer bg-white shadow-sm"
+                        >
+                          -
+                        </button>
+                        <span className="text-xs font-bold font-label-caps px-1">
+                          {item.quantity}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => onUpdateQuantity(item.product.id, 1)}
+                          className="w-6 h-6 rounded-full border border-[#c4c7c7] flex items-center justify-center text-xs hover:bg-[#efeded] cursor-pointer bg-white shadow-sm"
+                        >
+                          +
+                        </button>
+                      </div>
                     </div>
+                    
+                    <button
+                      type="button"
+                      onClick={() => onRemoveItem(item.product.id)}
+                      className="absolute top-2 right-2 text-[#747878] hover:text-[#ba1a1a] p-1 cursor-pointer opacity-70 group-hover:opacity-100 transition-opacity"
+                      title="Remove item"
+                    >
+                      <span className="material-symbols-outlined text-sm">delete</span>
+                    </button>
                   </div>
                 ))}
               </div>
@@ -368,6 +415,14 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
                 <div className="flex justify-between text-[#444748]">
                   <span>Subtotal:</span>
                   <span>{formatPrice(rawTotalINR, currency)}</span>
+                </div>
+                <div className="flex justify-between text-[#444748]">
+                  <span>Shipping:</span>
+                  <span>{formatPrice(shippingCharge, currency)}</span>
+                </div>
+                <div className="flex justify-between text-[#444748]">
+                  <span>GST ({gstRate}%):</span>
+                  <span>{formatPrice(gstAmountINR, currency)}</span>
                 </div>
                 <div className="flex justify-between font-bold text-lg text-[#000000] border-t border-[#e4e2e2] pt-3 mt-1">
                   <span>Total Payable:</span>
@@ -403,6 +458,9 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
           currency={currency}
           subtotal={invoiceData.subtotal}
           discountAmount={invoiceData.discountAmount}
+          shipping={invoiceData.shipping}
+          gstAmount={invoiceData.gstAmount}
+          gstRate={invoiceData.gstRate}
           total={invoiceData.total}
         />
       )}

@@ -240,6 +240,8 @@ export function App() {
             currency={currency}
             onClearCart={() => setCartItems([])}
             setActiveTab={setActiveTab}
+            onUpdateQuantity={handleUpdateCartQuantity}
+            onRemoveItem={handleRemoveCartItem}
           />
         )}
       </main>

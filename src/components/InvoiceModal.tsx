@@ -11,6 +11,9 @@ interface InvoiceModalProps {
   currency: Currency;
   subtotal: number;
   discountAmount: number;
+  shipping: number;
+  gstAmount: number;
+  gstRate: number;
   total: number;
 }
 
@@ -23,6 +26,9 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({
   currency,
   subtotal,
   discountAmount,
+  shipping,
+  gstAmount,
+  gstRate,
   total,
 }) => {
   const contentRef = useRef<HTMLDivElement>(null);
@@ -150,9 +156,13 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({
                     <span>-{formatPrice(discountAmount, currency)}</span>
                   </div>
                 )}
+                <div className="flex justify-between text-[#444748]">
+                  <span className="font-bold text-[#1c1b1b]">Shipping</span>
+                  <span>{formatPrice(shipping, currency)}</span>
+                </div>
                 <div className="flex justify-between text-[#444748] border-b border-[#c4c7c7] pb-3">
-                  <span className="font-bold text-[#1c1b1b]">Tax (0%)</span>
-                  <span>{formatPrice(0, currency)}</span>
+                  <span className="font-bold text-[#1c1b1b]">GST ({gstRate}%)</span>
+                  <span>{formatPrice(gstAmount, currency)}</span>
                 </div>
                 <div className="flex justify-between font-bold text-lg sm:text-xl pt-2 text-[#1c1b1b]">
                   <span>Total</span>

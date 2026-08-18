@@ -15,11 +15,11 @@ export const PromoPopup: React.FC = () => {
 
     // Check if the user has already seen or submitted the popup
     const hasSeenPopup = localStorage.getItem('irisjev_promo_seen');
-    
+
     if (!hasSeenPopup) {
       const timer = setTimeout(() => {
         setIsOpen(true);
-      }, 4000); // Show after 4 seconds
+      }, 1000); // Show after 4 seconds
 
       return () => clearTimeout(timer);
     }
@@ -32,7 +32,7 @@ export const PromoPopup: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     const { error } = await supabase
       .from('newsletter_subscribers')
       .insert([{ full_name: name, email, phone, country_code: countryCode }]);
@@ -43,7 +43,7 @@ export const PromoPopup: React.FC = () => {
 
     setIsSubmitted(true);
     localStorage.setItem('irisjev_promo_seen', 'true');
-    
+
     // Close automatically after 3 seconds of success message
     setTimeout(() => {
       setIsOpen(false);
@@ -54,13 +54,13 @@ export const PromoPopup: React.FC = () => {
 
   return (
     <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 sm:p-6">
-      <div 
+      <div
         className="absolute inset-0 bg-[#1c1b1b]/60 backdrop-blur-sm transition-opacity"
         onClick={handleClose}
       />
-      
+
       <div className="relative bg-[#fbf9f8] w-full max-w-md shadow-2xl rounded-sm flex flex-col overflow-hidden animate-in fade-in zoom-in duration-300">
-        <button 
+        <button
           onClick={handleClose}
           className="absolute top-4 right-4 text-[#444748] hover:text-[#1c1b1b] z-10 transition-colors bg-white/50 rounded-full p-1 backdrop-blur-md"
         >
@@ -88,8 +88,8 @@ export const PromoPopup: React.FC = () => {
 
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     required
                     value={name}
                     onChange={(e) => setName(e.target.value)}
@@ -97,10 +97,10 @@ export const PromoPopup: React.FC = () => {
                     placeholder="Full Name"
                   />
                 </div>
-                
+
                 <div>
-                  <input 
-                    type="email" 
+                  <input
+                    type="email"
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
@@ -108,7 +108,7 @@ export const PromoPopup: React.FC = () => {
                     placeholder="Email Address"
                   />
                 </div>
-                
+
                 <div className="flex gap-2">
                   <select
                     value={countryCode}
@@ -123,8 +123,8 @@ export const PromoPopup: React.FC = () => {
                     <option value="+49">+49</option>
                     <option value="+33">+33</option>
                   </select>
-                  <input 
-                    type="tel" 
+                  <input
+                    type="tel"
                     required
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
@@ -133,7 +133,7 @@ export const PromoPopup: React.FC = () => {
                   />
                 </div>
 
-                <button 
+                <button
                   type="submit"
                   className="w-full py-4 bg-[#735c00] text-white font-label-caps text-xs uppercase tracking-widest hover:bg-[#594800] transition-colors shadow-md mt-2"
                 >
