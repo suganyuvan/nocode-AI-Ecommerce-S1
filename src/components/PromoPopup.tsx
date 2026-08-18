@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { supabase } from '../utils/supabaseClient';
 
 export const PromoPopup: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -29,10 +30,17 @@ export const PromoPopup: React.FC = () => {
     localStorage.setItem('irisjev_promo_seen', 'true');
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Here you would typically send the data to a backend or CRM
-    console.log({ name, email, phone: `${countryCode}${phone}` });
+    
+    const { error } = await supabase
+      .from('newsletter_subscribers')
+      .insert([{ full_name: name, email, phone, country_code: countryCode }]);
+
+    if (error) {
+      console.error('Error submitting promo form:', error);
+    }
+
     setIsSubmitted(true);
     localStorage.setItem('irisjev_promo_seen', 'true');
     
@@ -69,7 +77,7 @@ export const PromoPopup: React.FC = () => {
           {isSubmitted ? (
             <div className="text-center py-6">
               <span className="material-symbols-outlined text-5xl text-[#735c00] mb-4">check_circle</span>
-              <h3 className="font-display text-xl text-[#1c1b1b] mb-2">Thank You!</h3>
+              <h3 className="font-display text-xl text-[#1c1b1b] mb-2">Thank You, {name}!</h3>
               <p className="text-[#444748] text-sm">Use code <span className="font-bold text-[#1c1b1b]">WELCOME10</span> at checkout.</p>
             </div>
           ) : (

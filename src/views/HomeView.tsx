@@ -1,6 +1,5 @@
 import React from 'react';
-import { Product, Currency, ActiveTab } from '../types';
-import { PRODUCTS } from '../data/products';
+import { Product, Currency, ActiveTab, PageContent } from '../types';
 import { formatPrice } from '../utils/currency';
 
 interface HomeViewProps {
@@ -8,17 +7,30 @@ interface HomeViewProps {
   onSelectProduct: (product: Product) => void;
   onAddToCart: (product: Product) => void;
   currency: Currency;
+  products: Product[];
+  pageContent: PageContent[];
 }
 
 export const HomeView: React.FC<HomeViewProps> = ({
   setActiveTab,
   onSelectProduct,
   onAddToCart,
-  
   currency,
+  products,
+  pageContent = [],
 }) => {
-  const spotlightProducts = PRODUCTS.filter((p) => p.featuredInSpotlight);
-  const heroGanesha = PRODUCTS.find((p) => p.id === 'ganesha-sculpture-01') || PRODUCTS[0];
+  const getSection = (sectionName: string) => {
+    return pageContent.find(c => c.section === sectionName)?.content || {};
+  };
+
+  const heroContent = getSection('hero');
+  const statsContent = getSection('stats');
+  const templeContent = getSection('temple');
+  const ecoContent = getSection('eco');
+  const instagramContent = getSection('instagram');
+
+  const spotlightProducts = products.filter((p) => p.featuredInSpotlight);
+  const heroGanesha = products.find((p) => p.id === (heroContent.featuredProductId || 'ganesha-sculpture-01')) || products[0];
 
   return (
     <div className="space-y-20 animate-fadeIn">
@@ -35,7 +47,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
               />
               {/* Badge overlay */}
               <div className="absolute top-6 left-6 bg-[#1c1b1b]/80 backdrop-blur-xs text-white px-3.5 py-1.5 rounded-xs text-xs font-label-caps uppercase tracking-widest border border-white/20">
-                Est. 1995 • Irisjev Wooden Crafts
+                {heroContent.badge || 'Est. 1995 • Irisjev Wooden Crafts'}
               </div>
 
               {/* Quick action floating panel */}
@@ -79,11 +91,11 @@ export const HomeView: React.FC<HomeViewProps> = ({
             </div>
 
             <h1 className="font-display-lg text-3xl sm:text-4xl lg:text-5xl font-bold text-[#1b1c1c] leading-tight italic">
-              Ancient Artistry for Modern Spaces
+              {heroContent.headline || 'Ancient Artistry for Modern Spaces'}
             </h1>
 
             <p className="font-body-lg text-[#444748] leading-relaxed">
-              At Irisjev Wooden Crafts, every piece is hand-carved by 8th-generation master sculptors using centuries-old temple traditions. We preserve sacred heritage through ethically sourced aged teak, red sandalwood, and Indian rosewood.
+              {heroContent.description || 'At Irisjev Wooden Crafts, every piece is hand-carved by 8th-generation master sculptors using centuries-old temple traditions. We preserve sacred heritage through ethically sourced aged teak, red sandalwood, and Indian rosewood.'}
             </p>
 
             <div className="pt-4 flex flex-col sm:flex-row gap-4 font-label-caps text-xs uppercase tracking-widest">
@@ -91,7 +103,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
                 onClick={() => setActiveTab('shop')}
                 className="px-8 py-4 bg-[#1c1b1b] text-white font-bold hover:bg-black transition-all cursor-pointer shadow-md text-center flex items-center justify-center gap-2 group"
               >
-                <span>Explore Collection</span>
+                <span>{heroContent.buttonText || 'Explore Collection'}</span>
                 <span className="material-symbols-outlined text-sm group-hover:translate-x-1 transition-transform">
                   arrow_forward
                 </span>
@@ -100,18 +112,16 @@ export const HomeView: React.FC<HomeViewProps> = ({
 
             {/* Quick Stats Banner */}
             <div className="grid grid-cols-3 gap-4 pt-8 border-t border-[#c4c7c7]/40 text-center font-body-md">
-              <div>
-                <span className="font-display-lg text-xl font-bold text-[#1b1c1c] block">48+ Yrs</span>
-                <span className="text-[11px] text-[#444748] font-label-caps uppercase">Carving Legacy</span>
-              </div>
-              <div>
-                <span className="font-display-lg text-xl font-bold text-[#1b1c1c] block">100%</span>
-                <span className="text-[11px] text-[#444748] font-label-caps uppercase">Ethical Timber</span>
-              </div>
-              <div>
-                <span className="font-display-lg text-xl font-bold text-[#1b1c1c] block">4,500+</span>
-                <span className="text-[11px] text-[#444748] font-label-caps uppercase">Global Shrines</span>
-              </div>
+              {(statsContent.items || [
+                { value: '48+ Yrs', label: 'Carving Legacy' },
+                { value: '100%', label: 'Ethical Timber' },
+                { value: '4,500+', label: 'Global Shrines' }
+              ]).map((stat: any, idx: number) => (
+                <div key={idx}>
+                  <span className="font-display-lg text-xl font-bold text-[#1b1c1c] block">{stat.value}</span>
+                  <span className="text-[11px] text-[#444748] font-label-caps uppercase">{stat.label}</span>
+                </div>
+              ))}
             </div>
           </div>
         </div>
@@ -225,30 +235,28 @@ export const HomeView: React.FC<HomeViewProps> = ({
         <div className="max-w-[1200px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
           <div className="lg:col-span-6 space-y-6">
             <span className="text-xs font-label-caps uppercase tracking-widest text-[#fed65b] font-bold block">
-              Architectural Temple Craftsmanship
+              {templeContent.badge || 'Architectural Temple Craftsmanship'}
             </span>
 
             <h2 className="font-display-lg text-3xl md:text-4xl font-bold italic leading-tight">
-              The Sacred Temple Collection & Mandapams
+              {templeContent.title || 'The Sacred Temple Collection & Mandapams'}
             </h2>
 
             <p className="font-body-lg text-[#e5e2e1] leading-relaxed">
-              Designed for luxury private homes and spiritual sanctuaries. Inspired by the UNESCO heritage temples of Hampi, Belur, and Tanjore. Every mandapam features hand-turned pillars, brass oil lamp brackets, concealed drawers, and LED lattice illumination.
+              {templeContent.description || 'Designed for luxury private homes and spiritual sanctuaries. Inspired by the UNESCO heritage temples of Hampi, Belur, and Tanjore. Every mandapam features hand-turned pillars, brass oil lamp brackets, concealed drawers, and LED lattice illumination.'}
             </p>
 
             <div className="space-y-3 font-body-md text-sm text-[#e5e2e1]">
-              <div className="flex items-center gap-3">
-                <span className="material-symbols-outlined text-[#fed65b]">check_circle</span>
-                <span>100% Sustainable Aged Burmese & Indian Teak Wood</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <span className="material-symbols-outlined text-[#fed65b]">check_circle</span>
-                <span>Custom CAD 3D Blueprints provided prior to hand carving</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <span className="material-symbols-outlined text-[#fed65b]">check_circle</span>
-                <span>White-Glove Worldwide Delivery & Assembly Support</span>
-              </div>
+              {(templeContent.features || [
+                '100% Sustainable Aged Burmese & Indian Teak Wood',
+                'Custom CAD 3D Blueprints provided prior to hand carving',
+                'White-Glove Worldwide Delivery & Assembly Support'
+              ]).map((feature: string, idx: number) => (
+                <div key={idx} className="flex items-center gap-3">
+                  <span className="material-symbols-outlined text-[#fed65b]">check_circle</span>
+                  <span>{feature}</span>
+                </div>
+              ))}
             </div>
 
             <div className="pt-4 flex flex-col sm:flex-row gap-4 font-label-caps text-xs uppercase tracking-widest">
@@ -256,7 +264,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
                 onClick={() => setActiveTab('temple-projects')}
                 className="px-8 py-4 bg-[#fed65b] text-[#745c00] font-bold hover:bg-[#fed65b]/90 cursor-pointer text-center"
               >
-                View Temple Portfolio
+                {templeContent.buttonText || 'View Temple Portfolio'}
               </button>
             </div>
           </div>
@@ -264,12 +272,12 @@ export const HomeView: React.FC<HomeViewProps> = ({
           <div className="lg:col-span-6 relative">
             <div className="relative overflow-hidden rounded-xs border border-white/20 shadow-2xl">
               <img
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuCopiZFKKw0hGQPYG_mLJdJ5OB7pOHQxsc3Z1QMibWen6WwhVBTKcCX8q6DR76oTyFF2Ya7jXDFMdIHUWPvL0KHHsQ98AdTlT59EjnWnqwWqqYHrJDWISDmnviw_egcQEkqqmzjpjPgubHoVVY7mySXhS-McHYfNe0WiLyTw7jKsBOMWUdNItg8AjA76PraiU4VURKLncMTXH1mbmJ369jGX9-62e8B7aI0rbQE4dSxe-Zv2Uczn_gmeA"
+                src={templeContent.imageUrl || 'https://lh3.googleusercontent.com/aida-public/AB6AXuCopiZFKKw0hGQPYG_mLJdJ5OB7pOHQxsc3Z1QMibWen6WwhVBTKcCX8q6DR76oTyFF2Ya7jXDFMdIHUWPvL0KHHsQ98AdTlT59EjnWnqwWqqYHrJDWISDmnviw_egcQEkqqmzjpjPgubHoVVY7mySXhS-McHYfNe0WiLyTw7jKsBOMWUdNItg8AjA76PraiU4VURKLncMTXH1mbmJ369jGX9-62e8B7aI0rbQE4dSxe-Zv2Uczn_gmeA'}
                 alt="Sacred Temple Mandapam"
                 className="w-full h-[400px] object-cover"
               />
               <div className="absolute bottom-4 right-4 bg-black/80 px-4 py-2 text-xs font-label-caps text-white rounded-xs">
-                Mandapam Model: Hampi Royal Sanctuary
+                {templeContent.imageCaption || 'Mandapam Model: Hampi Royal Sanctuary'}
               </div>
             </div>
           </div>
@@ -280,52 +288,34 @@ export const HomeView: React.FC<HomeViewProps> = ({
       <section className="max-w-[1200px] mx-auto px-4 md:px-8 space-y-12">
         <div className="text-center max-w-2xl mx-auto space-y-3">
           <span className="text-xs font-label-caps uppercase tracking-widest text-[#735c00] font-bold block">
-            Sustainability & Ethics
+            {ecoContent.badge || 'Sustainability & Ethics'}
           </span>
           <h2 className="font-display-lg text-3xl font-bold text-[#1b1c1c] italic">
-            Our Eco Credentials
+            {ecoContent.title || 'Our Eco Credentials'}
           </h2>
           <p className="font-body-md text-[#444748]">
-            We honor the trees that grant us their timber. Every piece carved is paired with active reforestation and fair artisan support.
+            {ecoContent.description || 'We honor the trees that grant us their timber. Every piece carved is paired with active reforestation and fair artisan support.'}
           </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 font-body-md text-center">
-          <div className="bg-white p-8 rounded-xs border border-[#e4e2e2] space-y-4 hover:border-[#1c1b1b] transition-colors">
-            <div className="w-14 h-14 bg-[#f5f3f3] rounded-full flex items-center justify-center mx-auto text-[#735c00]">
-              <span className="material-symbols-outlined text-2xl">park</span>
+          {(ecoContent.items || [
+            { icon: 'park', title: '1-for-1 Reforestation', description: 'We plant five teak and rosewood saplings in Karnataka forestry reserves for every single sculpture commissioned.' },
+            { icon: 'recycling', title: 'Reclaimed Vintage Beams', description: 'Our wall panels and mirrors utilize 80+ year old seasoned teak salvaged from ancient South Indian ancestral homes.' },
+            { icon: 'handshake', title: 'Direct Artisan Guild', description: 'We empower 80+ artisan families with fair living wages, health coverage, and traditional craft apprenticeships.' }
+          ]).map((item: any, idx: number) => (
+            <div key={idx} className="bg-white p-8 rounded-xs border border-[#e4e2e2] space-y-4 hover:border-[#1c1b1b] transition-colors">
+              <div className="w-14 h-14 bg-[#f5f3f3] rounded-full flex items-center justify-center mx-auto text-[#735c00]">
+                <span className="material-symbols-outlined text-2xl">{item.icon}</span>
+              </div>
+              <h3 className="font-headline-md text-xl font-bold text-[#1b1c1c]">
+                {item.title}
+              </h3>
+              <p className="text-sm text-[#444748]">
+                {item.description}
+              </p>
             </div>
-            <h3 className="font-headline-md text-xl font-bold text-[#1b1c1c]">
-              1-for-1 Reforestation
-            </h3>
-            <p className="text-sm text-[#444748]">
-              We plant five teak and rosewood saplings in Karnataka forestry reserves for every single sculpture commissioned.
-            </p>
-          </div>
-
-          <div className="bg-white p-8 rounded-xs border border-[#e4e2e2] space-y-4 hover:border-[#1c1b1b] transition-colors">
-            <div className="w-14 h-14 bg-[#f5f3f3] rounded-full flex items-center justify-center mx-auto text-[#735c00]">
-              <span className="material-symbols-outlined text-2xl">recycling</span>
-            </div>
-            <h3 className="font-headline-md text-xl font-bold text-[#1b1c1c]">
-              Reclaimed Vintage Beams
-            </h3>
-            <p className="text-sm text-[#444748]">
-              Our wall panels and mirrors utilize 80+ year old seasoned teak salvaged from ancient South Indian ancestral homes.
-            </p>
-          </div>
-
-          <div className="bg-white p-8 rounded-xs border border-[#e4e2e2] space-y-4 hover:border-[#1c1b1b] transition-colors">
-            <div className="w-14 h-14 bg-[#f5f3f3] rounded-full flex items-center justify-center mx-auto text-[#735c00]">
-              <span className="material-symbols-outlined text-2xl">handshake</span>
-            </div>
-            <h3 className="font-headline-md text-xl font-bold text-[#1b1c1c]">
-              Direct Artisan Guild
-            </h3>
-            <p className="text-sm text-[#444748]">
-              We empower 80+ artisan families with fair living wages, health coverage, and traditional craft apprenticeships.
-            </p>
-          </div>
+          ))}
         </div>
       </section>
 
@@ -333,25 +323,24 @@ export const HomeView: React.FC<HomeViewProps> = ({
       <section className="max-w-[1200px] mx-auto px-4 md:px-8 space-y-8">
         <div className="text-center space-y-2">
           <span className="text-xs font-label-caps uppercase tracking-widest text-[#735c00] font-bold block">
-            Follow Our Craft Journey
+            {instagramContent.badge || 'Follow Our Craft Journey'}
           </span>
           <h2 className="font-display-lg text-2xl font-bold text-[#1b1c1c]">
-            @swarna_wooden_crafts
+            {instagramContent.handle || '@swarna_wooden_crafts'}
           </h2>
           <p className="font-body-md text-sm text-[#444748]">
-            Tag your home shrines with #IrisjevCrafts to be featured in our monthly circle gallery.
+            {instagramContent.description || 'Tag your home shrines with #IrisjevCrafts to be featured in our monthly circle gallery.'}
           </p>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
-          {[
+          {(instagramContent.images || [
             'https://lh3.googleusercontent.com/aida-public/AB6AXuBeK7OKa4S77fALp3MU5L9NH0gUHmQRzi-AW2uYLfAXuAa5d4auqSgKarq3yGCCRHPRh2lTGGtxUpYVYBcstbF9c4Nz8wUfq8UmEnNWncE-TduzzQcuUe8rc-pz4enVZ6xzav7mXuTtxd5PILaLNETSmFJ0u-kZVfQ63qtPkKmMo42ciLE4DZydgHp3MYiQBBuzMNU5i-PygNcb3217pT3GOrWYmtFilyN9wYaEE48AAg5WMCOiIKzmeg',
             'https://lh3.googleusercontent.com/aida-public/AB6AXuBS1ELlckSMDlqJ1YXaEkUx7yAMpnOUG0wSOgFPuBit9lC4XD9DBl1Q8BG3LvLRbB9hzZuuRKJgW_2u05do-W3VljhE2jtNEk7rqW5mphJw6SybKHl3RLE5kyodeV56ff9bNGaMzMI4Ch_lkBuA20zWlbdM7TfsLP4fQ6Maf6SGNj58O2Ph2TMzHuHDf_XAH7dKIhcmdpEtBfjehjHf6LuIjEhlRkre8aZY7KL7KmcZ3Vh9ADlmq5HzIQ',
             'https://lh3.googleusercontent.com/aida-public/AB6AXuBaen1JgbPQ50iJvvmonLoEqTq-cTEs-yICskF4AzzNWCGrb2yJfec-2LLhfWgW-ZRdfvM9P2GwBnjP4ac0TxfDLa-ycEl-ZjH2HS860tJdeT9Hsd8N4V40ahyrDcxyJfGQUlZ3l3AGAbBf6nIW-AKRlX8ezJxWGvPWnbGiyPgOXMieXuNXWgVIS97KMzp4pd9PcSymqyhVmSBrihU7UXhY_fB-JXEbhye14jGRyezYmoMGbajeIF0huA',
             'https://lh3.googleusercontent.com/aida-public/AB6AXuA_YuhgcG5heo6xKcyUpgaAeJASCdnVZP0kln-_gUwqWfNMlxPopZMoftXy6mswafTasS6mi-jCx_9m-RlP9OEQHWeEbMsi9sV4ShHVk4JPv8uWXdONoKXIX-36VH66IXGug3ZE_7nqL1kOluNB9T0pqhYi2ijwKI_KniaIe_Bi1kZBnsjl_3P1oP677NIuZyBsB85KteVKDTc5h_pVBAabEWGgHt_3jvdgfPZy7nKA6uOEWmEPazYM7w',
             'https://lh3.googleusercontent.com/aida-public/AB6AXuAAFRkdOaQU4PHApGgQbo_FJRUjh1MWNQbeVUOa8g25g4gGXpzYkjcrLVV0NykvQULzI9wUoTnbhcTMzjwK3pH91RxnlfZhy63kwiJEJni-4LQZ-9k31P5aPfvagrzdNUBtxnm-XKqTToXMfYS5Cj-kT8a5q8M4o47IkDCqCDHERKbjuhLd0linMoTLJJCDotqMNol3iSK-sJnWWCwPWGL70TEZdU9k3iRqszpyCTM0CR9QHZwUvwNIOg',
-            'https://lh3.googleusercontent.com/aida-public/AB6AXuAmALo1Snt4ZAeuLAwz94vm83laWqK2Jh-zDKqq2g6Wv2kvToPHycHkEtafvRKtcgB0F7c5QMdM7ltZqmLA2MWnTiNlkwCX5wc0CsGPLDdOI3RSAAFuW-3SZmQMehLWHCcbU8huLonlGQ-XgJMq3riiW4FR35otXB2noePwRyg5QiWsiYn7rE_xmZxcc1wCAvuSsXlNscHOUEMOlhu4q7HZ9LbeeZhA1AzB6Lugm_ZdhPavrwZypRmmFg',
-          ].map((src, idx) => (
+          ]).map((src: string, idx: number) => (
             <div
               key={idx}
               className="relative aspect-square overflow-hidden group rounded-xs border border-[#e4e2e2]"

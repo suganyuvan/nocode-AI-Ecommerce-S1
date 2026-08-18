@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Product, Currency, ActiveTab, Review } from '../types';
-import { MOCK_REVIEWS } from '../data/products';
 import { formatPrice } from '../utils/currency';
+import { supabase } from '../utils/supabaseClient';
 
 interface ProductDetailViewProps {
   product: Product;
@@ -32,13 +32,35 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
   const [pincodeResult, setPincodeResult] = useState<string | null>(null);
 
   // Review state
-  const [reviews, setReviews] = useState<Review[]>(
-    MOCK_REVIEWS.filter((r) => r.productId === product.id || product.id === 'ganesha-sculpture-01')
-  );
+  const [reviews, setReviews] = useState<Review[]>([]);
   const [newReviewName, setNewReviewName] = useState('');
   const [newReviewComment, setNewReviewComment] = useState('');
   const [newReviewRating, setNewReviewRating] = useState(5);
   const [reviewSubmitted, setReviewSubmitted] = useState(false);
+
+  React.useEffect(() => {
+    const fetchReviews = async () => {
+      const { data } = await supabase
+        .from('reviews')
+        .select('*')
+        .eq('product_id', product.id);
+      
+      if (data) {
+        setReviews(data.map(r => ({
+          id: r.id,
+          productId: r.product_id,
+          userName: r.user_name,
+          userLocation: r.user_location,
+          rating: r.rating,
+          comment: r.comment,
+          date: r.date,
+          verifiedPurchase: r.verified_purchase,
+          userPhoto: r.user_photo,
+        })));
+      }
+    };
+    fetchReviews();
+  }, [product.id]);
 
   // Added Toast notification state
   const [addedToast, setAddedToast] = useState(false);
@@ -52,20 +74,32 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
     }
   };
 
-  const handleAddReview = (e: React.FormEvent) => {
+  const handleAddReview = async (e: React.FormEvent) => {
     e.preventDefault();
     if (newReviewName && newReviewComment) {
-      const newRev: Review = {
+      const newRev = {
         id: `rev-${Date.now()}`,
-        productId: product.id,
-        userName: newReviewName,
-        userLocation: 'Verified Collector',
+        product_id: product.id,
+        user_name: newReviewName,
+        user_location: 'Verified Collector',
         rating: newReviewRating,
         comment: newReviewComment,
         date: new Date().toLocaleDateString(),
-        verifiedPurchase: true,
+        verified_purchase: true,
       };
-      setReviews([newRev, ...reviews]);
+
+      await supabase.from('reviews').insert([newRev]);
+
+      setReviews([{
+        id: newRev.id,
+        productId: newRev.product_id,
+        userName: newRev.user_name,
+        userLocation: newRev.user_location,
+        rating: newRev.rating,
+        comment: newRev.comment,
+        date: newRev.date,
+        verifiedPurchase: newRev.verified_purchase,
+      }, ...reviews]);
       setReviewSubmitted(true);
       setNewReviewName('');
       setNewReviewComment('');

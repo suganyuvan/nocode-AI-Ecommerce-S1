@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { CartItem, Currency } from '../types';
 import { formatPrice } from '../utils/currency';
-import { InvoiceModal } from './InvoiceModal';
 
 interface CartDrawerProps {
   isOpen: boolean;
@@ -11,6 +10,7 @@ interface CartDrawerProps {
   onRemoveItem: (productId: string) => void;
   onClearCart: () => void;
   currency: Currency;
+  onCheckout: () => void;
 }
 
 export const CartDrawer: React.FC<CartDrawerProps> = ({
@@ -21,21 +21,29 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
   onRemoveItem,
   onClearCart,
   currency,
-  
+  onCheckout,
 }) => {
   const [coupon, setCoupon] = useState('');
   const [appliedDiscount, setAppliedDiscount] = useState(0);
   const [couponError, setCouponError] = useState('');
-  const [isCheckingOut, setIsCheckingOut] = useState(false);
-  const [orderComplete, setOrderComplete] = useState(false);
-  const [showInvoice, setShowInvoice] = useState(false);
-  const [invoiceData, setInvoiceData] = useState<{items: CartItem[], total: number, subtotal: number, discountAmount: number} | null>(null);
 
   // Form states for checkout
   const [customerName, setCustomerName] = useState('');
   const [customerEmail, setCustomerEmail] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
   const [address, setAddress] = useState('');
+  
+  // Payment states
+  const [cardNumber, setCardNumber] = useState('');
+  const [cardName, setCardName] = useState('');
+  const [cardExpiry, setCardExpiry] = useState('');
+  const [cardCvv, setCardCvv] = useState('');
+
+  const getCardBrand = (number: string) => {
+    if (number.startsWith('4')) return 'Visa';
+    if (number.startsWith('5')) return 'Mastercard';
+    return null;
+  };
 
   if (!isOpen) return null;
 
@@ -55,20 +63,6 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
     } else {
       setCouponError('Invalid coupon. Try SWARNA10');
     }
-  };
-
-  const handlePlaceOrder = (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsCheckingOut(false);
-    setOrderComplete(true);
-    setInvoiceData({
-      items: [...cartItems],
-      subtotal: rawTotalINR,
-      discountAmount: discountAmountINR,
-      total: finalTotalINR
-    });
-    setShowInvoice(true);
-    onClearCart();
   };
 
   return (
@@ -95,124 +89,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
 
         {/* Content */}
         <div className="p-6 overflow-y-auto flex-1 space-y-6 custom-scrollbar">
-          {orderComplete ? (
-            <div className="text-center py-12 space-y-4">
-              <span className="material-symbols-outlined text-5xl text-[#735c00]">verified</span>
-              <h4 className="font-headline-md text-2xl font-bold text-[#1b1c1c]">
-                Reservation Confirmed!
-              </h4>
-              <p className="font-body-md text-sm text-[#444748]">
-                Thank you, <strong>{customerName || 'Valued Collector'}</strong>. Your handcrafted piece is reserved. Our concierge will contact you at {customerEmail || customerPhone} with white-glove transit details.
-              </p>
-              <div className="bg-[#f5f3f3] p-4 rounded-xs border border-[#c4c7c7] text-left text-xs font-label-caps space-y-1">
-                <p><strong>Order ID:</strong> #SWARNA-{Math.floor(100000 + Math.random() * 900000)}</p>
-                <p><strong>Craft Studio:</strong> Irisjev Wooden Crafts, Karnataka</p>
-                <p><strong>Insurance:</strong> 100% Transit Insured</p>
-              </div>
-              <button
-                onClick={() => {
-                  setOrderComplete(false);
-                  onClose();
-                }}
-                className="w-full py-3 bg-[#1c1b1b] text-white font-label-caps text-xs uppercase tracking-widest hover:opacity-90 cursor-pointer"
-              >
-                Continue Browsing Collection
-              </button>
-            </div>
-          ) : isCheckingOut ? (
-            <form onSubmit={handlePlaceOrder} className="space-y-4 font-body-md text-sm">
-              <div className="flex items-center justify-between border-b pb-2">
-                <h4 className="font-headline-md text-lg font-bold">White-Glove Delivery Information</h4>
-                <button
-                  type="button"
-                  onClick={() => setIsCheckingOut(false)}
-                  className="text-xs text-[#735c00] font-label-caps uppercase"
-                >
-                  ← Back to Cart
-                </button>
-              </div>
-
-              <div>
-                <label className="block text-xs font-label-caps uppercase text-[#444748] mb-1">
-                  Full Name *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={customerName}
-                  onChange={(e) => setCustomerName(e.target.value)}
-                  placeholder="e.g. Ananya Rao"
-                  className="w-full p-2.5 border border-[#c4c7c7] rounded-xs bg-white text-sm"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-label-caps uppercase text-[#444748] mb-1">
-                  Email Address *
-                </label>
-                <input
-                  type="email"
-                  required
-                  value={customerEmail}
-                  onChange={(e) => setCustomerEmail(e.target.value)}
-                  placeholder="name@domain.com"
-                  className="w-full p-2.5 border border-[#c4c7c7] rounded-xs bg-white text-sm"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-label-caps uppercase text-[#444748] mb-1">
-                  Phone Number (for Transit Updates) *
-                </label>
-                <input
-                  type="tel"
-                  required
-                  value={customerPhone}
-                  onChange={(e) => setCustomerPhone(e.target.value)}
-                  placeholder="+91 98765 43210"
-                  className="w-full p-2.5 border border-[#c4c7c7] rounded-xs bg-white text-sm"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-label-caps uppercase text-[#444748] mb-1">
-                  Shipping Address *
-                </label>
-                <textarea
-                  required
-                  rows={3}
-                  value={address}
-                  onChange={(e) => setAddress(e.target.value)}
-                  placeholder="Street, Landmark, City, Pincode/Zip..."
-                  className="w-full p-2.5 border border-[#c4c7c7] rounded-xs bg-white text-sm"
-                />
-              </div>
-
-              <div className="bg-[#efeded] p-3 rounded-xs border border-[#c4c7c7] text-xs font-label-caps space-y-1">
-                <div className="flex justify-between">
-                  <span>Subtotal:</span>
-                  <span>{formatPrice(rawTotalINR, currency)}</span>
-                </div>
-                {appliedDiscount > 0 && (
-                  <div className="flex justify-between text-[#735c00]">
-                    <span>Discount ({appliedDiscount}%):</span>
-                    <span>-{formatPrice(discountAmountINR, currency)}</span>
-                  </div>
-                )}
-                <div className="flex justify-between font-bold text-sm text-[#000000] border-t border-[#c4c7c7] pt-1 mt-1">
-                  <span>Total Amount Payable:</span>
-                  <span>{formatPrice(finalTotalINR, currency)}</span>
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                className="w-full py-3.5 bg-[#1c1b1b] text-white font-label-caps text-xs uppercase tracking-widest hover:opacity-90 cursor-pointer shadow-md"
-              >
-                Confirm Order & Request Payment Link
-              </button>
-            </form>
-          ) : cartItems.length === 0 ? (
+          {cartItems.length === 0 ? (
             <div className="text-center py-16 space-y-4">
               <span className="material-symbols-outlined text-5xl text-[#c4c7c7]">
                 shopping_bag
@@ -309,7 +186,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
         </div>
 
         {/* Footer Actions */}
-        {cartItems.length > 0 && !orderComplete && !isCheckingOut && (
+        {cartItems.length > 0 && (
           <div className="p-6 border-t border-[#e4e2e2] bg-white space-y-3">
             <div className="space-y-1 text-xs font-label-caps uppercase text-[#444748]">
               <div className="flex justify-between">
@@ -329,7 +206,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
             </div>
 
             <button
-              onClick={() => setIsCheckingOut(true)}
+              onClick={onCheckout}
               className="w-full py-3.5 bg-[#1c1b1b] text-white font-label-caps text-xs uppercase tracking-widest hover:opacity-90 cursor-pointer shadow-md flex items-center justify-center gap-2"
             >
               <span className="material-symbols-outlined text-sm">lock</span>
@@ -342,19 +219,6 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
           </div>
         )}
       </div>
-      {showInvoice && invoiceData && (
-        <InvoiceModal
-          isOpen={showInvoice}
-          onClose={() => setShowInvoice(false)}
-          cartItems={invoiceData.items}
-          customerName={customerName}
-          address={address}
-          currency={currency}
-          subtotal={invoiceData.subtotal}
-          discountAmount={invoiceData.discountAmount}
-          total={invoiceData.total}
-        />
-      )}
     </div>
   );
 };

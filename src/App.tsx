@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Product, CartItem, Currency, ActiveTab, BespokeInquiry } from './types';
-import { PRODUCTS } from './data/products';
+import { Product, CartItem, Currency, ActiveTab, BespokeInquiry, PageContent } from './types';
+import { supabase } from './utils/supabaseClient';
 import { Header } from './components/Header';
 import { MobileBottomNav } from './components/MobileBottomNav';
 import { Footer } from './components/Footer';
@@ -19,15 +19,62 @@ import { TempleProjectsView } from './views/TempleProjectsView';
 import { AboutView } from './views/AboutView';
 import { WholesaleExportView } from './views/WholesaleExportView';
 import { CareGuideView } from './views/CareGuideView';
+import { CheckoutView } from './views/CheckoutView';
 
 export function App() {
   const [activeTab, setActiveTab] = useState<ActiveTab>('home');
-  const [products, setProducts] = useState<Product[]>(PRODUCTS);
-  const [selectedProduct, setSelectedProduct] = useState<Product>(PRODUCTS[0]);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [pageContent, setPageContent] = useState<PageContent[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  React.useEffect(() => {
+    const fetchData = async () => {
+      const { data, error } = await supabase.from('products').select('*');
+      if (data) {
+        const mapped: Product[] = data.map((p: any) => ({
+          id: p.id,
+          name: p.name,
+          category: p.category,
+          priceINR: p.price_inr,
+          priceUSD: p.price_usd,
+          image: p.image,
+          galleryImages: p.gallery_images,
+          description: p.description,
+          shortDescription: p.short_description,
+          dimensions: p.dimensions,
+          material: p.material,
+          style: p.style,
+          authenticity: p.authenticity,
+          isNewArrival: p.is_new_arrival,
+          isLimitedEdition: p.is_limited_edition,
+          isBestSeller: p.is_best_seller,
+          timberOptions: p.timber_options,
+          weight: p.weight,
+          rating: p.rating,
+          reviewCount: p.review_count,
+          featuredInSpotlight: p.featured_in_spotlight,
+        }));
+        setProducts(mapped);
+        if (mapped.length > 0) {
+          setSelectedProduct(mapped[0]);
+        }
+      }
+      
+      const { data: contentData } = await supabase.from('page_content').select('*');
+      if (contentData) {
+        setPageContent(contentData);
+      }
+
+      setIsLoading(false);
+    };
+    fetchData();
+  }, []);
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [wishlistIds, setWishlistIds] = useState<string[]>(['ganesha-sculpture-01']);
   const [currency, setCurrency] = useState<Currency>('INR');
   const [inquiries, setInquiries] = useState<BespokeInquiry[]>([]);
+  const [invoiceData, setInvoiceData] = useState<any>(null);
 
   // Modals & Drawers
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -104,6 +151,17 @@ export function App() {
 
   const wishlistProducts = products.filter((p) => wishlistIds.includes(p.id));
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#fbf9f8] text-[#1b1c1c]">
+        <div className="text-center space-y-4">
+          <div className="w-12 h-12 border-4 border-[#fed65b] border-t-[#1c1b1b] rounded-full animate-spin mx-auto"></div>
+          <p className="font-label-caps uppercase tracking-widest text-xs font-bold">Loading Masterpieces...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex flex-col bg-[#fbf9f8] text-[#1b1c1c] selection:bg-[#1c1b1b] selection:text-white">
       {/* Header */}
@@ -133,6 +191,8 @@ export function App() {
             onSelectProduct={handleSelectProduct}
             onAddToCart={handleAddToCart}
             currency={currency}
+            products={products}
+            pageContent={pageContent}
           />
         )}
 
@@ -147,7 +207,7 @@ export function App() {
           />
         )}
 
-        {activeTab === 'product-detail' && (
+        {activeTab === 'product-detail' && selectedProduct && (
           <ProductDetailView
             product={selectedProduct}
             onAddToCart={handleAddToCart}
@@ -173,6 +233,15 @@ export function App() {
         {activeTab === 'wholesale-export' && <WholesaleExportView />}
 
         {activeTab === 'care-guide' && <CareGuideView />}
+
+        {activeTab === 'checkout' && (
+          <CheckoutView 
+            cartItems={cartItems}
+            currency={currency}
+            onClearCart={() => setCartItems([])}
+            setActiveTab={setActiveTab}
+          />
+        )}
       </main>
 
       {/* Footer */}
@@ -195,6 +264,7 @@ export function App() {
         onClose={() => setIsSearchOpen(false)}
         onSelectProduct={handleSelectProduct}
         currency={currency}
+        products={products}
       />
 
       <CartDrawer
@@ -205,6 +275,11 @@ export function App() {
         onRemoveItem={handleRemoveCartItem}
         onClearCart={() => setCartItems([])}
         currency={currency}
+        onCheckout={() => {
+          setIsCartOpen(false);
+          setActiveTab('checkout');
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }}
       />
 
       <WishlistDrawer

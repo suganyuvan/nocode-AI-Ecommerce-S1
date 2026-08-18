@@ -32,7 +32,7 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({
   const invoiceNumber = Math.floor(10000 + Math.random() * 90000);
   const today = new Date();
   const dateString = today.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
-  
+
   const payByDate = new Date();
   payByDate.setDate(payByDate.getDate() + 7);
   const payByString = payByDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
@@ -43,21 +43,21 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 sm:p-6 print:p-0 print:block">
-      <div 
+      <div
         className="absolute inset-0 bg-[#1c1b1b]/60 backdrop-blur-sm print:hidden"
         onClick={onClose}
       />
-      
+
       <div className="relative bg-[#F9F7F3] w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl flex flex-col print:shadow-none print:w-full print:h-full print:max-w-none print:max-h-none print:bg-white custom-scrollbar">
         <div className="absolute top-4 right-4 flex gap-2 print:hidden">
-          <button 
+          <button
             onClick={handlePrint}
             className="bg-white p-2 rounded-full text-[#444748] hover:text-[#1c1b1b] shadow-sm hover:shadow-md transition-all flex items-center justify-center"
             title="Print Invoice"
           >
             <span className="material-symbols-outlined text-sm">print</span>
           </button>
-          <button 
+          <button
             onClick={onClose}
             className="bg-white p-2 rounded-full text-[#444748] hover:text-[#1c1b1b] shadow-sm hover:shadow-md transition-all flex items-center justify-center"
           >
@@ -70,11 +70,11 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({
           <div className="flex justify-between items-start mb-16">
             <div className="w-16 h-16 sm:w-20 sm:h-20 flex-shrink-0">
               <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full text-[#C8A97E]">
-                <path d="M50 15 C55 35 75 40 85 55 C90 62 85 75 75 80 C60 88 55 70 50 60 C45 70 40 88 25 80 C15 75 10 62 15 55 C25 40 45 35 50 15 Z" stroke="currentColor" strokeWidth="2" fill="transparent"/>
-                <path d="M50 25 C53 40 68 45 75 55 C78 60 75 68 68 70 C58 75 53 62 50 55 C47 62 42 75 32 70 C25 68 22 60 25 55 C32 45 47 40 50 25 Z" stroke="currentColor" strokeWidth="2" fill="transparent"/>
-                <path d="M50 40 C52 50 60 52 65 60 C67 63 65 67 60 68 C54 70 52 63 50 58 C48 63 46 70 40 68 C35 67 33 63 35 60 C40 52 48 50 50 40 Z" stroke="currentColor" strokeWidth="2" fill="transparent"/>
-                <path d="M50 15 L50 60" stroke="currentColor" strokeWidth="2"/>
-                <path d="M38 82 C42 85 48 85 50 85 C52 85 58 85 62 82" stroke="currentColor" strokeWidth="2" fill="transparent" strokeLinecap="round"/>
+                <path d="M50 15 C55 35 75 40 85 55 C90 62 85 75 75 80 C60 88 55 70 50 60 C45 70 40 88 25 80 C15 75 10 62 15 55 C25 40 45 35 50 15 Z" stroke="currentColor" strokeWidth="2" fill="transparent" />
+                <path d="M50 25 C53 40 68 45 75 55 C78 60 75 68 68 70 C58 75 53 62 50 55 C47 62 42 75 32 70 C25 68 22 60 25 55 C32 45 47 40 50 25 Z" stroke="currentColor" strokeWidth="2" fill="transparent" />
+                <path d="M50 40 C52 50 60 52 65 60 C67 63 65 67 60 68 C54 70 52 63 50 58 C48 63 46 70 40 68 C35 67 33 63 35 60 C40 52 48 50 50 40 Z" stroke="currentColor" strokeWidth="2" fill="transparent" />
+                <path d="M50 15 L50 60" stroke="currentColor" strokeWidth="2" />
+                <path d="M38 82 C42 85 48 85 50 85 C52 85 58 85 62 82" stroke="currentColor" strokeWidth="2" fill="transparent" strokeLinecap="round" />
               </svg>
             </div>
             <h1 className="text-4xl sm:text-5xl tracking-widest text-[#1c1b1b]" style={{ fontFamily: 'Times New Roman, serif' }}>INVOICE</h1>
@@ -103,7 +103,7 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({
               <div className="w-24 text-right">Unit Price</div>
               <div className="w-24 text-right">Total</div>
             </div>
-            
+
             {cartItems.length > 0 ? (
               cartItems.map((item, index) => (
                 <div key={`${item.product.id}-${index}`} className="flex border-b border-[#c4c7c7] py-4 text-sm text-[#444748]">
@@ -167,7 +167,7 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({
           {/* Footer */}
           <div className="mt-8">
             <h3 className="text-2xl text-[#1c1b1b] mb-12">Thank you!</h3>
-            
+
             <div className="flex flex-col sm:flex-row justify-between items-end text-sm">
               <div className="w-full sm:w-auto mb-6 sm:mb-0">
                 <h4 className="font-bold text-xs sm:text-sm uppercase tracking-wider mb-2">PAYMENT INFORMATION</h4>
@@ -178,10 +178,10 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({
                   <div>Pay by: {payByString}</div>
                 </div>
               </div>
-              
+
               <div className="text-right w-full sm:w-auto">
-                <div className="text-lg text-[#1c1b1b] mb-1" style={{ fontFamily: 'Times New Roman, serif' }}>Samantha Jordan</div>
-                <div className="text-[#444748]">123 Anywhere St., Any City, ST 12345</div>
+                {/* <div className="text-lg text-[#1c1b1b] mb-1" style={{ fontFamily: 'Times New Roman, serif' }}>Samantha Jordan</div>
+                <div className="text-[#444748]">123 Anywhere St., Any City, ST 12345</div> */}
               </div>
             </div>
           </div>

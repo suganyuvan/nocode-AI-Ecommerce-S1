@@ -52,7 +52,7 @@ export interface Review {
   userPhoto?: string;
 }
 
-export type ActiveTab = 'home' | 'shop' | 'product-detail' | 'temple-projects' | 'about' | 'wholesale-export' | 'care-guide';
+export type ActiveTab = 'home' | 'shop' | 'product-detail' | 'temple-projects' | 'about' | 'wholesale-export' | 'care-guide' | 'checkout';
 
 export interface BespokeInquiry {
   id: string;
@@ -61,5 +61,41 @@ export interface BespokeInquiry {
   customerPhone?: string;
   details: string;
   date: string;
-  status: 'pending' | 'reviewed' | 'responded';
+}
+
+export interface PageContent {
+  section: string;
+  content: any; // jsonb data
+}
+
+export interface Customer {
+  id?: string;
+  full_name: string;
+  email: string;
+  phone?: string;
+  address?: string;
+  created_at?: string;
+}
+
+export interface Order {
+  id?: string;
+  order_number: string;
+  customer_id: string;
+  subtotal: number;
+  discount_amount: number;
+  total_amount: number;
+  currency: string;
+  status?: string;
+  created_at?: string;
+}
+
+export interface OrderItem {
+  id?: string;
+  order_id: string;
+  product_id: string;
+  product_name: string;
+  selected_timber?: string;
+  quantity: number;
+  unit_price: number;
+  created_at?: string;
 }

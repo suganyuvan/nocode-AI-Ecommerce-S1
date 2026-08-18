@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { Product, Currency } from '../types';
-import { PRODUCTS } from '../data/products';
 import { formatPrice } from '../utils/currency';
 
 interface SearchModalProps {
@@ -8,6 +7,7 @@ interface SearchModalProps {
   onClose: () => void;
   onSelectProduct: (product: Product) => void;
   currency: Currency;
+  products: Product[];
 }
 
 export const SearchModal: React.FC<SearchModalProps> = ({
@@ -15,6 +15,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({
   onClose,
   onSelectProduct,
   currency,
+  products,
 }) => {
   const [query, setQuery] = useState('');
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
@@ -23,7 +24,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({
 
   const popularTags = ['Ganesha', 'Teak Wood', 'Wall Panel', 'Mandala', 'Mandapam', 'Rosewood', 'Peacock'];
 
-  const filtered = PRODUCTS.filter((p) => {
+  const filtered = products.filter((p) => {
     const matchesQuery =
       p.name.toLowerCase().includes(query.toLowerCase()) ||
       p.category.toLowerCase().includes(query.toLowerCase()) ||
