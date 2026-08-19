@@ -156,11 +156,11 @@ export const HomeView: React.FC<HomeViewProps> = ({
               className="bg-white rounded-xs border border-[#e4e2e2] overflow-hidden hover-lift flex flex-col justify-between group cursor-pointer"
               onClick={() => onSelectProduct(product)}
             >
-              <div className="relative aspect-4/3 overflow-hidden bg-[#f5f3f3]">
+              <div className="relative aspect-4/3 overflow-hidden bg-[#fbf9f8]">
                 <img
                   src={product.image}
                   alt={product.name}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500"
                 />
 
                 {/* Badges */}

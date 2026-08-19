@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { AdminApp } from './admin/AdminApp';
 import { Product, CartItem, Currency, ActiveTab, BespokeInquiry, PageContent } from './types';
 import { supabase } from './utils/supabaseClient';
 import { Header } from './components/Header';
@@ -21,7 +23,7 @@ import { WholesaleExportView } from './views/WholesaleExportView';
 import { CareGuideView } from './views/CareGuideView';
 import { CheckoutView } from './views/CheckoutView';
 
-export function App() {
+export function Storefront() {
   const [activeTab, setActiveTab] = useState<ActiveTab>('home');
   const [products, setProducts] = useState<Product[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -314,4 +316,13 @@ export function App() {
   );
 }
 
-export default App;
+export default function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/admin/*" element={<AdminApp />} />
+        <Route path="/*" element={<Storefront />} />
+      </Routes>
+    </BrowserRouter>
+  );
+}

@@ -143,7 +143,7 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
             <img
               src={selectedImage}
               alt={product.name}
-              className="w-full h-[400px] sm:h-[500px] lg:h-[580px] object-cover object-center group-hover:scale-105 transition-transform duration-700"
+              className="w-full h-[400px] sm:h-[500px] lg:h-[580px] object-contain bg-[#fbf9f8] object-center group-hover:scale-105 transition-transform duration-700"
             />
 
             {/* Top Floating Buttons */}

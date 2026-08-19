@@ -3,6 +3,7 @@ import { ActiveTab } from '../types';
 
 interface AboutViewProps {
   setActiveTab: (tab: ActiveTab) => void;
+  onOpenBespoke?: () => void;
 }
 
 export const AboutView: React.FC<AboutViewProps> = ({ setActiveTab, onOpenBespoke }) => {

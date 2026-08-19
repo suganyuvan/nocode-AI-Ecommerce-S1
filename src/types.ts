@@ -61,6 +61,7 @@ export interface BespokeInquiry {
   customerPhone?: string;
   details: string;
   date: string;
+  status?: 'pending' | 'reviewed' | 'responded';
 }
 
 export interface PageContent {
