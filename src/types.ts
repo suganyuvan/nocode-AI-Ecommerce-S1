@@ -52,7 +52,7 @@ export interface Review {
   userPhoto?: string;
 }
 
-export type ActiveTab = 'home' | 'shop' | 'product-detail' | 'temple-projects' | 'about' | 'wholesale-export' | 'care-guide' | 'checkout';
+export type ActiveTab = 'home' | 'shop' | 'product-detail' | 'temple-projects' | 'about' | 'wholesale-export' | 'care-guide' | 'checkout' | 'terms' | 'privacy' | 'refund' | 'shipping' | 'contact';
 
 export interface BespokeInquiry {
   id: string;

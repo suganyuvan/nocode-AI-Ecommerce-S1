@@ -34,7 +34,7 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab }) => {
             <a href="#instagram" onClick={(e) => { e.preventDefault(); setActiveTab('home'); }} className="hover:opacity-70 transition-opacity">
               <span className="material-symbols-outlined">photo_camera</span>
             </a>
-            <a href="mailto:contact@swarnacrafts.com" onClick={(e) => { e.preventDefault(); alert("Contact us at contact@swarnacrafts.com"); }} className="hover:opacity-70 transition-opacity">
+            <a href="#contact" onClick={(e) => { e.preventDefault(); setActiveTab('contact'); }} className="hover:opacity-70 transition-opacity">
               <span className="material-symbols-outlined">mail</span>
             </a>
             <a href="#share" onClick={(e) => { e.preventDefault(); alert("App URL copied to clipboard!"); }} className="hover:opacity-70 transition-opacity">
@@ -89,7 +89,9 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab }) => {
               </button>
             </li>
             <li>
-              <span className="text-[#444748]">Shipping & White-Glove Transit</span>
+              <button onClick={() => setActiveTab('shipping')} className="hover:text-[#000000] transition-colors cursor-pointer text-left">
+                Shipping & White-Glove Transit
+              </button>
             </li>
             <li>
               <span className="text-[#444748]">Authenticity & Heritage Cards</span>
@@ -138,9 +140,10 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab }) => {
       {/* Bottom Copyright */}
       <div className="max-w-[1200px] mx-auto px-6 py-6 border-t border-[#c4c7c7]/40 flex flex-col md:flex-row justify-between items-center text-[11px] font-label-caps text-[#444748]/80 uppercase tracking-wider">
         <span>© 2026 Irisjev Wooden Crafts. Crafting Divinity.</span>
-        <div className="flex gap-6 mt-3 md:mt-0">
-          <span className="hover:text-[#000000] cursor-pointer">Privacy Policy</span>
-          <span className="hover:text-[#000000] cursor-pointer">Terms of Service</span>
+        <div className="flex flex-wrap gap-4 md:gap-6 mt-3 md:mt-0 justify-center">
+          <button onClick={() => setActiveTab('privacy')} className="hover:text-[#000000] cursor-pointer">Privacy Policy</button>
+          <button onClick={() => setActiveTab('terms')} className="hover:text-[#000000] cursor-pointer">Terms of Service</button>
+          <button onClick={() => setActiveTab('refund')} className="hover:text-[#000000] cursor-pointer">Cancellation & Refund</button>
           <span className="hover:text-[#000000] cursor-pointer">Heritage Registry</span>
         </div>
       </div>

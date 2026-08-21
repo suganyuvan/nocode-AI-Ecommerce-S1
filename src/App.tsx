@@ -22,6 +22,11 @@ import { AboutView } from './views/AboutView';
 import { WholesaleExportView } from './views/WholesaleExportView';
 import { CareGuideView } from './views/CareGuideView';
 import { CheckoutView } from './views/CheckoutView';
+import { TermsView } from './views/TermsView';
+import { PrivacyView } from './views/PrivacyView';
+import { RefundView } from './views/RefundView';
+import { ShippingView } from './views/ShippingView';
+import { ContactView } from './views/ContactView';
 
 export function Storefront() {
   const [activeTab, setActiveTab] = useState<ActiveTab>('home');
@@ -246,6 +251,12 @@ export function Storefront() {
             onRemoveItem={handleRemoveCartItem}
           />
         )}
+
+        {activeTab === 'terms' && <TermsView />}
+        {activeTab === 'privacy' && <PrivacyView />}
+        {activeTab === 'refund' && <RefundView />}
+        {activeTab === 'shipping' && <ShippingView />}
+        {activeTab === 'contact' && <ContactView />}
       </main>
 
       {/* Footer */}
