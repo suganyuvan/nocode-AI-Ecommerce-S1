@@ -87,7 +87,19 @@ export interface Order {
   total_amount: number;
   currency: string;
   status?: string;
+  payment_status?: string;
+  payment_info?: string;
+  razorpay_order_id?: string;
+  razorpay_payment_id?: string;
+  razorpay_signature?: string;
+  shipping_address?: any;
+  shipping_charge?: number;
+  gst_rate?: number;
+  gst_amount?: number;
+  webhook_verified?: boolean;
   created_at?: string;
+  updated_at?: string;
+  customers?: Customer;
 }
 
 export interface OrderItem {

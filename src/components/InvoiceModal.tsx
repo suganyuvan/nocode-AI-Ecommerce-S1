@@ -15,6 +15,8 @@ interface InvoiceModalProps {
   gstAmount: number;
   gstRate: number;
   total: number;
+  invoiceNumber?: string;
+  razorpayPaymentId?: string;
 }
 
 export const InvoiceModal: React.FC<InvoiceModalProps> = ({
@@ -30,12 +32,14 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({
   gstAmount,
   gstRate,
   total,
+  invoiceNumber,
+  razorpayPaymentId,
 }) => {
   const contentRef = useRef<HTMLDivElement>(null);
 
   if (!isOpen) return null;
 
-  const invoiceNumber = Math.floor(10000 + Math.random() * 90000);
+  const displayInvoiceNumber = invoiceNumber || `SWARNA-${Math.floor(10000 + Math.random() * 90000)}`;
   const today = new Date();
   const dateString = today.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
 
@@ -96,8 +100,13 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({
               </div>
             </div>
             <div className="text-right text-[#444748]">
-              <div>Invoice No. {invoiceNumber}</div>
+              <div>Invoice No. {displayInvoiceNumber}</div>
               <div>{dateString}</div>
+              {razorpayPaymentId && (
+                <div className="text-xs text-[#735c00] font-mono mt-1 font-semibold">
+                  Paid via Razorpay: {razorpayPaymentId}
+                </div>
+              )}
             </div>
           </div>
 
@@ -182,16 +191,28 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({
               <div className="w-full sm:w-auto mb-6 sm:mb-0">
                 <h4 className="font-bold text-xs sm:text-sm uppercase tracking-wider mb-2">PAYMENT INFORMATION</h4>
                 <div className="text-[#444748] leading-relaxed">
-                  <div>Briard Bank</div>
-                  <div>Account Name: Irisjev Crafts</div>
-                  <div>Account No.: 9876543210</div>
-                  <div>Pay by: {payByString}</div>
+                  {razorpayPaymentId ? (
+                    <>
+                      <div>Gateway: Razorpay Automated Checkout</div>
+                      <div>Payment ID: <span className="font-mono">{razorpayPaymentId}</span></div>
+                      <div>Status: <strong className="text-[#2e6930]">Paid & Verified</strong></div>
+                      <div>Date: {dateString}</div>
+                    </>
+                  ) : (
+                    <>
+                      <div>Briard Bank</div>
+                      <div>Account Name: Irisjev Crafts</div>
+                      <div>Account No.: 9876543210</div>
+                      <div>Pay by: {payByString}</div>
+                    </>
+                  )}
                 </div>
               </div>
 
               <div className="text-right w-full sm:w-auto">
-                {/* <div className="text-lg text-[#1c1b1b] mb-1" style={{ fontFamily: 'Times New Roman, serif' }}>Samantha Jordan</div>
-                <div className="text-[#444748]">123 Anywhere St., Any City, ST 12345</div> */}
+                <div className="text-xs text-[#747878] font-label-caps uppercase">
+                  100% Heirloom Quality Guaranteed
+                </div>
               </div>
             </div>
           </div>

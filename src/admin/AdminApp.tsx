@@ -10,6 +10,7 @@ import { ProductsManager } from './views/ProductsManager';
 import { OrdersManager } from './views/OrdersManager';
 import { CustomersManager } from './views/CustomersManager';
 import { LeadsManager } from './views/LeadsManager';
+import { WebhookLogsManager } from './views/WebhookLogsManager';
 
 export function AdminApp() {
   const [session, setSession] = useState<any>(null);
@@ -75,6 +76,8 @@ export function AdminApp() {
         <Route path="orders" element={<OrdersManager />} />
         <Route path="customers" element={<CustomersManager />} />
         <Route path="leads" element={<LeadsManager />} />
+        <Route path="payment-logs" element={<WebhookLogsManager />} />
+        <Route path="webhook-logs" element={<WebhookLogsManager />} />
       </Route>
     </Routes>
   );
