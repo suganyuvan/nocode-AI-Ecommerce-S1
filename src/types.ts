@@ -53,7 +53,8 @@ export interface Review {
   userPhoto?: string;
 }
 
-export type ActiveTab = 'home' | 'shop' | 'product-detail' | 'temple-projects' | 'about' | 'wholesale-export' | 'care-guide' | 'checkout' | 'terms' | 'privacy' | 'refund' | 'shipping' | 'contact' | 'account';
+export type ActiveTab = 'home' | 'shop' | 'product-detail' | 'temple-projects' | 'about' | 'wholesale-export' | 'care-guide' | 'checkout' | 'terms' | 'privacy' | 'refund' | 'shipping' | 'contact' | 'account' | 'track';
+
 
 export interface BespokeInquiry {
   id: string;
@@ -300,5 +301,26 @@ export interface HeroSettings {
   textAlign?: 'left' | 'center' | 'right';
   secondaryImageUrl?: string;
 }
+
+export type ShippingLabelPaperSize = 'A4' | 'A5' | 'Thermal_4x6' | 'Letter';
+export type ShippingLabelSlipsPerSheet = 1 | 2 | 4 | 6;
+
+export interface ShippingLabelSettings {
+  id?: number;
+  paper_size: ShippingLabelPaperSize;
+  slips_per_sheet: ShippingLabelSlipsPerSheet;
+  show_barcode: boolean;
+  show_qr_code: boolean;
+  show_fragile_warning: boolean;
+  show_return_address: boolean;
+  show_order_items: boolean;
+  show_cod_badge: boolean;
+  custom_declaration_note: string;
+  brand_logo_url: string;
+  dispatch_hub_name: string;
+  dispatch_hub_address: string;
+  dispatch_hub_phone: string;
+}
+
 
 

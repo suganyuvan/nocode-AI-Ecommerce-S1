@@ -121,3 +121,32 @@
   letter-spacing: 0.1em;
 }
 
+/* Global Print Stylesheet for Clean Label & Invoice Printing */
+@media print {
+  /* Hide non-printable UI elements */
+  .no-print,
+  .print\:hidden,
+  header,
+  footer,
+  nav,
+  aside,
+  button,
+  .fixed:not(.print-canvas-overlay) {
+    display: none !important;
+  }
+
+  body {
+    background: white !important;
+    color: black !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* Reset layout margins for print */
+  @page {
+    size: auto;
+    margin: 8mm;
+  }
+}
+
+

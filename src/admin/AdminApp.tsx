@@ -16,8 +16,10 @@ import { StoreSettingsManager } from './views/StoreSettingsManager';
 import { CouponsManager } from './views/CouponsManager';
 import { PromoBannersManager } from './views/PromoBannersManager';
 import { PageBuilderManager } from './views/PageBuilderManager';
+import { ShippingLabelManager } from './views/ShippingLabelManager';
 
 export function AdminApp() {
+
 
   const [session, setSession] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -90,7 +92,9 @@ export function AdminApp() {
         <Route path="payment-logs" element={<WebhookLogsManager />} />
         <Route path="webhook-logs" element={<WebhookLogsManager />} />
         <Route path="shipping" element={<ShippingManager />} />
+        <Route path="shipping-labels" element={<ShippingLabelManager />} />
         <Route path="settings" element={<StoreSettingsManager />} />
+
       </Route>
     </Routes>
   );

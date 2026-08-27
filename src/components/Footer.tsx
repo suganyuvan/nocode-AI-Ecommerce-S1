@@ -89,10 +89,16 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab }) => {
               </button>
             </li>
             <li>
+              <button onClick={() => setActiveTab('track')} className="hover:text-[#853c4d] transition-colors cursor-pointer text-left font-bold text-[#853c4d] flex items-center gap-1">
+                <span>🚚 Track Order & AWBs</span>
+              </button>
+            </li>
+            <li>
               <button onClick={() => setActiveTab('shipping')} className="hover:text-[#000000] transition-colors cursor-pointer text-left">
                 Shipping & White-Glove Transit
               </button>
             </li>
+
             <li>
               <span className="text-[#444748]">Authenticity & Heritage Cards</span>
             </li>

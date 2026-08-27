@@ -12,6 +12,8 @@ import { WishlistDrawer } from './components/WishlistDrawer';
 import { BespokeOrderModal } from './components/BespokeOrderModal';
 import { CustomerAuthModal } from './components/CustomerAuthModal';
 import { WhatsAppButton } from './components/WhatsAppButton';
+import { TrackOrderModal } from './components/TrackOrderModal';
+
 
 import { HomeView } from './views/HomeView';
 import { ShopView } from './views/ShopView';
@@ -27,8 +29,10 @@ import { PrivacyView } from './views/PrivacyView';
 import { RefundView } from './views/RefundView';
 import { ShippingView } from './views/ShippingView';
 import { ContactView } from './views/ContactView';
+import { TrackOrderView } from './views/TrackOrderView';
 
 export function Storefront() {
+
   const [activeTab, setActiveTab] = useState<ActiveTab>('home');
   const [products, setProducts] = useState<Product[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -47,6 +51,8 @@ export function Storefront() {
   });
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authModalMode, setAuthModalMode] = useState<'promo' | 'login'>('login');
+  const [isTrackModalOpen, setIsTrackModalOpen] = useState(false);
+
 
   // Trigger Welcome Promo / OTP signup on first visit if not logged in
   useEffect(() => {
@@ -221,7 +227,9 @@ export function Storefront() {
           setAuthModalMode('login');
           setIsAuthModalOpen(true);
         }}
+        onOpenTrackOrder={() => setIsTrackModalOpen(true)}
       />
+
 
       {/* Main Screen Views */}
       <main className="flex-1 pb-20 md:pb-0">
@@ -311,7 +319,9 @@ export function Storefront() {
         {activeTab === 'refund' && <RefundView />}
         {activeTab === 'shipping' && <ShippingView />}
         {activeTab === 'contact' && <ContactView />}
+        {activeTab === 'track' && <TrackOrderView />}
       </main>
+
 
       {/* Footer */}
       <Footer
@@ -382,7 +392,12 @@ export function Storefront() {
           setCustomer(c);
         }}
       />
+      <TrackOrderModal
+        isOpen={isTrackModalOpen}
+        onClose={() => setIsTrackModalOpen(false)}
+      />
       <WhatsAppButton />
+
     </div>
   );
 }

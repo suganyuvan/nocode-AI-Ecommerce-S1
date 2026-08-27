@@ -15,8 +15,10 @@ import {
   Settings,
   Truck,
   Gift,
-  Ticket
+  Ticket,
+  Printer
 } from 'lucide-react';
+
 import { supabase } from '../../utils/supabaseClient';
 import irisjevLogo from '../../assets/images/irisjev_logo_1785688429320.jpg';
 
@@ -40,7 +42,9 @@ export function AdminLayout() {
     { name: 'Promotional Banners', path: '/admin/promotional-banners', icon: Gift, badge: 'NEW' },
     { name: 'Payment Transactions', path: '/admin/payment-logs', icon: CreditCard },
     { name: 'Shipping & Payments', path: '/admin/shipping', icon: Truck, badge: 'NEW' },
+    { name: 'Shipping Labels', path: '/admin/shipping-labels', icon: Printer, badge: 'NEW' },
   ];
+
 
   return (
     <div className="h-screen overflow-hidden bg-[#0d1312] flex font-sans text-[#1b1c1c] p-2 md:p-3 selection:bg-[#fed65b] selection:text-[#1b1c1c]">

@@ -18,7 +18,9 @@ interface HeaderProps {
   onOpenBespoke: () => void;
   customer: Customer | null;
   onOpenAuthModal: () => void;
+  onOpenTrackOrder?: () => void;
 }
+
 
 export const Header: React.FC<HeaderProps> = ({
   activeTab,
@@ -33,7 +35,9 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenBespoke,
   customer,
   onOpenAuthModal,
+  onOpenTrackOrder,
 }) => {
+
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
@@ -129,8 +133,22 @@ export const Header: React.FC<HeaderProps> = ({
               <span className="material-symbols-outlined text-sm">edit_square</span>
               Custom Orders
             </button>
+            <button
+              onClick={() => setActiveTab('track')}
+              className={`transition-colors cursor-pointer flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold ${
+                activeTab === 'track'
+                  ? 'bg-[#853c4d] text-white shadow-xs'
+                  : 'bg-[#f5e9eb] text-[#853c4d] hover:bg-[#ebd5da]'
+              }`}
+            >
+              <span className="material-symbols-outlined text-sm">local_shipping</span>
+              <span>Track Order</span>
+            </button>
+
           </div>
+
         </div>
+
 
         {/* Right Actions */}
         <div className="flex items-center gap-4 text-[#000000]">
