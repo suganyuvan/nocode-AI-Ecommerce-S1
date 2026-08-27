@@ -163,36 +163,56 @@ export function WebhookLogsManager() {
         </div>
       </div>
 
-      {/* JSON Payload Modal */}
+      {/* Transaction Details Modal */}
       {selectedLog && (
-        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
-          <div className="bg-[#1b1c1c] text-white w-full max-w-2xl rounded-2xl shadow-2xl border border-white/10 overflow-hidden flex flex-col max-h-[85vh]">
-            <div className="p-5 border-b border-white/10 flex justify-between items-center bg-[#141515]">
-              <div>
-                <h3 className="font-bold text-sm text-[#fed65b] flex items-center gap-2">
-                  <CreditCard className="w-4 h-4" />
-                  Transaction Details: {selectedLog.event_type}
-                </h3>
-                <p className="text-xs text-gray-400 font-mono mt-0.5">ID: {selectedLog.id}</p>
-              </div>
-              <button
-                onClick={() => setSelectedLog(null)}
-                className="text-gray-400 hover:text-white cursor-pointer"
-              >
-                ✕
+        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-[#1b1c1c]/60 backdrop-blur-xs animate-fadeIn">
+          <div className="bg-[#fbf9f8] w-full max-w-2xl rounded-sm shadow-2xl border border-[#c4c7c7] overflow-hidden max-h-[90vh] flex flex-col font-body-md">
+            
+            {/* Header */}
+            <div className="bg-[#1c1b1b] text-white px-6 py-4 flex justify-between items-center">
+              <h3 className="font-headline-md text-lg font-bold flex items-center gap-2">
+                <CreditCard className="w-5 h-5" />
+                Transaction Details: {selectedLog.event_type}
+              </h3>
+              <button onClick={() => setSelectedLog(null)} className="text-white hover:opacity-70 cursor-pointer">
+                <span className="material-symbols-outlined">close</span>
               </button>
             </div>
             
-            <div className="p-6 overflow-y-auto custom-scrollbar flex-1 bg-[#0f1111]">
-              <pre className="text-xs font-mono text-[#fed65b] leading-relaxed overflow-x-auto p-4 bg-black/50 rounded-xl border border-white/5">
-                {JSON.stringify(selectedLog.payload || selectedLog, null, 2)}
-              </pre>
+            {/* Content */}
+            <div className="p-6 overflow-y-auto custom-scrollbar flex-1">
+              <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm space-y-4">
+                <div className="flex items-center gap-2 mb-2 pb-2 border-b border-gray-50">
+                  <span className="text-xs text-gray-400 font-mono">Log ID: {selectedLog.id}</span>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+                  {Object.entries(selectedLog.payload || selectedLog).map(([key, value]) => {
+                    if (typeof value === 'object' && value !== null) return null;
+                    const strValue = String(value);
+                    const isLong = strValue.length > 40;
+                    return (
+                      <div 
+                        key={key} 
+                        className={`space-y-1 ${isLong ? 'col-span-1 md:col-span-2' : ''}`}
+                      >
+                        <span className="text-xs font-bold text-gray-500 uppercase tracking-wider block">
+                          {key.replace(/_/g, ' ')}
+                        </span>
+                        <span className="text-sm text-gray-900 break-all font-medium">
+                          {strValue || <span className="text-gray-400 italic">null</span>}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
 
-            <div className="p-4 border-t border-white/10 flex justify-end bg-[#141515]">
+            <div className="p-4 border-t border-[#e4e2e2] bg-[#fbf9f8] flex justify-end px-6">
               <button
                 onClick={() => setSelectedLog(null)}
-                className="px-5 py-2 bg-[#fed65b] text-[#1b1c1c] font-bold rounded-xl text-xs uppercase tracking-wider hover:opacity-90 cursor-pointer"
+                className="px-6 py-2 bg-white border border-[#c4c7c7] text-[#1c1b1b] font-label-caps text-xs uppercase tracking-widest hover:bg-[#efeded] cursor-pointer rounded-xs"
               >
                 Close
               </button>

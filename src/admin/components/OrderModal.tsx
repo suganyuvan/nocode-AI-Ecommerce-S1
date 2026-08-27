@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../../utils/supabaseClient';
-import { Package, User, MapPin, CreditCard, ShieldCheck } from 'lucide-react';
+import { Package, User, MapPin, CreditCard, ShieldCheck, Ticket } from 'lucide-react';
 
 interface OrderModalProps {
   isOpen: boolean;
@@ -10,11 +10,14 @@ interface OrderModalProps {
 
 export const OrderModal: React.FC<OrderModalProps> = ({ isOpen, onClose, order }) => {
   const [items, setItems] = useState<any[]>([]);
+  const [couponUsage, setCouponUsage] = useState<any | null>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (isOpen && order) {
       setLoading(true);
+      
+      // Fetch order items
       supabase
         .from('order_items')
         .select('*')
@@ -24,10 +27,54 @@ export const OrderModal: React.FC<OrderModalProps> = ({ isOpen, onClose, order }
           if (data) setItems(data);
           setLoading(false);
         });
+
+      // Fetch coupon usage for coupon code and discount verification
+      const orderRef = order.order_number || order.id;
+      supabase
+        .from('coupon_usages')
+        .select('*')
+        .or(`order_id.eq.${orderRef},order_id.eq.${order.id}`)
+        .maybeSingle()
+        .then(({ data }) => {
+          if (data) setCouponUsage(data);
+          else setCouponUsage(null);
+        });
     } else {
       setItems([]);
+      setCouponUsage(null);
     }
   }, [isOpen, order]);
+
+  // Pre-process items to retroactively identify gifts for older orders
+  const processedItems = React.useMemo(() => {
+    if (!items || items.length === 0 || !order) return [];
+
+    const rawTotal = items.reduce((sum, item) => sum + (item.unit_price * item.quantity), 0);
+    let remainingDiff = rawTotal - (order.subtotal || 0);
+
+    const clonedItems = items.map(item => ({
+      ...item,
+      isGift: item.unit_price === 0 || item.product_name.includes('(Free Gift)')
+    }));
+
+    // For old orders where the price wasn't 0 in DB but excluded from subtotal
+    if (remainingDiff > 0) {
+      const sortedIndices = clonedItems
+        .map((item, index) => ({ index, total: item.unit_price * item.quantity, isGift: item.isGift }))
+        .filter(x => !x.isGift)
+        .sort((a, b) => a.total - b.total);
+        
+      for (const { index, total } of sortedIndices) {
+        // We use a small epsilon for floating point comparison just in case
+        if (remainingDiff >= total - 0.01 && total > 0) {
+          clonedItems[index].isGift = true;
+          remainingDiff -= total;
+        }
+      }
+    }
+    
+    return clonedItems;
+  }, [items, order]);
 
   if (!isOpen || !order) return null;
 
@@ -43,6 +90,10 @@ export const OrderModal: React.FC<OrderModalProps> = ({ isOpen, onClose, order }
 
   const currencySymbol = getCurrencySymbol(order.currency);
   const isPaid = order.status === 'paid' || order.payment_status === 'paid' || order.payment_status === 'captured';
+  const isCOD = order.payment_info === 'Cash on Delivery';
+
+  const appliedCouponCode = order.coupon_code || couponUsage?.coupon_code || null;
+  const appliedDiscountAmount = Number(order.discount_amount || couponUsage?.discount_applied || 0);
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-[#1b1c1c]/60 backdrop-blur-xs animate-fadeIn">
@@ -83,7 +134,7 @@ export const OrderModal: React.FC<OrderModalProps> = ({ isOpen, onClose, order }
               <div className="space-y-1 text-sm">
                 <div className="flex justify-between">
                   <span className="text-gray-500">Order Status:</span>
-                  <span className={`font-semibold capitalize ${isPaid ? 'text-emerald-600' : 'text-amber-600'}`}>
+                  <span className={`font-semibold capitalize ${isPaid ? 'text-emerald-600' : isCOD ? 'text-[#735c00] font-bold' : order.status === 'confirmed' ? 'text-[#735c00]' : 'text-amber-600'}`}>
                     {order.status || 'Pending'}
                   </span>
                 </div>
@@ -91,9 +142,11 @@ export const OrderModal: React.FC<OrderModalProps> = ({ isOpen, onClose, order }
                   <span className="text-gray-500">Gateway Sync:</span>
                   <span className="font-medium flex items-center gap-1">
                     {order.webhook_verified ? (
-                      <span className="text-blue-600 flex items-center text-xs gap-1">
+                      <span className="text-[#735c00] flex items-center text-xs gap-1 font-semibold">
                         <ShieldCheck className="w-3.5 h-3.5" /> Webhook Fallback Active
                       </span>
+                    ) : isCOD ? (
+                      <span className="text-gray-500 text-xs italic">N/A (Cash on Delivery)</span>
                     ) : (
                       <span className="text-gray-600 text-xs">Direct API Verified</span>
                     )}
@@ -105,13 +158,13 @@ export const OrderModal: React.FC<OrderModalProps> = ({ isOpen, onClose, order }
             {/* Payment Info */}
             <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
               <h4 className="font-bold mb-3 flex items-center text-gray-700">
-                <CreditCard className="w-4 h-4 mr-2" /> Razorpay Transaction Details
+                <CreditCard className="w-4 h-4 mr-2" /> {isCOD ? 'Payment Details (COD)' : 'Razorpay Transaction Details'}
               </h4>
               <div className="space-y-1.5 text-xs">
                 <div className="flex justify-between">
                   <span className="text-gray-500">Payment Status:</span>
-                  <span className={`font-bold uppercase ${isPaid ? 'text-emerald-600' : 'text-amber-600'}`}>
-                    {order.payment_status || (isPaid ? 'Paid' : 'Unpaid')}
+                  <span className={`font-bold uppercase ${isPaid ? 'text-emerald-600' : isCOD ? 'text-[#735c00]' : 'text-amber-600'}`}>
+                    {isCOD ? 'COD - Pending' : (order.payment_status || (isPaid ? 'Paid' : 'Unpaid'))}
                   </span>
                 </div>
                 {order.razorpay_payment_id && (
@@ -156,6 +209,31 @@ export const OrderModal: React.FC<OrderModalProps> = ({ isOpen, onClose, order }
                 <p className="text-sm text-gray-500">No shipping address provided.</p>
               )}
             </div>
+
+            {/* Applied Coupon Card */}
+            {(appliedCouponCode || appliedDiscountAmount > 0) && (
+              <div className="md:col-span-2 bg-emerald-50 p-4 rounded-xl border border-emerald-200 shadow-sm flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-emerald-700 text-white flex items-center justify-center font-bold">
+                    <Ticket className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-bold text-emerald-800 uppercase tracking-wider block">
+                      Applied Coupon / Promo Code
+                    </span>
+                    <span className="font-mono font-bold text-emerald-950 text-base">
+                      {appliedCouponCode ? `🎟️ ${appliedCouponCode}` : 'DISCOUNT APPLIED'}
+                    </span>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <span className="text-[10px] text-emerald-800 font-bold uppercase tracking-wider block">Discount Savings</span>
+                  <span className="font-bold text-emerald-700 text-base">
+                    -{currencySymbol}{appliedDiscountAmount.toLocaleString()}
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Items Table */}
@@ -175,20 +253,58 @@ export const OrderModal: React.FC<OrderModalProps> = ({ isOpen, onClose, order }
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
-                  {items.map((item) => (
+                  {processedItems.map((item) => (
                     <tr key={item.id} className="hover:bg-gray-50">
-                      <td className="p-3 font-medium text-gray-900">{item.product_name}</td>
+                      <td className="p-3 font-medium text-gray-900">
+                        {item.product_name} 
+                        {item.isGift && !item.product_name.includes('(Free Gift)') && (
+                          <span className="text-emerald-600 font-bold text-xs ml-2">(FREE GIFT)</span>
+                        )}
+                      </td>
                       <td className="p-3 text-gray-600">{item.selected_timber || 'Heritage Sandalwood'}</td>
                       <td className="p-3 text-gray-600 text-center">{item.quantity}</td>
-                      <td className="p-3 text-gray-600 text-right">{currencySymbol}{item.unit_price}</td>
+                      <td className="p-3 text-gray-600 text-right">
+                        {item.isGift ? <span className="text-emerald-600 font-bold">FREE</span> : `${currencySymbol}${item.unit_price}`}
+                      </td>
                       <td className="p-3 font-medium text-gray-900 text-right">
-                        {currencySymbol}{(item.quantity * item.unit_price).toFixed(2)}
+                        {item.isGift ? <span className="text-emerald-600 font-bold">FREE</span> : `${currencySymbol}${(item.quantity * item.unit_price).toFixed(2)}`}
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
+              <div className="bg-gray-50 p-4 border-t border-gray-100 flex justify-end">
+                <div className="w-72 space-y-2 text-sm">
+                  <div className="flex justify-between text-gray-600">
+                    <span>Subtotal:</span>
+                    <span>{currencySymbol}{order.subtotal || 0}</span>
+                  </div>
+                  {appliedDiscountAmount > 0 && (
+                    <div className="flex justify-between text-emerald-700 font-bold bg-emerald-50 px-2.5 py-1.5 rounded-lg border border-emerald-200">
+                      <span>Discount {appliedCouponCode ? `(${appliedCouponCode})` : ''}:</span>
+                      <span>-{currencySymbol}{appliedDiscountAmount}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between text-gray-600">
+                    <span>Shipping:</span>
+                    <span>{order.shipping_charge === 0 && appliedCouponCode?.includes('SHIP') ? (
+                      <span className="text-emerald-700 font-bold">FREE (Coupon)</span>
+                    ) : (
+                      `${currencySymbol}${order.shipping_charge || 0}`
+                    )}</span>
+                  </div>
+                  <div className="flex justify-between text-gray-600">
+                    <span>GST {order.gst_rate ? `(${order.gst_rate}%)` : ''}:</span>
+                    <span>{currencySymbol}{order.gst_amount || 0}</span>
+                  </div>
+                  <div className="flex justify-between text-gray-900 font-bold pt-2 border-t border-gray-200 text-base">
+                    <span>Total:</span>
+                    <span>{currencySymbol}{order.total_amount || 0}</span>
+                  </div>
+                </div>
+              </div>
             </div>
+
           ) : (
             <p className="text-sm text-gray-500 bg-gray-50 p-4 rounded-xl border border-gray-100">No items found for this order.</p>
           )}

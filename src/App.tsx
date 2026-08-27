@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AdminApp } from './admin/AdminApp';
-import { Product, CartItem, Currency, ActiveTab, BespokeInquiry, PageContent } from './types';
+import { Product, CartItem, Currency, ActiveTab, BespokeInquiry, PageContent, StoreSettings, Customer } from './types';
 import { supabase } from './utils/supabaseClient';
 import { Header } from './components/Header';
 import { MobileBottomNav } from './components/MobileBottomNav';
@@ -9,9 +9,8 @@ import { Footer } from './components/Footer';
 import { SearchModal } from './components/SearchModal';
 import { CartDrawer } from './components/CartDrawer';
 import { WishlistDrawer } from './components/WishlistDrawer';
-import { AdminModal } from './components/AdminModal';
 import { BespokeOrderModal } from './components/BespokeOrderModal';
-import { PromoPopup } from './components/PromoPopup';
+import { CustomerAuthModal } from './components/CustomerAuthModal';
 import { WhatsAppButton } from './components/WhatsAppButton';
 
 import { HomeView } from './views/HomeView';
@@ -22,6 +21,7 @@ import { AboutView } from './views/AboutView';
 import { WholesaleExportView } from './views/WholesaleExportView';
 import { CareGuideView } from './views/CareGuideView';
 import { CheckoutView } from './views/CheckoutView';
+import { MyAccountView } from './views/MyAccountView';
 import { TermsView } from './views/TermsView';
 import { PrivacyView } from './views/PrivacyView';
 import { RefundView } from './views/RefundView';
@@ -33,7 +33,32 @@ export function Storefront() {
   const [products, setProducts] = useState<Product[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [pageContent, setPageContent] = useState<PageContent[]>([]);
+  const [storeSettings, setStoreSettings] = useState<StoreSettings | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Customer Account & Auth States
+  const [customer, setCustomer] = useState<Customer | null>(() => {
+    try {
+      const stored = localStorage.getItem('irisjev_customer_user');
+      return stored ? JSON.parse(stored) : null;
+    } catch (e) {
+      return null;
+    }
+  });
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [authModalMode, setAuthModalMode] = useState<'promo' | 'login'>('login');
+
+  // Trigger Welcome Promo / OTP signup on first visit if not logged in
+  useEffect(() => {
+    const hasSeen = localStorage.getItem('irisjev_promo_seen');
+    if (!hasSeen && !customer) {
+      const timer = setTimeout(() => {
+        setAuthModalMode('promo');
+        setIsAuthModalOpen(true);
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [customer]);
 
   React.useEffect(() => {
     const fetchData = async () => {
@@ -73,6 +98,11 @@ export function Storefront() {
         setPageContent(contentData);
       }
 
+      const { data: settingsData } = await supabase.from('store_settings').select('*').eq('id', 1).single();
+      if (settingsData) {
+        setStoreSettings(settingsData as StoreSettings);
+      }
+
       setIsLoading(false);
     };
     fetchData();
@@ -88,28 +118,26 @@ export function Storefront() {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isWishlistOpen, setIsWishlistOpen] = useState(false);
   const [isBespokeOpen, setIsBespokeOpen] = useState(false);
-  const [isAdminOpen, setIsAdminOpen] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
 
   // Cart Handler
-  const handleAddToCart = (product: Product, selectedTimber?: string) => {
+  const handleAddToCart = (product: Product, selectedTimber?: string, isGift: boolean = false) => {
     const timber = selectedTimber || product.timberOptions[0] || product.material;
     setCartItems((prev) => {
       const existingIndex = prev.findIndex(
-        (item) => item.product.id === product.id && item.selectedTimber === timber
+        (item) => item.product.id === product.id && item.selectedTimber === timber && !!item.isGift === isGift
       );
       if (existingIndex > -1) {
         const updated = [...prev];
         updated[existingIndex].quantity += 1;
         return updated;
       }
-      return [...prev, { product, quantity: 1, selectedTimber: timber }];
+      return [...prev, { product, quantity: 1, selectedTimber: timber, isGift }];
     });
   };
 
   const handleUpdateCartQuantity = (productId: string, delta: number) => {
-    setCartItems((prev) =>
-      prev
+    setCartItems((prev) => {
+      const updated = prev
         .map((item) => {
           if (item.product.id === productId) {
             const newQty = item.quantity + delta;
@@ -117,12 +145,27 @@ export function Storefront() {
           }
           return item;
         })
-        .filter(Boolean) as CartItem[]
-    );
+        .filter(Boolean) as CartItem[];
+
+      // If no regular products remain, clear any free gifts too
+      const hasRegularItems = updated.some((item) => !item.isGift);
+      if (!hasRegularItems) {
+        return [];
+      }
+      return updated;
+    });
   };
 
   const handleRemoveCartItem = (productId: string) => {
-    setCartItems((prev) => prev.filter((item) => item.product.id !== productId));
+    setCartItems((prev) => {
+      const updated = prev.filter((item) => item.product.id !== productId);
+      // If no regular products remain, clear any free gifts too
+      const hasRegularItems = updated.some((item) => !item.isGift);
+      if (!hasRegularItems) {
+        return [];
+      }
+      return updated;
+    });
   };
 
   // Wishlist Handler
@@ -139,16 +182,6 @@ export function Storefront() {
     setSelectedProduct(product);
     setActiveTab('product-detail');
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  // Add Product (Admin)
-  const handleAddProduct = (newProduct: Product) => {
-    setProducts((prev) => [newProduct, ...prev]);
-  };
-
-  // Delete Product (Admin)
-  const handleDeleteProduct = (id: string) => {
-    setProducts((prev) => prev.filter((p) => p.id !== id));
   };
 
   // Handle Bespoke Inquiry submit
@@ -183,10 +216,10 @@ export function Storefront() {
         onOpenWishlist={() => setIsWishlistOpen(true)}
         onOpenSearch={() => setIsSearchOpen(true)}
         onOpenBespoke={() => setIsBespokeOpen(true)}
-        isAdmin={isAdmin}
-        setIsAdmin={(val) => {
-          setIsAdmin(val);
-          if (val) setIsAdminOpen(true);
+        customer={customer}
+        onOpenAuthModal={() => {
+          setAuthModalMode('login');
+          setIsAuthModalOpen(true);
         }}
       />
 
@@ -241,10 +274,31 @@ export function Storefront() {
 
         {activeTab === 'care-guide' && <CareGuideView />}
 
+        {activeTab === 'account' && (
+          <MyAccountView
+            customer={customer}
+            currency={currency}
+            cartItems={cartItems}
+            wishlist={wishlistProducts}
+            products={products}
+            setActiveTab={setActiveTab}
+            onOpenAuthModal={() => {
+              setAuthModalMode('login');
+              setIsAuthModalOpen(true);
+            }}
+            onLogout={() => {
+              localStorage.removeItem('irisjev_customer_user');
+              setCustomer(null);
+              setActiveTab('home');
+            }}
+          />
+        )}
+
         {activeTab === 'checkout' && (
           <CheckoutView 
             cartItems={cartItems}
             currency={currency}
+            customer={customer}
             onClearCart={() => setCartItems([])}
             setActiveTab={setActiveTab}
             onUpdateQuantity={handleUpdateCartQuantity}
@@ -271,6 +325,11 @@ export function Storefront() {
         cartCount={cartItems.reduce((acc, i) => acc + i.quantity, 0)}
         onOpenCart={() => setIsCartOpen(true)}
         onOpenSearch={() => setIsSearchOpen(true)}
+        customer={customer}
+        onOpenAuthModal={() => {
+          setAuthModalMode('login');
+          setIsAuthModalOpen(true);
+        }}
       />
 
       {/* Modals & Drawers */}
@@ -290,6 +349,9 @@ export function Storefront() {
         onRemoveItem={handleRemoveCartItem}
         onClearCart={() => setCartItems([])}
         currency={currency}
+        products={products}
+        storeSettings={storeSettings}
+        onAddToCart={handleAddToCart}
         onCheckout={() => {
           setIsCartOpen(false);
           setActiveTab('checkout');
@@ -307,21 +369,19 @@ export function Storefront() {
         currency={currency}
       />
 
-      <AdminModal
-        isOpen={isAdminOpen}
-        onClose={() => setIsAdminOpen(false)}
-        products={products}
-        onAddProduct={handleAddProduct}
-        onDeleteProduct={handleDeleteProduct}
-        currency={currency}
-      />
-
       <BespokeOrderModal
         isOpen={isBespokeOpen}
         onClose={() => setIsBespokeOpen(false)}
         onSubmitInquiry={handleBespokeInquirySubmit}
       />
-      <PromoPopup />
+      <CustomerAuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        initialMode={authModalMode}
+        onLoginSuccess={(c) => {
+          setCustomer(c);
+        }}
+      />
       <WhatsAppButton />
     </div>
   );

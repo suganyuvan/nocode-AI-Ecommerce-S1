@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
-import { Product, Currency, ActiveTab, Review } from '../types';
+import React, { useState, useEffect } from 'react';
+import { Product, Currency, ActiveTab, Review, ShippingAndPaymentSettings } from '../types';
 import { formatPrice } from '../utils/currency';
 import { supabase } from '../utils/supabaseClient';
+import { DEFAULT_SHIPPING_PAYMENT_SETTINGS, PINCODE_CITY_STATE_MAP } from '../admin/views/ShippingManager';
+import { validateIndianPincode } from '../utils/pincodeValidator';
 
 interface ProductDetailViewProps {
   product: Product;
@@ -12,6 +14,18 @@ interface ProductDetailViewProps {
   setActiveTab: (tab: ActiveTab) => void;
 }
 
+interface TransitEstimate {
+  profileName: string;
+  courierNotes: string;
+  timelineText: string;
+  estimatedDateRange: string;
+  locationName: string;
+  shippingChargeText: string;
+  isCodAvailable: boolean;
+  codFee: number;
+  isFreeShipping: boolean;
+}
+
 export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
   product,
   onAddToCart,
@@ -19,7 +33,6 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
   isWishlisted,
   currency,
   setActiveTab,
-  
 }) => {
   const [selectedImage, setSelectedImage] = useState(
     product.galleryImages[0] || product.image
@@ -30,15 +43,19 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
   const [activeAccordion, setActiveAccordion] = useState<string | null>('heritage');
   const [pincode, setPincode] = useState('');
   const [pincodeResult, setPincodeResult] = useState<string | null>(null);
+  const [transitEstimate, setTransitEstimate] = useState<TransitEstimate | null>(null);
+  const [isCheckingPincode, setIsCheckingPincode] = useState(false);
+  const [addedToast, setAddedToast] = useState(false);
 
-  // Review state
+  // Review states
   const [reviews, setReviews] = useState<Review[]>([]);
   const [newReviewName, setNewReviewName] = useState('');
   const [newReviewComment, setNewReviewComment] = useState('');
   const [newReviewRating, setNewReviewRating] = useState(5);
   const [reviewSubmitted, setReviewSubmitted] = useState(false);
 
-  React.useEffect(() => {
+  // Load reviews from Supabase
+  useEffect(() => {
     const fetchReviews = async () => {
       const { data } = await supabase
         .from('reviews')
@@ -62,16 +79,130 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
     fetchReviews();
   }, [product.id]);
 
-  // Added Toast notification state
-  const [addedToast, setAddedToast] = useState(false);
+  // Load active shipping settings from localStorage or fallback
+  const [shippingSettings, setShippingSettings] = useState<ShippingAndPaymentSettings>(() => {
+    try {
+      const stored = localStorage.getItem('irisjev_shipping_payment_settings');
+      if (stored) return JSON.parse(stored);
+    } catch (e) {
+      console.warn('Could not read shipping settings:', e);
+    }
+    return DEFAULT_SHIPPING_PAYMENT_SETTINGS;
+  });
+
+  // Calculate Delivery Dates from Timeline string
+  const computeDeliveryDates = (timeline: string) => {
+    const nums = timeline.match(/\d+/g);
+    const minDays = nums && nums[0] ? parseInt(nums[0], 10) : 3;
+    const maxDays = nums && nums[1] ? parseInt(nums[1], 10) : minDays + 2;
+
+    const addBusinessDays = (days: number) => {
+      const d = new Date();
+      let added = 0;
+      while (added < days) {
+        d.setDate(d.getDate() + 1);
+        if (d.getDay() !== 0) { // Skip Sunday
+          added++;
+        }
+      }
+      return d;
+    };
+
+    const minDate = addBusinessDays(minDays);
+    const maxDate = addBusinessDays(maxDays);
+
+    const options: Intl.DateTimeFormatOptions = { weekday: 'short', month: 'short', day: 'numeric' };
+    return `${minDate.toLocaleDateString('en-IN', options)} – ${maxDate.toLocaleDateString('en-IN', options)}`;
+  };
+
+  // Evaluate transit lead time and profile match for given PIN code
+  const evaluatePincode = (inputPin: string) => {
+    const cleanPin = inputPin.replace(/\D/g, '').trim();
+    if (!cleanPin) {
+      setPincodeResult(null);
+      setTransitEstimate(null);
+      return;
+    }
+
+    if (cleanPin.length !== 6) {
+      setPincodeResult('Please enter a valid 6-digit Indian PIN code.');
+      setTransitEstimate(null);
+      return;
+    }
+
+    const validation = validateIndianPincode(cleanPin, '');
+    const prefix3 = cleanPin.slice(0, 3);
+    const detectedCity = validation.detectedCity || PINCODE_CITY_STATE_MAP[prefix3]?.city || '';
+    const detectedState = validation.detectedState || PINCODE_CITY_STATE_MAP[prefix3]?.state || '';
+
+    // Active profiles
+    const profiles = shippingSettings.profiles.filter(p => p.isEnabled);
+    let matchedProfile = profiles.find(p => {
+      if (!p.pincodeWildcards) return false;
+      const patterns = p.pincodeWildcards.split(',').map(s => s.trim()).filter(Boolean);
+      return patterns.some(pattern => {
+        if (pattern.endsWith('*')) {
+          return cleanPin.startsWith(pattern.slice(0, -1));
+        }
+        return pattern === cleanPin;
+      });
+    });
+
+    if (!matchedProfile && detectedState) {
+      matchedProfile = profiles.find(p => 
+        p.applicableStates && p.applicableStates.some(s => s.toLowerCase() === detectedState.toLowerCase())
+      );
+    }
+
+    if (!matchedProfile) {
+      matchedProfile = profiles.find(p => p.isDefault) || profiles.find(p => p.isAllIndia) || profiles[0];
+    }
+
+    if (!matchedProfile) {
+      setPincodeResult('Serviceable via standard insured courier.');
+      setTransitEstimate(null);
+      return;
+    }
+
+    // Shipping charge calculation
+    const isFreeShipping = matchedProfile.freeShippingThreshold > 0 && product.priceINR >= matchedProfile.freeShippingThreshold;
+    const shippingChargeText = isFreeShipping 
+      ? 'FREE White-Glove Insured Delivery' 
+      : matchedProfile.baseCharge > 0 
+      ? `₹${matchedProfile.baseCharge} Insured Shipping` 
+      : 'FREE Insured Delivery';
+
+    // COD check
+    const isCodRestricted = (shippingSettings.cod.restrictedPincodes || '')
+      .split(',')
+      .map(s => s.trim())
+      .filter(Boolean)
+      .some(pattern => pattern.endsWith('*') ? cleanPin.startsWith(pattern.slice(0, -1)) : pattern === cleanPin);
+
+    const isCodAvailable = shippingSettings.cod.isEnabled && !isCodRestricted;
+
+    const dates = computeDeliveryDates(matchedProfile.deliveryTimeline || '3 - 5 Business Days');
+    const locationStr = detectedCity ? `${detectedCity}, ${detectedState}` : detectedState ? detectedState : `PIN ${cleanPin}`;
+
+    setPincodeResult(null);
+    setTransitEstimate({
+      profileName: matchedProfile.name,
+      courierNotes: matchedProfile.courierNotes,
+      timelineText: matchedProfile.deliveryTimeline || '3 - 5 Business Days',
+      estimatedDateRange: dates,
+      locationName: locationStr,
+      shippingChargeText,
+      isCodAvailable,
+      codFee: shippingSettings.cod.handlingCharge || 0,
+      isFreeShipping,
+    });
+  };
 
   const handleCheckPincode = (e: React.FormEvent) => {
     e.preventDefault();
-    if (pincode.length >= 5) {
-      setPincodeResult('✅ White-glove insured delivery available to ' + pincode + '. Est. 4-6 business days.');
-    } else {
-      setPincodeResult('Please enter a valid 6-digit Pincode or Zipcode.');
-    }
+    setIsCheckingPincode(true);
+    evaluatePincode(pincode);
+    setIsCheckingPincode(false);
   };
 
   const handleAddReview = async (e: React.FormEvent) => {
@@ -301,27 +432,96 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
           </div>
 
           {/* Delivery Pincode Estimator */}
-          <div className="bg-white p-4 rounded-xs border border-[#c4c7c7] space-y-2">
-            <label className="block text-xs font-label-caps uppercase text-[#1b1c1c] font-bold">
-              Check Transit Lead Time
-            </label>
+          <div className="bg-white p-4 rounded-xs border border-[#c4c7c7] space-y-3 shadow-2xs">
+            <div className="flex items-center justify-between">
+              <label className="block text-xs font-label-caps uppercase text-[#1b1c1c] font-bold">
+                Check Transit Lead Time
+              </label>
+              <span className="text-[10px] font-label-caps uppercase text-[#735c00] font-bold flex items-center gap-1">
+                <span className="material-symbols-outlined text-xs">local_shipping</span>
+                Live Carrier Status
+              </span>
+            </div>
+
             <form onSubmit={handleCheckPincode} className="flex gap-2">
               <input
                 type="text"
                 value={pincode}
-                onChange={(e) => setPincode(e.target.value)}
-                placeholder="Enter Pincode / Zipcode..."
-                className="flex-1 px-3 py-1.5 border border-[#c4c7c7] rounded-xs text-xs"
+                onChange={(e) => {
+                  const val = e.target.value.replace(/\D/g, '').slice(0, 6);
+                  setPincode(val);
+                  if (val.length === 6) {
+                    evaluatePincode(val);
+                  } else if (val.length === 0) {
+                    setTransitEstimate(null);
+                    setPincodeResult(null);
+                  }
+                }}
+                placeholder="Enter 6-Digit PIN Code (e.g. 560001)..."
+                className="flex-1 px-3 py-2 border border-[#c4c7c7] rounded-xs text-xs focus:outline-none focus:border-[#1c1b1b]"
               />
               <button
                 type="submit"
-                className="px-4 py-1.5 bg-[#1c1b1b] text-white text-xs font-label-caps uppercase cursor-pointer"
+                className="px-5 py-2 bg-[#1c1b1b] text-white text-xs font-label-caps uppercase tracking-wider cursor-pointer hover:bg-black transition-colors font-bold shrink-0"
               >
-                Check
+                {isCheckingPincode ? 'Checking...' : 'Check'}
               </button>
             </form>
+
+            {/* Error or validation info message */}
             {pincodeResult && (
-              <p className="text-xs text-[#735c00] font-bold mt-1">{pincodeResult}</p>
+              <p className="text-xs text-red-600 font-semibold flex items-center gap-1">
+                <span className="material-symbols-outlined text-xs">error</span>
+                {pincodeResult}
+              </p>
+            )}
+
+            {/* Dynamic Transit Estimation Card */}
+            {transitEstimate && (
+              <div className="p-3.5 bg-[#fbfaf8] border border-[#e5e1d8] rounded-xs space-y-2.5 animate-fadeIn">
+                <div className="flex items-start justify-between gap-2 border-b border-[#e4e2e2] pb-2">
+                  <div>
+                    <span className="text-[10px] font-label-caps uppercase text-[#747878] block">Estimated Delivery</span>
+                    <strong className="text-sm font-headline-md text-[#1b1c1c] block">
+                      {transitEstimate.estimatedDateRange}
+                    </strong>
+                  </div>
+                  <span className="text-[10px] font-bold text-[#2e6930] bg-[#eaf5eb] border border-[#c3e6c6] px-2 py-0.5 rounded-xs shrink-0 flex items-center gap-1">
+                    <span className="material-symbols-outlined text-xs">bolt</span>
+                    {transitEstimate.timelineText}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div className="space-y-0.5">
+                    <span className="text-[10px] text-[#747878] uppercase font-label-caps block">Delivery Zone</span>
+                    <span className="font-semibold text-[#1b1c1c] block truncate" title={transitEstimate.locationName}>
+                      📍 {transitEstimate.locationName}
+                    </span>
+                    <span className="text-[10px] text-[#735c00] block">
+                      {transitEstimate.profileName}
+                    </span>
+                  </div>
+
+                  <div className="space-y-0.5">
+                    <span className="text-[10px] text-[#747878] uppercase font-label-caps block">Shipping & Insurance</span>
+                    <span className="font-bold text-[#2e6930] block">
+                      {transitEstimate.shippingChargeText}
+                    </span>
+                    <span className="text-[10px] text-[#444748] block">
+                      {transitEstimate.isCodAvailable 
+                        ? `✓ COD Available ${transitEstimate.codFee > 0 ? `(₹${transitEstimate.codFee} fee)` : ''}`
+                        : '✕ Prepaid Orders Only'}
+                    </span>
+                  </div>
+                </div>
+
+                {transitEstimate.courierNotes && (
+                  <p className="text-[11px] text-[#555] bg-white p-2 rounded-xs border border-[#eee] italic">
+                    🚚 {transitEstimate.courierNotes}
+                  </p>
+                )}
+              </div>
             )}
           </div>
 

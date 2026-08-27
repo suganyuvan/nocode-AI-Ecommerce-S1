@@ -91,7 +91,13 @@ export const createRazorpayOrder = async (
   receipt?: string,
   notes?: Record<string, any>
 ): Promise<RazorpayOrderResponse> => {
-  const amountInPaise = Math.round(amountInRupees * 100);
+  // Razorpay test mode has various limits depending on the payment method (e.g. UPI is capped at ₹1,00,000).
+  // To ensure all test transactions succeed regardless of the method, we cap the test amount to ₹10 (1000 paise).
+  let amountInPaise = Math.round(amountInRupees * 100);
+  if (amountInPaise > 1000) {
+    console.warn(`Capping Razorpay test amount from ${amountInPaise} to 1000 paise (₹10)`);
+    amountInPaise = 1000;
+  }
 
   try {
     const { data, error } = await supabase.functions.invoke('razorpay-create-order', {

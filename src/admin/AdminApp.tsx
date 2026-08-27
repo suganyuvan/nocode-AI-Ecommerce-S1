@@ -11,8 +11,14 @@ import { OrdersManager } from './views/OrdersManager';
 import { CustomersManager } from './views/CustomersManager';
 import { LeadsManager } from './views/LeadsManager';
 import { WebhookLogsManager } from './views/WebhookLogsManager';
+import { ShippingManager } from './views/ShippingManager';
+import { StoreSettingsManager } from './views/StoreSettingsManager';
+import { CouponsManager } from './views/CouponsManager';
+import { PromoBannersManager } from './views/PromoBannersManager';
+import { PageBuilderManager } from './views/PageBuilderManager';
 
 export function AdminApp() {
+
   const [session, setSession] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
@@ -72,13 +78,21 @@ export function AdminApp() {
     <Routes>
       <Route element={<AdminLayout />}>
         <Route index element={<DashboardOverview />} />
+        <Route path="page-builder" element={<PageBuilderManager />} />
         <Route path="products" element={<ProductsManager />} />
+
         <Route path="orders" element={<OrdersManager />} />
         <Route path="customers" element={<CustomersManager />} />
         <Route path="leads" element={<LeadsManager />} />
+        <Route path="coupons" element={<CouponsManager />} />
+        <Route path="promotional-banners" element={<PromoBannersManager />} />
+        <Route path="promotions" element={<PromoBannersManager />} />
         <Route path="payment-logs" element={<WebhookLogsManager />} />
         <Route path="webhook-logs" element={<WebhookLogsManager />} />
+        <Route path="shipping" element={<ShippingManager />} />
+        <Route path="settings" element={<StoreSettingsManager />} />
       </Route>
     </Routes>
   );
 }
+

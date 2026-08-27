@@ -1,9 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { CartItem, Currency, ActiveTab } from '../types';
+import { CartItem, Currency, ActiveTab, Customer, Coupon } from '../types';
 import { formatPrice } from '../utils/currency';
 import { InvoiceModal } from '../components/InvoiceModal';
 import { supabase } from '../utils/supabaseClient';
 import { loadRazorpayScript, createRazorpayOrder, verifyRazorpayPayment } from '../utils/razorpay';
+import { PINCODE_CITY_STATE_MAP, DEFAULT_SHIPPING_PAYMENT_SETTINGS, ALL_INDIAN_STATES } from '../admin/views/ShippingManager';
+import { 
+  validateIndianPincode, 
+  validateCityWithState, 
+  validateStreetAddress, 
+  fetchLivePincodeData 
+} from '../utils/pincodeValidator';
+import { validateCoupon, recordCouponUsage } from '../utils/couponEngine';
+import { PromotionalBanner } from '../components/PromotionalBanner';
 
 interface CheckoutViewProps {
   cartItems: CartItem[];
@@ -12,7 +21,19 @@ interface CheckoutViewProps {
   setActiveTab: (tab: ActiveTab) => void;
   onUpdateQuantity: (productId: string, delta: number) => void;
   onRemoveItem: (productId: string) => void;
+  customer?: Customer | null;
 }
+
+const COUNTRY_OPTIONS = [
+  { code: 'India', name: 'India', flag: '🇮🇳', dialCode: '+91' },
+  { code: 'United States', name: 'United States', flag: '🇺🇸', dialCode: '+1' },
+  { code: 'United Kingdom', name: 'United Kingdom', flag: '🇬🇧', dialCode: '+44' },
+  { code: 'United Arab Emirates', name: 'United Arab Emirates', flag: '🇦🇪', dialCode: '+971' },
+  { code: 'Singapore', name: 'Singapore', flag: '🇸🇬', dialCode: '+65' },
+  { code: 'Australia', name: 'Australia', flag: '🇦🇺', dialCode: '+61' },
+  { code: 'Canada', name: 'Canada', flag: '🇨🇦', dialCode: '+1' },
+  { code: 'Germany', name: 'Germany', flag: '🇩🇪', dialCode: '+49' },
+];
 
 export const CheckoutView: React.FC<CheckoutViewProps> = ({
   cartItems,
@@ -21,6 +42,7 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
   setActiveTab,
   onUpdateQuantity,
   onRemoveItem,
+  customer,
 }) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [showInvoice, setShowInvoice] = useState(false);
@@ -28,34 +50,416 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // Form states for checkout
-  const [customerName, setCustomerName] = useState('');
-  const [customerEmail, setCustomerEmail] = useState('');
-  const [customerPhone, setCustomerPhone] = useState('');
-  const [address, setAddress] = useState('');
-  const [city, setCity] = useState('');
-  const [state, setState] = useState('');
-  const [postalCode, setPostalCode] = useState('');
+  const [customerName, setCustomerName] = useState(customer?.full_name || '');
+  const [customerEmail, setCustomerEmail] = useState(customer?.email || '');
+  const [countryCode, setCountryCode] = useState(customer?.country_code || '+91');
+  const [customerPhone, setCustomerPhone] = useState(customer?.phone ? customer.phone.replace(/\D/g, '').slice(-10) : '');
+  const [address, setAddress] = useState(customer?.address || '');
+  const [city, setCity] = useState(customer?.city || '');
+  const [state, setState] = useState(customer?.state || 'Karnataka');
+  const [postalCode, setPostalCode] = useState(customer?.postal_code || '');
   const [country, setCountry] = useState('India');
+  const [paymentMethod, setPaymentMethod] = useState<'prepaid' | 'cod'>('prepaid');
+  const [gstRate, setGstRate] = useState(3);
 
-  // Shipping & GST
-  const [shippingCharge, setShippingCharge] = useState(0);
-  const [gstRate, setGstRate] = useState(0);
+  // Coupon state in Checkout
+  const [checkoutCouponInput, setCheckoutCouponInput] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null);
+  const [couponDiscountINR, setCouponDiscountINR] = useState(0);
+  const [couponError, setCouponError] = useState('');
+  const [couponSuccessMsg, setCouponSuccessMsg] = useState('');
+  const [isValidatingCoupon, setIsValidatingCoupon] = useState(false);
 
+  // Auto-sync customer details when logged in
   useEffect(() => {
-    setShippingCharge((Math.floor(Math.random() * 8) + 15) * 10);
-    setGstRate(Math.floor(Math.random() * 3) + 3);
+    if (customer) {
+      if (customer.full_name) setCustomerName(customer.full_name);
+      if (customer.email) setCustomerEmail(customer.email);
+      if (customer.phone) {
+        const digits = customer.phone.replace(/\D/g, '');
+        setCustomerPhone(digits.slice(-10));
+      }
+      if (customer.address) setAddress(customer.address);
+      if (customer.city) setCity(customer.city);
+      if (customer.state) setState(customer.state);
+      if (customer.postal_code) setPostalCode(customer.postal_code);
+    }
+  }, [customer]);
+
+  // Map & Live Location states
+  const [localities, setLocalities] = useState<string[]>([]);
+  const [isLocating, setIsLocating] = useState(false);
+  const [geoAddressFound, setGeoAddressFound] = useState<string | null>(null);
+
+  // Field validation errors
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const [shippingSettings, setShippingSettings] = useState<any>(() => {
+    try {
+      const stored = localStorage.getItem('irisjev_shipping_payment_settings');
+      if (stored) return JSON.parse(stored);
+    } catch (e) {
+      console.warn('Could not read custom shipping settings:', e);
+    }
+    return DEFAULT_SHIPPING_PAYMENT_SETTINGS;
+  });
+
+  // Fetch live postal office suggestions when 6-digit PIN is typed
+  useEffect(() => {
+    if (country === 'India' && postalCode.trim().length === 6) {
+      fetchLivePincodeData(postalCode.trim()).then(res => {
+        if (res.status === 'Success') {
+          const names = Array.from(new Set(res.postOffices.map(p => p.name)));
+          setLocalities(names);
+          if (res.district && !city) setCity(res.district);
+          if (res.state && !state) setState(res.state);
+        } else {
+          setLocalities([]);
+        }
+      });
+    } else {
+      setLocalities([]);
+    }
+  }, [postalCode, country]);
+
+  // GPS Location Auto-Detection
+  const handleDetectLocation = () => {
+    if (!navigator.geolocation) {
+      alert('Geolocation is not supported by your browser.');
+      return;
+    }
+    setIsLocating(true);
+    setErrorMessage(null);
+
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        try {
+          const { latitude, longitude } = pos.coords;
+          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
+          if (res.ok) {
+            const data = await res.json();
+            const addr = data.address || {};
+            
+            const detectedState = addr.state || '';
+            const detectedCity = addr.city || addr.town || addr.village || addr.county || '';
+            const detectedPostcode = (addr.postcode || '').replace(/\D/g, '').slice(0, 6);
+            const roadParts = [addr.house_number, addr.road, addr.suburb || addr.neighbourhood].filter(Boolean);
+            const road = roadParts.join(', ');
+
+            setCountry('India');
+            if (detectedState) setState(detectedState);
+            if (detectedCity) setCity(detectedCity);
+            if (detectedPostcode) setPostalCode(detectedPostcode);
+            if (road) setAddress(road);
+            setGeoAddressFound(data.display_name || `${detectedCity}, ${detectedState}`);
+          }
+        } catch (e) {
+          console.warn('Geolocation lookup failed:', e);
+        } finally {
+          setIsLocating(false);
+        }
+      },
+      (err) => {
+        console.warn('Geolocation notice:', err);
+        setIsLocating(false);
+      },
+      { timeout: 6000 }
+    );
+  };
+
+  // Auto-detect City and State from Pincode prefix when in India
+  const handlePincodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value.replace(/\D/g, '');
+    const maxLen = country === 'India' ? 6 : 10;
+    if (val.length <= maxLen) {
+      setPostalCode(val);
+      if (errors.postalCode) {
+        setErrors(prev => ({ ...prev, postalCode: undefined }));
+      }
+      if (country === 'India' && val.length >= 3) {
+        const prefix = val.slice(0, 3);
+        if (PINCODE_CITY_STATE_MAP[prefix]) {
+          const detected = PINCODE_CITY_STATE_MAP[prefix];
+          setCity(detected.city);
+          setState(detected.state);
+          setErrors(prev => ({ ...prev, city: undefined, state: undefined }));
+        }
+      }
+    }
+  };
+
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    // Allow only alphabets and spaces/symbols
+    if (val === '' || /^[A-Za-z\s.'-]+$/.test(val)) {
+      setCustomerName(val);
+      if (errors.customerName) {
+        setErrors(prev => ({ ...prev, customerName: undefined }));
+      }
+    }
+  };
+
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setCustomerEmail(e.target.value);
+    if (errors.customerEmail) {
+      setErrors(prev => ({ ...prev, customerEmail: undefined }));
+    }
+  };
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const digits = e.target.value.replace(/\D/g, '');
+    if (digits.length <= 15) {
+      setCustomerPhone(digits);
+      if (errors.customerPhone) {
+        setErrors(prev => ({ ...prev, customerPhone: undefined }));
+      }
+    }
+  };
+
+  const handleCityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    if (val === '' || /^[A-Za-z\s.'-]+$/.test(val)) {
+      setCity(val);
+      if (errors.city) {
+        setErrors(prev => ({ ...prev, city: undefined }));
+      }
+    }
+  };
+
+  const handleCountryChange = (newCountry: string) => {
+    setCountry(newCountry);
+    const matched = COUNTRY_OPTIONS.find(c => c.code === newCountry);
+    if (matched) {
+      setCountryCode(matched.dialCode);
+    }
+    if (newCountry === 'India') {
+      setState('Karnataka');
+    } else {
+      setState('');
+    }
+    if (errors.country) {
+      setErrors(prev => ({ ...prev, country: undefined }));
+    }
+  };
+
+  // Fetch Shipping & Payment Settings from localStorage or Supabase
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('irisjev_shipping_payment_settings');
+      if (stored) {
+        setShippingSettings(JSON.parse(stored));
+      } else {
+        setShippingSettings(DEFAULT_SHIPPING_PAYMENT_SETTINGS);
+      }
+    } catch (e) {
+      console.warn('Could not read custom shipping settings:', e);
+    }
   }, []);
 
   const rawTotalINR = cartItems.reduce(
-    (acc, item) => acc + item.product.priceINR * item.quantity,
+    (acc, item) => acc + (item.isGift ? 0 : item.product.priceINR * item.quantity),
     0
   );
 
-  const appliedDiscount = 0; 
-  const discountAmountINR = (rawTotalINR * appliedDiscount) / 100;
-  
-  const gstAmountINR = ((rawTotalINR - discountAmountINR) * gstRate) / 100;
-  const finalTotalINR = rawTotalINR - discountAmountINR + gstAmountINR + shippingCharge;
+  // Dynamic Shipping & Zone Calculation based on Unified Engine
+  const calculateDynamicCheckout = () => {
+    const cleanPincode = (postalCode || '').trim();
+    const cleanState = (state || '').trim().toLowerCase();
+
+    // Default settings fallback
+    const activeSettings = shippingSettings || DEFAULT_SHIPPING_PAYMENT_SETTINGS;
+    const profiles = activeSettings.profiles || DEFAULT_SHIPPING_PAYMENT_SETTINGS.profiles;
+
+    // 1. Match Zone by Pincode Wildcards
+    let matchedProfile = profiles.find((p: any) => {
+      if (!p.isEnabled || !p.pincodeWildcards) return false;
+      const patterns = p.pincodeWildcards.split(',').map((s: string) => s.trim().toLowerCase()).filter(Boolean);
+      return patterns.some((pattern: string) => {
+        if (pattern.endsWith('*')) {
+          const prefix = pattern.slice(0, -1);
+          return cleanPincode.startsWith(prefix);
+        }
+        return cleanPincode === pattern;
+      });
+    });
+
+    // 2. Match Zone by State
+    if (!matchedProfile) {
+      matchedProfile = profiles.find((p: any) => {
+        if (!p.isEnabled) return false;
+        return p.applicableStates && p.applicableStates.some((s: string) => s.toLowerCase() === cleanState);
+      });
+    }
+
+    // 3. Fallback to Default Zone
+    if (!matchedProfile) {
+      matchedProfile = profiles.find((p: any) => p.isDefault && p.isEnabled) || profiles[0];
+    }
+
+    // Free shipping threshold ONLY applies if threshold > 0 AND rawTotalINR >= threshold
+    const hasThreshold = matchedProfile && Number(matchedProfile.freeShippingThreshold) > 0;
+    const isFree = hasThreshold && rawTotalINR >= Number(matchedProfile.freeShippingThreshold);
+    const baseShippingFee = isFree ? 0 : (matchedProfile ? Number(matchedProfile.baseCharge) : 350);
+
+    // COD Validation & Handling Fee
+    let isCodAllowed = true;
+    let codDisabledReason = '';
+
+    // COD is only available for domestic India in INR
+    if (country !== 'India' || currency !== 'INR') {
+      isCodAllowed = false;
+      codDisabledReason = `Cash on Delivery is only available for domestic orders in India (INR).`;
+    } else if (activeSettings.cod) {
+      if (!activeSettings.cod.isEnabled) {
+        isCodAllowed = false;
+        codDisabledReason = 'Cash on Delivery is currently disabled.';
+      } else if (activeSettings.cod.minOrder > 0 && rawTotalINR < activeSettings.cod.minOrder) {
+        isCodAllowed = false;
+        codDisabledReason = `Minimum order of ₹${activeSettings.cod.minOrder} required for COD.`;
+      } else if (activeSettings.cod.maxOrder > 0 && rawTotalINR > activeSettings.cod.maxOrder) {
+        isCodAllowed = false;
+        codDisabledReason = `COD unavailable for orders above ₹${Number(activeSettings.cod.maxOrder).toLocaleString()}.`;
+      } else if (cleanPincode.length >= 3 && activeSettings.cod.restrictedPincodes) {
+        const blacklist = activeSettings.cod.restrictedPincodes.split(',').map((s: string) => s.trim().toLowerCase()).filter(Boolean);
+        const isBlacklisted = blacklist.some((pattern: string) => {
+          if (pattern.endsWith('*')) {
+            const prefix = pattern.slice(0, -1);
+            return cleanPincode.startsWith(prefix);
+          }
+          return cleanPincode === pattern;
+        });
+        if (isBlacklisted) {
+          isCodAllowed = false;
+          codDisabledReason = `COD is not available for pincode ${cleanPincode}.`;
+        }
+      }
+    }
+
+    const codHandlingFee = (paymentMethod === 'cod' && isCodAllowed && activeSettings.cod) ? (Number(activeSettings.cod.handlingCharge) || 0) : 0;
+
+    // Prepaid Discount
+    let prepaidDiscountINR = 0;
+    if (paymentMethod === 'prepaid' && activeSettings.prepaid?.isEnabled) {
+      if (activeSettings.prepaid.instantDiscountPercent > 0) {
+        prepaidDiscountINR = (rawTotalINR * activeSettings.prepaid.instantDiscountPercent) / 100;
+      } else if (activeSettings.prepaid.flatDiscount > 0) {
+        prepaidDiscountINR = Number(activeSettings.prepaid.flatDiscount);
+      }
+    }
+
+    return {
+      baseShippingFee,
+      codHandlingFee,
+      totalShippingAndFees: baseShippingFee + codHandlingFee,
+      deliveryTimeline: matchedProfile ? matchedProfile.deliveryTimeline : '3-5 Business Days',
+      isCodAllowed,
+      codDisabledReason,
+      prepaidDiscountINR,
+      isFreeQualified: isFree,
+      matchedProfileName: matchedProfile ? matchedProfile.name : 'Standard Delivery'
+    };
+  };
+
+  // Auto re-validate coupon if cart subtotal changes while applied
+  useEffect(() => {
+    if (appliedCoupon && rawTotalINR > 0) {
+      validateCoupon({
+        code: appliedCoupon.code,
+        cartSubtotal: rawTotalINR,
+        customerEmail: customerEmail,
+        shippingFee: checkoutCalc.baseShippingFee,
+      }).then(res => {
+        if (res.isValid) {
+          setCouponDiscountINR(res.discountAmount);
+          setCouponSuccessMsg(res.message);
+          setCouponError('');
+        } else {
+          setAppliedCoupon(null);
+          setCouponDiscountINR(0);
+          setCouponSuccessMsg('');
+          setCouponError(`Coupon removed: ${res.message}`);
+        }
+      });
+    } else if (rawTotalINR === 0) {
+      setAppliedCoupon(null);
+      setCouponDiscountINR(0);
+      setCouponSuccessMsg('');
+    }
+  }, [rawTotalINR, customerEmail, appliedCoupon]);
+
+  const handleApplyCouponCheckout = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    const cleanCode = checkoutCouponInput.trim();
+    if (!cleanCode) return;
+
+    setIsValidatingCoupon(true);
+    setCouponError('');
+    setCouponSuccessMsg('');
+
+    const res = await validateCoupon({
+      code: cleanCode,
+      cartSubtotal: rawTotalINR,
+      customerEmail: customerEmail,
+      shippingFee: checkoutCalc.baseShippingFee,
+    });
+
+    setIsValidatingCoupon(false);
+
+    if (res.isValid && res.coupon) {
+      setAppliedCoupon(res.coupon);
+      setCouponDiscountINR(res.discountAmount);
+      setCouponSuccessMsg(res.message);
+      setCouponError('');
+    } else {
+      setAppliedCoupon(null);
+      setCouponDiscountINR(0);
+      setCouponSuccessMsg('');
+      setCouponError(res.message);
+    }
+  };
+
+  const handleRemoveCouponCheckout = () => {
+    setAppliedCoupon(null);
+    setCouponDiscountINR(0);
+    setCheckoutCouponInput('');
+    setCouponSuccessMsg('');
+    setCouponError('');
+  };
+
+  const getCouponDiscountText = (coupon: Coupon, subtotal: number) => {
+    const subtotalFormatted = formatPrice(subtotal, currency);
+    if (coupon.discount_type === 'free_shipping') {
+      return `Coupon applied! Free Insured Shipping unlocked!`;
+    }
+    if (coupon.discount_type === 'percentage') {
+      const rawPercentDiscount = (subtotal * coupon.discount_value) / 100;
+      if (coupon.max_discount_amount && rawPercentDiscount > coupon.max_discount_amount) {
+        return `Coupon applied! ${coupon.discount_value}% off Subtotal (${subtotalFormatted}), capped at ₹${Number(coupon.max_discount_amount).toLocaleString('en-IN')}`;
+      }
+      return `Coupon applied! ${coupon.discount_value}% off Subtotal (${subtotalFormatted})`;
+    }
+    return `Coupon applied! Flat ₹${Number(coupon.discount_value).toLocaleString('en-IN')} off Subtotal (${subtotalFormatted})`;
+  };
+
+  const checkoutCalc = calculateDynamicCheckout();
+  const isFreeShippingCoupon = appliedCoupon?.discount_type === 'free_shipping';
+  const baseShippingCharge = isFreeShippingCoupon ? 0 : checkoutCalc.baseShippingFee;
+  const codHandlingFee = checkoutCalc.codHandlingFee;
+  const isCodAllowed = checkoutCalc.isCodAllowed;
+  const prepaidDiscountINR = checkoutCalc.prepaidDiscountINR;
+
+  // Total combined discounts (Prepaid discount + Coupon discount)
+  const totalDiscountINR = prepaidDiscountINR + couponDiscountINR;
+
+  // Auto-fallback to prepaid if COD is not allowed
+  useEffect(() => {
+    if (!isCodAllowed && paymentMethod === 'cod') {
+      setPaymentMethod('prepaid');
+    }
+  }, [isCodAllowed, paymentMethod]);
+
+  const gstAmountINR = Math.max(0, ((rawTotalINR - totalDiscountINR) * gstRate) / 100);
+  const finalTotalINR = Math.max(0, rawTotalINR - totalDiscountINR + gstAmountINR + baseShippingCharge + codHandlingFee);
 
   const fullShippingAddress = {
     street: address,
@@ -65,16 +469,114 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
     country: country || 'India',
   };
 
+  const pincodeValidation = country === 'India' ? validateIndianPincode(postalCode, state) : null;
+  const cityValidation = country === 'India' ? validateCityWithState(city, state) : { isValid: true };
+
+  // Comprehensive Form Validation
+  const validateAllFields = () => {
+    const newErrors: Record<string, string> = {};
+
+    // 1. Name validation (alphabets, spaces, min 2 chars)
+    const nameTrim = customerName.trim();
+    if (!nameTrim) {
+      newErrors.customerName = 'Full Name is required.';
+    } else if (!/^[A-Za-z\s.'-]+$/.test(nameTrim)) {
+      newErrors.customerName = 'Name must only contain alphabet letters and spaces.';
+    } else if (nameTrim.length < 2) {
+      newErrors.customerName = 'Name must be at least 2 characters.';
+    }
+
+    // 2. Email validation
+    const emailTrim = customerEmail.trim();
+    if (!emailTrim) {
+      newErrors.customerEmail = 'Email Address is required.';
+    } else if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(emailTrim)) {
+      newErrors.customerEmail = 'Please enter a valid email address (e.g. name@domain.com).';
+    }
+
+    // 3. Mobile Number validation
+    const phoneDigits = customerPhone.replace(/\D/g, '');
+    if (!phoneDigits) {
+      newErrors.customerPhone = 'Mobile Phone Number is required.';
+    } else if (countryCode === '+91') {
+      if (!/^[6-9]\d{9}$/.test(phoneDigits)) {
+        newErrors.customerPhone = 'Please enter a valid 10-digit Indian mobile number starting with 6, 7, 8, or 9.';
+      }
+    } else {
+      if (phoneDigits.length < 7 || phoneDigits.length > 15) {
+        newErrors.customerPhone = 'Please enter a valid international phone number (7-15 digits).';
+      }
+    }
+
+    // 4. Street Address / Landmark validation
+    const addressCheck = validateStreetAddress(address);
+    if (!addressCheck.isValid) {
+      newErrors.address = addressCheck.message || 'Please enter a complete delivery address (min 8 characters).';
+    }
+
+    // 5. City validation & State consistency
+    const cityTrim = city.trim();
+    if (!cityTrim) {
+      newErrors.city = 'City is required.';
+    } else if (!/^[A-Za-z\s.'-]+$/.test(cityTrim)) {
+      newErrors.city = 'City must only contain alphabetic letters.';
+    } else if (cityTrim.length < 2) {
+      newErrors.city = 'City must be at least 2 characters.';
+    } else if (country === 'India') {
+      const cityCheck = validateCityWithState(cityTrim, state);
+      if (!cityCheck.isValid) {
+        newErrors.city = cityCheck.message || `City "${cityTrim}" is not located in ${state}.`;
+      }
+    }
+
+    // 6. State validation
+    const stateTrim = state.trim();
+    if (!stateTrim) {
+      newErrors.state = 'State / Province is required.';
+    }
+
+    // 7. PIN / ZIP code validation
+    const pinTrim = postalCode.trim();
+    if (!pinTrim) {
+      newErrors.postalCode = 'PIN / ZIP Code is required.';
+    } else if (country === 'India') {
+      if (!/^\d{6}$/.test(pinTrim)) {
+        newErrors.postalCode = 'Indian PIN code must be exactly 6 numeric digits.';
+      } else if (pincodeValidation && pincodeValidation.status === 'mismatch') {
+        newErrors.postalCode = pincodeValidation.message;
+      }
+    } else {
+      if (pinTrim.length < 3) {
+        newErrors.postalCode = 'Please enter a valid Postal / ZIP code.';
+      }
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handlePlaceOrder = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
+
+    // Validate form inputs
+    if (!validateAllFields()) {
+      setErrorMessage('Please correct the highlighted fields in the delivery form.');
+      window.scrollTo({ top: 180, behavior: 'smooth' });
+      return;
+    }
+
     setIsProcessing(true);
     
     try {
-      // 1. Ensure Razorpay SDK is loaded
-      const isLoaded = await loadRazorpayScript();
-      if (!isLoaded || !window.Razorpay) {
-        throw new Error('Razorpay payment gateway SDK failed to load. Please check your internet connection.');
+      const formattedAddressStr = `${address}, ${city}, ${state} ${postalCode}, ${country}`;
+
+      // 1. Ensure Razorpay SDK is loaded if Prepaid
+      if (paymentMethod === 'prepaid') {
+        const isLoaded = await loadRazorpayScript();
+        if (!isLoaded || !window.Razorpay) {
+          throw new Error('Razorpay payment gateway SDK failed to load. Please check your internet connection.');
+        }
       }
 
       // 2. Check or Upsert Customer
@@ -85,34 +587,35 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
         .eq('email', customerEmail)
         .maybeSingle();
 
-      if (findErr) throw findErr;
-
-      const formattedAddressStr = `${address}, ${city} ${postalCode}, ${state}, ${country}`.replace(/^[,\s]+|[,\s]+$/g, '');
+      if (findErr) console.warn('Customer lookup notice:', findErr);
 
       if (existingCustomer) {
         customerId = existingCustomer.id;
         await supabase
           .from('customers')
-          .update({ phone: customerPhone, address: formattedAddressStr, full_name: customerName })
+          .update({
+            full_name: customerName,
+            phone: customerPhone,
+            address: formattedAddressStr,
+          })
           .eq('id', customerId);
       } else {
-        const { data: newCustomer, error: insertErr } = await supabase
+        const { data: newCustomer, error: createErr } = await supabase
           .from('customers')
-          .insert([{ full_name: customerName, email: customerEmail, phone: customerPhone, address: formattedAddressStr }])
+          .insert([{
+            full_name: customerName,
+            email: customerEmail,
+            phone: customerPhone,
+            address: formattedAddressStr,
+          }])
           .select()
           .single();
-        
-        if (insertErr) throw insertErr;
-        if (newCustomer) {
-          customerId = newCustomer.id;
-        }
+
+        if (createErr) throw createErr;
+        customerId = newCustomer.id;
       }
 
-      if (!customerId) {
-        throw new Error('Failed to create or fetch customer record');
-      }
-
-      // 3. Create Draft Order in Supabase
+      // 3. Create Pending Order in Supabase
       const orderNumber = `SWARNA-${Math.floor(100000 + Math.random() * 900000)}`;
       const { data: newOrder, error: orderError } = await supabase
         .from('orders')
@@ -120,14 +623,15 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
           order_number: orderNumber,
           customer_id: customerId,
           subtotal: rawTotalINR,
-          discount_amount: discountAmountINR,
+          discount_amount: totalDiscountINR,
+          coupon_code: appliedCoupon ? appliedCoupon.code : null,
           total_amount: finalTotalINR,
           currency,
-          status: 'pending_payment',
+          status: paymentMethod === 'cod' ? 'confirmed' : 'pending_payment',
           payment_status: 'pending',
-          payment_info: 'Razorpay (Pending)',
+          payment_info: paymentMethod === 'cod' ? 'Cash on Delivery' : 'Razorpay (Pending)',
           shipping_address: fullShippingAddress,
-          shipping_charge: shippingCharge,
+          shipping_charge: baseShippingCharge,
           gst_rate: gstRate,
           gst_amount: gstAmountINR,
         }])
@@ -141,16 +645,55 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
       const orderItemsPayload = cartItems.map(item => ({
         order_id: newOrder.id,
         product_id: item.product.id,
-        product_name: item.product.name,
+        product_name: item.isGift ? `${item.product.name} (Free Gift)` : item.product.name,
         selected_timber: item.selectedTimber,
         quantity: item.quantity,
-        unit_price: item.product.priceINR
+        unit_price: item.isGift ? 0 : item.product.priceINR
       }));
 
       const { error: itemsErr } = await supabase.from('order_items').insert(orderItemsPayload);
       if (itemsErr) console.warn('Order items insert notice:', itemsErr);
 
-      // 5. Create Order in Razorpay via Edge Function
+      // 5. If COD, complete order directly without Razorpay
+      if (paymentMethod === 'cod') {
+        await supabase
+          .from('orders')
+          .update({
+            status: 'confirmed',
+            payment_status: 'pending',
+            payment_info: 'Cash on Delivery',
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', newOrder.id);
+
+        if (appliedCoupon && couponDiscountINR > 0) {
+          recordCouponUsage(appliedCoupon.id, appliedCoupon.code, customerEmail, orderNumber, couponDiscountINR);
+        }
+
+        onClearCart();
+        setInvoiceData({
+          items: [...cartItems],
+          customerName,
+          customerEmail,
+          customerPhone,
+          address: formattedAddressStr,
+          subtotal: rawTotalINR,
+          discountAmount: totalDiscountINR,
+          couponCode: appliedCoupon ? appliedCoupon.code : undefined,
+          shipping: baseShippingCharge,
+          codHandlingFee: codHandlingFee,
+          gstAmount: gstAmountINR,
+          gstRate: gstRate,
+          total: finalTotalINR,
+          invoiceNumber: orderNumber,
+          paymentMethod: 'cod',
+        });
+        setShowInvoice(true);
+        setIsProcessing(false);
+        return; // Stop execution here
+      }
+
+      // 6. Create Order in Razorpay via Edge Function
       const rzpOrder = await createRazorpayOrder(
         finalTotalINR,
         currency,
@@ -204,6 +747,10 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
               })
               .eq('id', newOrder.id);
 
+            if (appliedCoupon && couponDiscountINR > 0) {
+              recordCouponUsage(appliedCoupon.id, appliedCoupon.code, customerEmail, orderNumber, couponDiscountINR);
+            }
+
             // Clear Cart
             onClearCart();
 
@@ -215,14 +762,17 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
               customerPhone,
               address: formattedAddressStr,
               subtotal: rawTotalINR,
-              discountAmount: discountAmountINR,
-              shipping: shippingCharge,
+              discountAmount: totalDiscountINR,
+              couponCode: appliedCoupon ? appliedCoupon.code : undefined,
+              shipping: baseShippingCharge,
+              codHandlingFee: 0,
               gstAmount: gstAmountINR,
               gstRate: gstRate,
               total: finalTotalINR,
               invoiceNumber: orderNumber,
               razorpayPaymentId: response.razorpay_payment_id,
               razorpayOrderId: response.razorpay_order_id,
+              paymentMethod: 'prepaid',
             });
 
             setShowInvoice(true);
@@ -238,13 +788,16 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
               customerPhone,
               address: formattedAddressStr,
               subtotal: rawTotalINR,
-              discountAmount: discountAmountINR,
-              shipping: shippingCharge,
+              discountAmount: totalDiscountINR,
+              couponCode: appliedCoupon ? appliedCoupon.code : undefined,
+              shipping: baseShippingCharge,
+              codHandlingFee: 0,
               gstAmount: gstAmountINR,
               gstRate: gstRate,
               total: finalTotalINR,
               invoiceNumber: orderNumber,
               razorpayPaymentId: response.razorpay_payment_id,
+              paymentMethod: 'prepaid',
             });
             setShowInvoice(true);
           } finally {
@@ -304,15 +857,24 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
             <span className="material-symbols-outlined text-5xl">verified</span>
           </div>
           <h4 className="font-headline-md text-3xl font-bold text-[#1b1c1c]">
-            Payment Successful & Order Reserved!
+            {invoiceData.paymentMethod === 'cod' ? 'Order Confirmed & Reserved!' : 'Payment Successful & Order Reserved!'}
           </h4>
           <p className="font-body-md text-base text-[#444748] leading-relaxed">
-            Thank you, <strong>{invoiceData.customerName || 'Valued Collector'}</strong>. Your payment has been securely verified via <strong>Razorpay</strong>. Our master craftspeople will prepare your bespoke piece with custom heirloom packaging.
+            Thank you, <strong>{invoiceData.customerName || 'Valued Collector'}</strong>.{' '}
+            {invoiceData.paymentMethod === 'cod' 
+              ? <span>Your order has been confirmed for <strong>Cash on Delivery</strong>.</span> 
+              : <span>Your payment has been securely verified via <strong>Razorpay</strong>.</span>
+            }{' '}
+            Our master craftspeople will prepare your bespoke piece with custom heirloom packaging.
           </p>
           <div className="bg-[#f5f3f3] p-6 rounded-xs border border-[#c4c7c7] text-left text-sm font-label-caps space-y-2 inline-block mx-auto w-full mt-4">
             <div className="flex justify-between items-center py-1 border-b border-[#e4e2e2]">
               <span className="text-[#747878]">Order ID:</span>
               <strong className="text-[#1b1c1c]">#{invoiceData.invoiceNumber}</strong>
+            </div>
+            <div className="flex justify-between items-center py-1 border-b border-[#e4e2e2]">
+              <span className="text-[#747878]">Payment Method:</span>
+              <strong className="text-[#1b1c1c] uppercase">{invoiceData.paymentMethod === 'cod' ? 'Cash on Delivery' : 'Prepaid'}</strong>
             </div>
             {invoiceData.razorpayPaymentId && (
               <div className="flex justify-between items-center py-1 border-b border-[#e4e2e2]">
@@ -337,18 +899,28 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
           <div className="pt-8 flex flex-col sm:flex-row gap-4 justify-center">
             <button
               onClick={() => setShowInvoice(true)}
-              className="px-8 py-4 bg-white border-2 border-[#1c1b1b] text-[#1c1b1b] font-label-caps text-xs uppercase tracking-widest hover:bg-[#efeded] cursor-pointer"
+              className="px-6 py-3.5 bg-white border-2 border-[#1c1b1b] text-[#1c1b1b] font-label-caps text-xs uppercase tracking-widest hover:bg-[#efeded] cursor-pointer font-bold"
             >
-              View Detailed Tax Invoice
+              View Tax Invoice
             </button>
             <button
               onClick={() => {
-                setActiveTab('home');
+                setActiveTab('account');
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
-              className="px-10 py-4 bg-[#1c1b1b] text-white font-label-caps text-xs uppercase tracking-widest hover:opacity-90 cursor-pointer shadow-md"
+              className="px-8 py-3.5 bg-[#1c1b1b] text-white font-label-caps text-xs uppercase tracking-widest hover:bg-black cursor-pointer shadow-md flex items-center justify-center gap-1.5 font-bold"
             >
-              Continue Browsing Collection
+              <span className="material-symbols-outlined text-sm">local_shipping</span>
+              Track in My Orders
+            </button>
+            <button
+              onClick={() => {
+                setActiveTab('shop');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              className="px-6 py-3.5 bg-transparent text-[#747878] hover:text-[#1b1c1c] font-label-caps text-xs uppercase tracking-widest cursor-pointer"
+            >
+              Continue Shopping
             </button>
           </div>
         </div>
@@ -356,17 +928,20 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
     );
   }
 
-  if (cartItems.length === 0 && !showInvoice) {
+  if (cartItems.filter(i => !i.isGift).length === 0 && !showInvoice) {
     return (
       <div className="py-24 px-6 max-w-7xl mx-auto min-h-screen">
-        <div className="text-center space-y-4">
+        <div className="text-center space-y-4 max-w-md mx-auto bg-white p-10 border border-[#e4e2e2] shadow-sm rounded-xs">
           <span className="material-symbols-outlined text-5xl text-[#c4c7c7]">shopping_bag</span>
           <h2 className="font-headline-md text-2xl font-bold text-[#1b1c1c]">Your Cart is Empty</h2>
+          <p className="text-sm text-[#747878]">
+            Your shopping cart is currently empty. Explore our collection of authentic handcrafted sculptures.
+          </p>
           <button
             onClick={() => setActiveTab('shop')}
-            className="mt-6 px-8 py-3 bg-[#1c1b1b] text-white font-label-caps text-xs uppercase tracking-widest hover:opacity-90 cursor-pointer"
+            className="mt-6 px-8 py-3 bg-[#1c1b1b] text-white font-label-caps text-xs uppercase tracking-widest hover:opacity-90 cursor-pointer shadow-sm w-full"
           >
-            Continue Browsing Collection
+            Explore Collection
           </button>
         </div>
       </div>
@@ -400,11 +975,16 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
           </div>
         </div>
 
+        {/* Promotional Banner Slot for Checkout */}
+        <div className="mb-8">
+          <PromotionalBanner targetPage="checkout_top" />
+        </div>
+
         {errorMessage && (
           <div className="mb-8 p-4 bg-red-50 border-l-4 border-red-600 text-red-800 text-sm flex items-start gap-3 rounded-xs">
             <span className="material-symbols-outlined text-red-600">error</span>
             <div className="flex-1">
-              <p className="font-bold">Payment Notice</p>
+              <p className="font-bold">Delivery & Checkout Notice</p>
               <p>{errorMessage}</p>
             </div>
             <button
@@ -419,10 +999,10 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
         <div className="flex flex-col lg:flex-row gap-12">
           {/* Left Column: Delivery & Payment Details */}
           <div className="flex-1 space-y-8">
-            <form id="checkout-form" onSubmit={handlePlaceOrder} className="bg-white p-8 border border-[#e4e2e2] shadow-sm space-y-8">
+            <form id="checkout-form" onSubmit={handlePlaceOrder} noValidate className="bg-white p-8 border border-[#e4e2e2] shadow-sm space-y-8">
               
               {/* Delivery Information */}
-              <div className="space-y-4">
+              <div className="space-y-5">
                 <div className="flex justify-between items-center border-b border-[#e4e2e2] pb-2">
                   <h5 className="font-label-caps uppercase text-sm font-bold text-[#1b1c1c] flex items-center gap-2">
                     <span className="w-6 h-6 rounded-full bg-[#1c1b1b] text-white flex items-center justify-center text-xs">1</span>
@@ -430,103 +1010,390 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
                   </h5>
                   <span className="text-xs text-[#747878] font-label-caps uppercase">White-Glove Courier</span>
                 </div>
+
+                {/* GPS Location Quick Autofill Bar (Optional) */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 bg-[#faf9f6] border border-[#e4e2e2] rounded-xs">
+                  <div className="flex items-center gap-2.5 text-xs text-[#444748]">
+                    <span className="material-symbols-outlined text-base text-[#735c00]">my_location</span>
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <span className="font-semibold text-[#1b1c1c]">Live Address Detection</span>
+                      <span className="text-[10px] font-bold text-[#747878] bg-gray-100 px-1.5 py-0.5 rounded-xs uppercase tracking-wider">Optional</span>
+                      <span className="text-[11px] text-[#747878] hidden md:inline">
+                        — {geoAddressFound ? `Detected: ${geoAddressFound.slice(0, 45)}...` : 'Quickly autofill address & PIN via GPS'}
+                      </span>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleDetectLocation}
+                    disabled={isLocating}
+                    className="px-3 py-1.5 bg-white border border-[#c4c7c7] text-[#1c1b1b] rounded-xs text-xs font-semibold hover:bg-[#1c1b1b] hover:text-white hover:border-[#1c1b1b] transition-all flex items-center justify-center gap-1.5 shrink-0 cursor-pointer shadow-2xs disabled:opacity-60"
+                  >
+                    {isLocating ? (
+                      <>
+                        <div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+                        Detecting...
+                      </>
+                    ) : (
+                      <>
+                        <span className="material-symbols-outlined text-sm">near_me</span>
+                        Autofill via GPS (Optional)
+                      </>
+                    )}
+                  </button>
+                </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Full Name */}
                   <div>
-                    <label className="block text-xs font-label-caps uppercase text-[#444748] mb-1">Full Name *</label>
+                    <label className="block text-xs font-label-caps uppercase text-[#444748] mb-1">
+                      Full Name <span className="text-red-600">*</span>
+                    </label>
                     <input
                       type="text"
-                      required
                       value={customerName}
-                      onChange={(e) => setCustomerName(e.target.value)}
+                      onChange={handleNameChange}
                       placeholder="e.g. Ananya Rao"
-                      className="w-full p-3 border border-[#c4c7c7] rounded-xs bg-white text-sm focus:outline-none focus:border-[#1c1b1b]"
+                      className={`w-full p-3 border rounded-xs bg-white text-sm focus:outline-none transition-colors ${
+                        errors.customerName ? 'border-red-500 bg-red-50/20 focus:border-red-600' : 'border-[#c4c7c7] focus:border-[#1c1b1b]'
+                      }`}
                     />
+                    {errors.customerName && (
+                      <p className="text-[11px] text-red-600 font-semibold mt-1 flex items-center gap-1">
+                        <span className="material-symbols-outlined text-xs">error</span>
+                        {errors.customerName}
+                      </p>
+                    )}
                   </div>
 
+                  {/* Email Address */}
                   <div>
-                    <label className="block text-xs font-label-caps uppercase text-[#444748] mb-1">Email Address *</label>
+                    <label className="block text-xs font-label-caps uppercase text-[#444748] mb-1">
+                      Email Address <span className="text-red-600">*</span>
+                    </label>
                     <input
                       type="email"
-                      required
                       value={customerEmail}
-                      onChange={(e) => setCustomerEmail(e.target.value)}
+                      onChange={handleEmailChange}
                       placeholder="name@domain.com"
-                      className="w-full p-3 border border-[#c4c7c7] rounded-xs bg-white text-sm focus:outline-none focus:border-[#1c1b1b]"
+                      className={`w-full p-3 border rounded-xs bg-white text-sm focus:outline-none transition-colors ${
+                        errors.customerEmail ? 'border-red-500 bg-red-50/20 focus:border-red-600' : 'border-[#c4c7c7] focus:border-[#1c1b1b]'
+                      }`}
                     />
+                    {errors.customerEmail && (
+                      <p className="text-[11px] text-red-600 font-semibold mt-1 flex items-center gap-1">
+                        <span className="material-symbols-outlined text-xs">error</span>
+                        {errors.customerEmail}
+                      </p>
+                    )}
                   </div>
                 </div>
 
+                {/* Country Code + Phone Number */}
                 <div>
-                  <label className="block text-xs font-label-caps uppercase text-[#444748] mb-1">Phone Number (for Transit Updates & OTP) *</label>
-                  <input
-                    type="tel"
-                    required
-                    value={customerPhone}
-                    onChange={(e) => setCustomerPhone(e.target.value)}
-                    placeholder="+91 98765 43210"
-                    className="w-full p-3 border border-[#c4c7c7] rounded-xs bg-white text-sm focus:outline-none focus:border-[#1c1b1b]"
-                  />
+                  <label className="block text-xs font-label-caps uppercase text-[#444748] mb-1">
+                    Phone Number (for Transit Updates & OTP) <span className="text-red-600">*</span>
+                  </label>
+                  <div className="flex gap-2">
+                    <select
+                      value={countryCode}
+                      onChange={(e) => setCountryCode(e.target.value)}
+                      className="w-28 p-3 border border-[#c4c7c7] rounded-xs bg-white text-sm font-medium focus:outline-none focus:border-[#1c1b1b]"
+                    >
+                      {COUNTRY_OPTIONS.map((c) => (
+                        <option key={c.code} value={c.dialCode}>
+                          {c.flag} {c.dialCode}
+                        </option>
+                      ))}
+                    </select>
+                    <input
+                      type="tel"
+                      value={customerPhone}
+                      onChange={handlePhoneChange}
+                      placeholder={countryCode === '+91' ? '9876543210' : 'Phone number'}
+                      className={`flex-1 p-3 border rounded-xs bg-white text-sm focus:outline-none transition-colors ${
+                        errors.customerPhone ? 'border-red-500 bg-red-50/20 focus:border-red-600' : 'border-[#c4c7c7] focus:border-[#1c1b1b]'
+                      }`}
+                    />
+                  </div>
+                  {errors.customerPhone && (
+                    <p className="text-[11px] text-red-600 font-semibold mt-1 flex items-center gap-1">
+                      <span className="material-symbols-outlined text-xs">error</span>
+                      {errors.customerPhone}
+                    </p>
+                  )}
                 </div>
 
+                {/* Street Address & Locality Suggestions */}
                 <div>
-                  <label className="block text-xs font-label-caps uppercase text-[#444748] mb-1">Street Address / Landmark *</label>
+                  <label className="block text-xs font-label-caps uppercase text-[#444748] mb-1">
+                    Street Address / Landmark <span className="text-red-600">*</span>
+                  </label>
                   <textarea
-                    required
                     rows={2}
                     value={address}
-                    onChange={(e) => setAddress(e.target.value)}
-                    placeholder="House/Apartment #, Street, Landmark..."
-                    className="w-full p-3 border border-[#c4c7c7] rounded-xs bg-white text-sm focus:outline-none focus:border-[#1c1b1b]"
+                    onChange={(e) => {
+                      setAddress(e.target.value);
+                      if (errors.address) setErrors(prev => ({ ...prev, address: undefined }));
+                    }}
+                    placeholder="House/Apartment #, Street, Colony, Landmark..."
+                    className={`w-full p-3 border rounded-xs bg-white text-sm focus:outline-none transition-colors ${
+                      errors.address ? 'border-red-500 bg-red-50/20 focus:border-red-600' : 'border-[#c4c7c7] focus:border-[#1c1b1b]'
+                    }`}
                   />
+                  {errors.address && (
+                    <p className="text-[11px] text-red-600 font-semibold mt-1 flex items-center gap-1">
+                      <span className="material-symbols-outlined text-xs">error</span>
+                      {errors.address}
+                    </p>
+                  )}
+
+                  {/* Clickable Locality Suggestions from India Post API */}
+                  {localities.length > 0 && (
+                    <div className="mt-2 p-2.5 bg-[#fbf9f8] border border-[#e4e2e2] rounded-xs space-y-1.5 animate-fadeIn">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-[#735c00] flex items-center gap-1">
+                        <span className="material-symbols-outlined text-xs">pin_drop</span>
+                        Suggested Postal Areas in {city || 'PIN ' + postalCode} (Click to add):
+                      </span>
+                      <div className="flex flex-wrap gap-1.5">
+                        {localities.slice(0, 10).map((loc) => (
+                          <button
+                            key={loc}
+                            type="button"
+                            onClick={() => {
+                              if (!address.toLowerCase().includes(loc.toLowerCase())) {
+                                setAddress(prev => prev ? `${loc}, ${prev}` : loc);
+                                if (errors.address) setErrors(prev => ({ ...prev, address: undefined }));
+                              }
+                            }}
+                            className="text-[11px] px-2.5 py-1 bg-white border border-[#c4c7c7] rounded-full hover:border-[#1c1b1b] hover:bg-[#1c1b1b] hover:text-white transition-all cursor-pointer font-medium shadow-2xs"
+                          >
+                            + {loc}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {/* Country, State, City, PIN Code */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                  {/* Country Selector */}
                   <div>
-                    <label className="block text-xs font-label-caps uppercase text-[#444748] mb-1">City *</label>
-                    <input
-                      type="text"
-                      required
-                      value={city}
-                      onChange={(e) => setCity(e.target.value)}
-                      placeholder="Bengaluru"
-                      className="w-full p-3 border border-[#c4c7c7] rounded-xs bg-white text-sm focus:outline-none focus:border-[#1c1b1b]"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-label-caps uppercase text-[#444748] mb-1">State *</label>
-                    <input
-                      type="text"
-                      required
-                      value={state}
-                      onChange={(e) => setState(e.target.value)}
-                      placeholder="Karnataka"
-                      className="w-full p-3 border border-[#c4c7c7] rounded-xs bg-white text-sm focus:outline-none focus:border-[#1c1b1b]"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-label-caps uppercase text-[#444748] mb-1">PIN / Zip *</label>
-                    <input
-                      type="text"
-                      required
-                      value={postalCode}
-                      onChange={(e) => setPostalCode(e.target.value)}
-                      placeholder="560001"
-                      className="w-full p-3 border border-[#c4c7c7] rounded-xs bg-white text-sm focus:outline-none focus:border-[#1c1b1b]"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-label-caps uppercase text-[#444748] mb-1">Country *</label>
-                    <input
-                      type="text"
-                      required
+                    <label className="block text-xs font-label-caps uppercase text-[#444748] mb-1">
+                      Country <span className="text-red-600">*</span>
+                    </label>
+                    <select
                       value={country}
-                      onChange={(e) => setCountry(e.target.value)}
-                      placeholder="India"
-                      className="w-full p-3 border border-[#c4c7c7] rounded-xs bg-white text-sm focus:outline-none focus:border-[#1c1b1b]"
+                      onChange={(e) => handleCountryChange(e.target.value)}
+                      className="w-full p-3 border border-[#c4c7c7] rounded-xs bg-white text-sm font-medium focus:outline-none focus:border-[#1c1b1b]"
+                    >
+                      {COUNTRY_OPTIONS.map((c) => (
+                        <option key={c.code} value={c.code}>
+                          {c.flag} {c.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* State Selector */}
+                  <div>
+                    <label className="block text-xs font-label-caps uppercase text-[#444748] mb-1">
+                      State / UT <span className="text-red-600">*</span>
+                    </label>
+                    {country === 'India' ? (
+                      <select
+                        value={state}
+                        onChange={(e) => {
+                          setState(e.target.value);
+                          if (errors.state) setErrors(prev => ({ ...prev, state: undefined }));
+                          if (errors.city) setErrors(prev => ({ ...prev, city: undefined }));
+                        }}
+                        className={`w-full p-3 border rounded-xs bg-white text-sm focus:outline-none transition-colors ${
+                          errors.state ? 'border-red-500 bg-red-50/20 focus:border-red-600' : 'border-[#c4c7c7] focus:border-[#1c1b1b]'
+                        }`}
+                      >
+                        <option value="">Select State</option>
+                        {ALL_INDIAN_STATES.map((s) => (
+                          <option key={s} value={s}>
+                            {s}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <input
+                        type="text"
+                        value={state}
+                        onChange={(e) => {
+                          setState(e.target.value);
+                          if (errors.state) setErrors(prev => ({ ...prev, state: undefined }));
+                        }}
+                        placeholder="State / Province"
+                        className={`w-full p-3 border rounded-xs bg-white text-sm focus:outline-none transition-colors ${
+                          errors.state ? 'border-red-500 bg-red-50/20 focus:border-red-600' : 'border-[#c4c7c7] focus:border-[#1c1b1b]'
+                        }`}
+                      />
+                    )}
+                    {errors.state && (
+                      <p className="text-[11px] text-red-600 font-semibold mt-1">{errors.state}</p>
+                    )}
+                  </div>
+
+                  {/* City */}
+                  <div>
+                    <label className="block text-xs font-label-caps uppercase text-[#444748] mb-1">
+                      City <span className="text-red-600">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={city}
+                      onChange={handleCityChange}
+                      placeholder="e.g. Bengaluru"
+                      className={`w-full p-3 border rounded-xs bg-white text-sm focus:outline-none transition-colors ${
+                        (errors.city || (country === 'India' && cityValidation && !cityValidation.isValid))
+                          ? 'border-red-500 bg-red-50/20 focus:border-red-600'
+                          : 'border-[#c4c7c7] focus:border-[#1c1b1b]'
+                      }`}
                     />
+                    {errors.city && (
+                      <p className="text-[11px] text-red-600 font-semibold mt-1">{errors.city}</p>
+                    )}
+
+                    {/* City vs State Mismatch Warning & 1-Click Fix */}
+                    {country === 'India' && cityValidation && !cityValidation.isValid && (
+                      <div className="mt-1.5 space-y-1 bg-red-50 p-2 rounded-xs border border-red-200 animate-fadeIn">
+                        <p className="text-[11px] text-red-700 font-semibold leading-tight flex items-start gap-1">
+                          <span className="material-symbols-outlined text-[13px] text-red-600 mt-0.5 shrink-0">cancel</span>
+                          <span>{cityValidation.message}</span>
+                        </p>
+                        {cityValidation.expectedState && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setState(cityValidation.expectedState!);
+                              if (errors.state) setErrors(prev => ({ ...prev, state: undefined }));
+                              if (errors.city) setErrors(prev => ({ ...prev, city: undefined }));
+                            }}
+                            className="text-[10px] text-red-800 underline font-bold hover:text-red-950 block pl-4 cursor-pointer text-left"
+                          >
+                            Click to sync State to {cityValidation.expectedState}
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* PIN / ZIP Code */}
+                  <div>
+                    <label className="block text-xs font-label-caps uppercase text-[#444748] mb-1">
+                      {country === 'India' ? 'PIN Code (6 digits)' : 'ZIP / Postal'} <span className="text-red-600">*</span>
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={postalCode}
+                        onChange={handlePincodeChange}
+                        placeholder={country === 'India' ? '560001' : 'ZIP Code'}
+                        className={`w-full p-3 pr-8 border rounded-xs text-sm focus:outline-none transition-colors ${
+                          country === 'India' && pincodeValidation?.status === 'valid'
+                            ? 'border-[#2e6930] bg-[#f4f9f4] text-[#1b1c1c]'
+                            : country === 'India' && pincodeValidation?.status === 'mismatch'
+                            ? 'border-red-500 bg-red-50/20 text-[#1b1c1c]'
+                            : errors.postalCode
+                            ? 'border-red-500 bg-red-50/20 focus:border-red-600'
+                            : 'border-[#c4c7c7] bg-white focus:border-[#1c1b1b]'
+                        }`}
+                      />
+                      {country === 'India' && postalCode.length === 6 && (
+                        <span className="absolute right-2.5 top-1/2 -translate-y-1/2">
+                          {pincodeValidation?.status === 'valid' ? (
+                            <span className="material-symbols-outlined text-[#2e6930] text-lg">check_circle</span>
+                          ) : pincodeValidation?.status === 'mismatch' ? (
+                            <span className="material-symbols-outlined text-red-600 text-lg">cancel</span>
+                          ) : null}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Green detected message */}
+                    {country === 'India' && pincodeValidation?.status === 'valid' && (
+                      <div className="mt-1.5 flex items-start gap-1 text-[11px] text-[#2e6930] font-semibold bg-[#eaf5eb] px-2 py-1.5 rounded-xs border border-[#c3e6c6]">
+                        <span className="material-symbols-outlined text-[13px] shrink-0 text-[#2e6930] mt-0.5">check_circle</span>
+                        <span>{pincodeValidation.message}</span>
+                      </div>
+                    )}
+
+                    {/* Red mismatch warning with auto-switch state button */}
+                    {country === 'India' && pincodeValidation?.status === 'mismatch' && (
+                      <div className="mt-1.5 space-y-1 bg-red-50 px-2 py-1.5 rounded-xs border border-red-200">
+                        <div className="flex items-start gap-1 text-[11px] text-red-700 font-semibold leading-tight">
+                          <span className="material-symbols-outlined text-[13px] shrink-0 text-red-600 mt-0.5">cancel</span>
+                          <span>{pincodeValidation.message}</span>
+                        </div>
+                        {pincodeValidation.detectedState && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setState(pincodeValidation.detectedState!);
+                              if (pincodeValidation.detectedCity) setCity(pincodeValidation.detectedCity);
+                              if (errors.state) setErrors(prev => ({ ...prev, state: undefined }));
+                              if (errors.postalCode) setErrors(prev => ({ ...prev, postalCode: undefined }));
+                            }}
+                            className="text-[10px] text-red-800 underline font-bold hover:text-red-950 block pl-4 cursor-pointer text-left"
+                          >
+                            Click to sync State to {pincodeValidation.detectedState}
+                          </button>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Incomplete helper */}
+                    {country === 'India' && pincodeValidation?.status === 'incomplete' && postalCode.length > 0 && (
+                      <p className="text-[10px] text-[#747878] mt-1 pl-1">
+                        {pincodeValidation.message}
+                      </p>
+                    )}
+
+                    {errors.postalCode && pincodeValidation?.status !== 'mismatch' && (
+                      <p className="text-[11px] text-red-600 font-semibold mt-1 flex items-center gap-1">
+                        <span className="material-symbols-outlined text-xs">error</span>
+                        {errors.postalCode}
+                      </p>
+                    )}
                   </div>
                 </div>
+
+                {/* Live Delivery Zone Map & Transit Hub Card */}
+                {(city || postalCode) && (
+                  <div className="p-3.5 bg-[#fbfaf8] border border-[#e5e1d8] rounded-xs space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="material-symbols-outlined text-base text-[#2e6930]">fmd_good</span>
+                        <span className="text-xs font-bold text-[#1b1c1c] uppercase tracking-wider">
+                          Verified Destination: {city ? `${city}, ` : ''}{state} {postalCode ? `(${postalCode})` : ''}
+                        </span>
+                      </div>
+                      <span className="text-[10px] font-bold text-[#735c00] bg-[#fed65b]/20 px-2 py-0.5 rounded-full">
+                        {checkoutCalc.matchedProfileName}
+                      </span>
+                    </div>
+
+                    {/* Embedded OpenStreetMap Preview */}
+                    <div className="w-full h-32 rounded-xs overflow-hidden border border-[#e4e2e2] relative bg-[#eee]">
+                      <iframe
+                        title="Delivery Location Map"
+                        width="100%"
+                        height="100%"
+                        frameBorder="0"
+                        scrolling="no"
+                        marginHeight={0}
+                        marginWidth={0}
+                        src={`https://maps.google.com/maps?q=${encodeURIComponent(`${address ? address + ', ' : ''}${city || ''}, ${state || ''} ${postalCode || ''}, ${country || 'India'}`)}&t=&z=13&ie=UTF8&iwloc=&output=embed`}
+                        className="w-full h-full grayscale-25 hover:grayscale-0 transition-all pointer-events-none"
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Payment Gateway Information */}
@@ -542,59 +1409,62 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
                   </span>
                 </div>
 
-                <div className="bg-[#fbf9f8] p-6 border-2 border-[#1c1b1b] rounded-xs space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-4 h-4 rounded-full border-4 border-[#1c1b1b] bg-white"></div>
-                      <div>
-                        <span className="font-headline-md font-bold text-base text-[#1b1c1c] block">
-                          Razorpay Payments
-                        </span>
-                        <span className="text-xs text-[#444748] block">
-                          UPI, Credit/Debit Cards, NetBanking, EMI & Wallets
-                        </span>
-                      </div>
-                    </div>
-                    <img
-                      src="https://razorpay.com/assets/razorpay-glyph.svg"
-                      alt="Razorpay"
-                      className="h-8 w-auto opacity-90"
-                      onError={(e: any) => {
-                        e.target.style.display = 'none';
-                      }}
+                <div className="flex flex-col gap-4">
+                  {/* Prepaid Option */}
+                  <label 
+                    className={`flex items-start gap-4 p-5 border-2 rounded-xs cursor-pointer transition-colors ${paymentMethod === 'prepaid' ? 'border-[#1c1b1b] bg-[#fbf9f8]' : 'border-[#e4e2e2] bg-white hover:border-[#c4c7c7]'}`}
+                  >
+                    <input 
+                      type="radio" 
+                      name="paymentMethod" 
+                      value="prepaid" 
+                      checked={paymentMethod === 'prepaid'} 
+                      onChange={() => setPaymentMethod('prepaid')}
+                      className="mt-1 w-4 h-4 accent-[#1c1b1b]"
                     />
-                  </div>
-
-                  {/* Payment Option Badges */}
-                  <div className="pt-3 border-t border-[#e4e2e2] grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs font-label-caps text-[#444748]">
-                    <div className="bg-white p-2 border border-[#e4e2e2] rounded-2xs text-center flex flex-col items-center justify-center gap-1">
-                      <span className="material-symbols-outlined text-[#1b1c1c] text-lg">account_balance_wallet</span>
-                      <span className="font-bold text-[10px]">UPI & QR</span>
-                      <span className="text-[9px] text-[#747878]">GPay / PhonePe / Paytm</span>
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between">
+                        <span className="font-headline-md font-bold text-base text-[#1b1c1c] block">
+                          Pay Online (Razorpay)
+                        </span>
+                        <img src="https://razorpay.com/assets/razorpay-glyph.svg" alt="Razorpay" className="h-6 w-auto opacity-90" />
+                      </div>
+                      <span className="text-xs text-[#444748] block mt-1">
+                        UPI, Credit/Debit Cards, NetBanking, EMI & Wallets
+                      </span>
                     </div>
+                  </label>
 
-                    <div className="bg-white p-2 border border-[#e4e2e2] rounded-2xs text-center flex flex-col items-center justify-center gap-1">
-                      <span className="material-symbols-outlined text-[#1b1c1c] text-lg">credit_card</span>
-                      <span className="font-bold text-[10px]">Cards</span>
-                      <span className="text-[9px] text-[#747878]">Visa / MC / RuPay / Amex</span>
+                  {/* COD Option */}
+                  <label 
+                    className={`flex items-start gap-4 p-5 border-2 rounded-xs transition-colors ${!isCodAllowed ? 'opacity-50 cursor-not-allowed border-[#e4e2e2] bg-gray-50' : paymentMethod === 'cod' ? 'border-[#1c1b1b] bg-[#fbf9f8] cursor-pointer' : 'border-[#e4e2e2] bg-white hover:border-[#c4c7c7] cursor-pointer'}`}
+                  >
+                    <input 
+                      type="radio" 
+                      name="paymentMethod" 
+                      value="cod" 
+                      checked={paymentMethod === 'cod'} 
+                      onChange={() => setPaymentMethod('cod')}
+                      disabled={!isCodAllowed}
+                      className="mt-1 w-4 h-4 accent-[#1c1b1b]"
+                    />
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between">
+                        <span className={`font-headline-md font-bold text-base block ${!isCodAllowed ? 'text-[#747878]' : 'text-[#1b1c1c]'}`}>
+                          Cash on Delivery (COD)
+                        </span>
+                        <span className="material-symbols-outlined text-[#747878]">local_shipping</span>
+                      </div>
+                      <span className="text-xs text-[#444748] block mt-1">
+                        Pay at your doorstep with Cash or UPI. 
+                        {!isCodAllowed && (
+                          <span className="text-[#ba1a1a] font-semibold block mt-1">
+                            {checkoutCalc.codDisabledReason || 'Not available for the selected area.'}
+                          </span>
+                        )}
+                      </span>
                     </div>
-
-                    <div className="bg-white p-2 border border-[#e4e2e2] rounded-2xs text-center flex flex-col items-center justify-center gap-1">
-                      <span className="material-symbols-outlined text-[#1b1c1c] text-lg">account_balance</span>
-                      <span className="font-bold text-[10px]">NetBanking</span>
-                      <span className="text-[9px] text-[#747878]">50+ Top Indian Banks</span>
-                    </div>
-
-                    <div className="bg-white p-2 border border-[#e4e2e2] rounded-2xs text-center flex flex-col items-center justify-center gap-1">
-                      <span className="material-symbols-outlined text-[#1b1c1c] text-lg">payments</span>
-                      <span className="font-bold text-[10px]">EMI & PayLater</span>
-                      <span className="text-[9px] text-[#747878]">Card & Cardless EMI</span>
-                    </div>
-                  </div>
-
-                  <p className="text-[11px] text-[#747878] leading-relaxed italic bg-white p-3 border border-[#e4e2e2] rounded-2xs">
-                    * Clicking "Proceed to Pay with Razorpay" will safely launch Razorpay's trusted checkout modal with automated bank reconciliation and instant payment capture.
-                  </p>
+                  </label>
                 </div>
               </div>
             </form>
@@ -620,9 +1490,13 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
                       <span className="text-[11px] font-body-md text-[#735c00] block mt-0.5">
                         {item.selectedTimber}
                       </span>
-                      <span className="font-headline-md font-bold text-sm text-[#000000] block mt-1.5">
-                        {formatPrice(item.product.priceINR * item.quantity, currency)}
-                      </span>
+                        <p className="font-headline-md font-bold text-sm text-[#1b1c1c] text-right">
+                          {item.isGift ? (
+                             <span className="text-[#2e6930]">FREE</span>
+                          ) : (
+                             formatPrice(item.product.priceINR * item.quantity, currency)
+                          )}
+                        </p>
                       
                       <div className="flex items-center gap-2 mt-2">
                         <button
@@ -657,15 +1531,97 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
                 ))}
               </div>
 
+              {/* Promo Code Input inside Checkout Order Summary */}
+              <div className="bg-[#f5f3f3] p-3 rounded-xs border border-[#c4c7c7] space-y-2 mt-4">
+                {!appliedCoupon ? (
+                  <form onSubmit={handleApplyCouponCheckout} className="flex gap-2">
+                    <input
+                      type="text"
+                      value={checkoutCouponInput}
+                      onChange={(e) => setCheckoutCouponInput(e.target.value.toUpperCase())}
+                      placeholder="Promo Code (e.g. WELCOME10)"
+                      className="flex-1 bg-white border border-[#c4c7c7] px-3 py-1.5 text-xs font-label-caps uppercase rounded-xs focus:outline-none focus:border-[#1c1b1b]"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleApplyCouponCheckout}
+                      disabled={isValidatingCoupon}
+                      className="bg-[#1c1b1b] text-white px-3 py-1.5 text-xs font-label-caps uppercase tracking-wider rounded-xs hover:opacity-90 cursor-pointer disabled:opacity-50 font-bold shrink-0"
+                    >
+                      {isValidatingCoupon ? '...' : 'Apply'}
+                    </button>
+                  </form>
+                ) : (
+                  <div className="bg-white p-3 rounded-xs border border-[#2e6930] space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <span className="font-mono font-bold text-xs text-[#2e6930] uppercase flex items-center gap-1">
+                        🎉 {appliedCoupon.code} APPLIED
+                      </span>
+                      <span className="font-bold text-xs text-[#2e6930]">
+                        -{formatPrice(couponDiscountINR, currency)}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between pt-1.5 border-t border-[#eaf5eb]">
+                      <span className="text-[11px] font-semibold text-[#2e6930]">
+                        {getCouponDiscountText(appliedCoupon, rawTotalINR)}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={handleRemoveCouponCheckout}
+                        className="text-[11px] font-bold text-red-600 hover:underline cursor-pointer ml-2 shrink-0"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {couponError && <p className="text-[11px] text-[#ba1a1a] font-medium">{couponError}</p>}
+                {couponSuccessMsg && !appliedCoupon && (
+                  <p className="text-[11px] text-[#2e6930] font-bold">
+                    {couponSuccessMsg}
+                  </p>
+                )}
+              </div>
+
               <div className="pt-4 border-t border-[#e4e2e2] space-y-2 text-sm font-label-caps">
                 <div className="flex justify-between text-[#444748]">
                   <span>Subtotal:</span>
                   <span>{formatPrice(rawTotalINR, currency)}</span>
                 </div>
+                {prepaidDiscountINR > 0 && (
+                  <div className="flex justify-between text-[#2e6930] font-semibold">
+                    <span>Prepaid Discount:</span>
+                    <span>-{formatPrice(prepaidDiscountINR, currency)}</span>
+                  </div>
+                )}
+                {couponDiscountINR > 0 && appliedCoupon && (
+                  <div className="space-y-0.5">
+                    <div className="flex justify-between text-[#2e6930] font-bold">
+                      <span>Coupon ({appliedCoupon.code}):</span>
+                      <span>-{formatPrice(couponDiscountINR, currency)}</span>
+                    </div>
+                    <p className="text-[10px] text-[#2e6930] text-right font-semibold">
+                      {getCouponDiscountText(appliedCoupon, rawTotalINR)}
+                    </p>
+                  </div>
+                )}
                 <div className="flex justify-between text-[#444748]">
                   <span>Insured Shipping:</span>
-                  <span>{formatPrice(shippingCharge, currency)}</span>
+                  <span>{isFreeShippingCoupon ? (
+                    <span className="text-[#2e6930] font-bold">FREE (Coupon {appliedCoupon.code})</span>
+                  ) : baseShippingCharge === 0 && checkoutCalc.isFreeQualified ? (
+                    <span className="text-[#2e6930] font-bold">FREE (Qualified)</span>
+                  ) : (
+                    formatPrice(baseShippingCharge, currency)
+                  )}</span>
                 </div>
+                {paymentMethod === 'cod' && codHandlingFee > 0 && (
+                  <div className="flex justify-between text-[#735c00] font-semibold">
+                    <span>COD Handling Fee:</span>
+                    <span>+{formatPrice(codHandlingFee, currency)}</span>
+                  </div>
+                )}
                 <div className="flex justify-between text-[#444748]">
                   <span>GST ({gstRate}%):</span>
                   <span>{formatPrice(gstAmountINR, currency)}</span>
@@ -687,12 +1643,12 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
                 {isProcessing ? (
                   <>
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    Connecting Razorpay Gateway...
+                    Processing Order...
                   </>
                 ) : (
                   <>
-                    <span className="material-symbols-outlined text-sm">lock</span>
-                    Proceed to Pay with Razorpay
+                    <span className="material-symbols-outlined text-sm">{paymentMethod === 'cod' ? 'local_shipping' : 'lock'}</span>
+                    {paymentMethod === 'cod' ? 'Confirm COD Order' : 'Proceed to Pay with Razorpay'}
                   </>
                 )}
               </button>
@@ -716,10 +1672,15 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
           currency={currency}
           subtotal={invoiceData.subtotal}
           discountAmount={invoiceData.discountAmount}
+          couponCode={invoiceData.couponCode}
           shipping={invoiceData.shipping}
           gstAmount={invoiceData.gstAmount}
           gstRate={invoiceData.gstRate}
           total={invoiceData.total}
+          invoiceNumber={invoiceData.invoiceNumber}
+          razorpayPaymentId={invoiceData.razorpayPaymentId}
+          paymentMethod={invoiceData.paymentMethod}
+          codHandlingFee={invoiceData.codHandlingFee}
         />
       )}
     </div>

@@ -1,8 +1,11 @@
 import React, { useState } from 'react';
-import { ActiveTab, Currency } from '../types';
+import { Link } from 'react-router-dom';
+import { ActiveTab, Currency, Customer } from '../types';
 import irisjevLogo from '../assets/images/irisjev_logo_1785688429320.jpg';
+import { PromotionalBanner } from './PromotionalBanner';
 
 interface HeaderProps {
+
   activeTab: ActiveTab;
   setActiveTab: (tab: ActiveTab) => void;
   currency: Currency;
@@ -13,8 +16,8 @@ interface HeaderProps {
   onOpenWishlist: () => void;
   onOpenSearch: () => void;
   onOpenBespoke: () => void;
-  isAdmin: boolean;
-  setIsAdmin: (val: boolean) => void;
+  customer: Customer | null;
+  onOpenAuthModal: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -28,13 +31,15 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenWishlist,
   onOpenSearch,
   onOpenBespoke,
-  isAdmin,
-  setIsAdmin,
+  customer,
+  onOpenAuthModal,
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-50 bg-[#fbf9f8]/95 backdrop-blur-md border-b border-[#c4c7c7]/30 shadow-xs transition-all duration-300">
+    <>
+      <PromotionalBanner targetPage="header_marquee" />
+      <header className="sticky top-0 z-50 bg-[#fbf9f8]/95 backdrop-blur-md border-b border-[#c4c7c7]/30 shadow-xs transition-all duration-300">
       {/* Top Announcement Bar */}
       <div className="bg-[#1c1b1b] text-[#e5e2e1] text-[11px] font-label-caps uppercase tracking-widest py-1.5 px-4 text-center flex justify-between items-center max-w-[1200px] mx-auto">
         <span className="hidden sm:inline">Est. 1995 • Irisjev Wooden Crafts</span>
@@ -54,14 +59,14 @@ export const Header: React.FC<HeaderProps> = ({
             <option value="MYR">🇲🇾 MYR (RM)</option>
             <option value="IDR">🇮🇩 IDR (Rp)</option>
           </select>
-          <button
-            onClick={() => setIsAdmin(!isAdmin)}
-            className={`text-[10px] uppercase px-1.5 py-0.5 rounded-xs transition-colors ${
-              isAdmin ? 'bg-[#fed65b] text-[#745c00] font-bold' : 'text-[#858383] hover:text-white'
-            }`}
+          <Link
+            to="/admin"
+            className="text-[10px] uppercase font-bold px-2 py-0.5 rounded-xs transition-colors bg-[#fed65b]/20 text-[#fed65b] hover:bg-[#fed65b] hover:text-[#1c1b1b] border border-[#fed65b]/40 flex items-center gap-1 cursor-pointer"
+            title="Access Master Admin Portal (/admin)"
           >
-            {isAdmin ? 'Admin Mode: ON' : 'Admin'}
-          </button>
+            <span className="material-symbols-outlined text-xs">admin_panel_settings</span>
+            Admin Portal
+          </Link>
         </div>
       </div>
 
@@ -157,6 +162,35 @@ export const Header: React.FC<HeaderProps> = ({
             <option value="IDR">IDR</option>
           </select>
 
+          {/* Customer Account / Sign In */}
+          {customer ? (
+            <button
+              onClick={() => setActiveTab('account')}
+              className={`p-1 transition-colors cursor-pointer flex items-center gap-1.5 ${
+                activeTab === 'account' ? 'text-[#735c00] font-bold' : 'hover:opacity-70'
+              }`}
+              title={`Account (${customer.full_name})`}
+            >
+              <div className="w-6 h-6 rounded-full bg-[#1c1b1b] text-[#fed65b] flex items-center justify-center text-[11px] font-bold">
+                {customer.full_name?.charAt(0)?.toUpperCase() || 'C'}
+              </div>
+              <span className="hidden lg:inline text-[11px] font-label-caps uppercase tracking-wider text-[#1c1b1b] font-bold max-w-[80px] truncate">
+                {customer.full_name?.split(' ')[0]}
+              </span>
+            </button>
+          ) : (
+            <button
+              onClick={onOpenAuthModal}
+              className="p-1 hover:opacity-70 transition-opacity cursor-pointer flex items-center gap-1"
+              title="Sign In / My Orders"
+            >
+              <span className="material-symbols-outlined">account_circle</span>
+              <span className="hidden lg:inline text-[11px] font-label-caps uppercase tracking-wider text-[#444748]">
+                Sign In
+              </span>
+            </button>
+          )}
+
           {/* Wishlist Icon */}
           <button
             onClick={onOpenWishlist}
@@ -198,6 +232,23 @@ export const Header: React.FC<HeaderProps> = ({
       {/* Mobile Drawer Menu */}
       {mobileMenuOpen && (
         <div className="md:hidden bg-[#fbf9f8] border-b border-[#c4c7c7] px-6 py-6 space-y-4 font-label-caps uppercase tracking-widest text-[13px] animate-fadeIn">
+          {/* Customer Account on Mobile */}
+          <button
+            onClick={() => {
+              if (customer) {
+                setActiveTab('account');
+              } else {
+                onOpenAuthModal();
+              }
+              setMobileMenuOpen(false);
+            }}
+            className="block w-full text-left py-2.5 text-[#735c00] font-bold border-b border-[#e9e8e7] flex items-center gap-2"
+          >
+            <span className="material-symbols-outlined text-base">
+              {customer ? 'account_circle' : 'login'}
+            </span>
+            <span>{customer ? `My Account (${customer.full_name})` : 'Sign In / My Orders (10% Off)'}</span>
+          </button>
           <button
             onClick={() => {
               setActiveTab('home');
@@ -248,12 +299,22 @@ export const Header: React.FC<HeaderProps> = ({
               onOpenBespoke();
               setMobileMenuOpen(false);
             }}
-            className="block w-full text-left py-2 text-[#735c00] font-bold"
+            className="block w-full text-left py-2 text-[#735c00] font-bold border-b border-[#e9e8e7]"
           >
             ✨ Custom Order Concierge
           </button>
+          <Link
+            to="/admin"
+            onClick={() => setMobileMenuOpen(false)}
+            className="block w-full text-left py-2.5 text-[#fed65b] font-bold bg-[#1c1b1b] px-3 rounded-xs flex items-center gap-2 mt-2"
+          >
+            <span className="material-symbols-outlined text-base">admin_panel_settings</span>
+            <span>Master Admin Portal (/admin)</span>
+          </Link>
         </div>
       )}
     </header>
+    </>
   );
 };
+

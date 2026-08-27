@@ -1,6 +1,9 @@
-import React from 'react';
-import { Product, Currency, ActiveTab, PageContent } from '../types';
+import React, { useState, useEffect } from 'react';
+import { Product, Currency, ActiveTab, PageContent, HeroSettings } from '../types';
 import { formatPrice } from '../utils/currency';
+import { PromotionalBanner } from '../components/PromotionalBanner';
+import { HeroSection } from '../components/HeroSection';
+import { fetchHeroSettings, DEFAULT_HERO_SETTINGS } from '../utils/pageContentEngine';
 
 interface HomeViewProps {
   setActiveTab: (tab: ActiveTab) => void;
@@ -19,9 +22,28 @@ export const HomeView: React.FC<HomeViewProps> = ({
   products,
   pageContent = [],
 }) => {
+  const [heroSettings, setHeroSettings] = useState<HeroSettings>(DEFAULT_HERO_SETTINGS);
+
+  useEffect(() => {
+    fetchHeroSettings().then(res => setHeroSettings(res));
+
+    const handleHeroUpdate = (e: any) => {
+      if (e.detail) {
+        setHeroSettings(e.detail);
+      } else {
+        fetchHeroSettings().then(res => setHeroSettings(res));
+      }
+    };
+
+    window.addEventListener('irisjev_hero_updated', handleHeroUpdate);
+    return () => window.removeEventListener('irisjev_hero_updated', handleHeroUpdate);
+  }, []);
+
+
   const getSection = (sectionName: string) => {
     return pageContent.find(c => c.section === sectionName)?.content || {};
   };
+
 
   const heroContent = getSection('hero');
   const statsContent = getSection('stats');
@@ -33,82 +55,20 @@ export const HomeView: React.FC<HomeViewProps> = ({
   const heroGanesha = products.find((p) => p.id === (heroContent.featuredProductId || 'ganesha-sculpture-01')) || products[0];
 
   return (
-    <div className="space-y-20 animate-fadeIn">
-      {/* Hero Section - Screen 3 Desktop & Screen 1 Mobile */}
-      <section className="relative overflow-hidden bg-[#fbf9f8] px-4 md:px-8 py-8 md:py-16">
-        <div className="max-w-[1200px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-          {/* Left Column - Featured Hero Sculpture Card */}
-          <div className="lg:col-span-7 relative group">
-            <div className="relative overflow-hidden rounded-xs border border-[#c4c7c7]/40 shadow-xl bg-white">
-              <img
-                src={heroGanesha.image}
-                alt="Lord Ganesha Wooden Sculpture"
-                className="w-full h-[380px] sm:h-[480px] md:h-[560px] object-cover object-center group-hover:scale-102 transition-transform duration-700"
-              />
-              {/* Badge overlay */}
-              <div className="absolute top-6 left-6 bg-[#1c1b1b]/80 backdrop-blur-xs text-white px-3.5 py-1.5 rounded-xs text-xs font-label-caps uppercase tracking-widest border border-white/20">
-                {heroContent.badge || 'Est. 1995 • Irisjev Wooden Crafts'}
-              </div>
+    <div className="space-y-12 animate-fadeIn">
+      {/* Promotional Banner Slot for Homepage */}
+      <div className="max-w-[1200px] mx-auto px-4 md:px-8 pt-4">
+        <PromotionalBanner targetPage="home_hero" />
+      </div>
 
-              {/* Quick action floating panel */}
-              <div className="absolute bottom-6 left-6 right-6 bg-[#fbf9f8]/90 backdrop-blur-md p-4 sm:p-6 rounded-xs border border-[#c4c7c7]/50 shadow-lg flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <div>
-                  <span className="text-[10px] font-label-caps uppercase tracking-widest text-[#735c00] font-bold block">
-                    Featured Masterpiece
-                  </span>
-                  <h3 className="font-headline-md text-lg sm:text-xl font-bold text-[#1b1c1c]">
-                    {heroGanesha.name}
-                  </h3>
-                  <p className="text-xs font-body-md text-[#444748]">
-                    {heroGanesha.material} • {heroGanesha.dimensions}
-                  </p>
-                </div>
-                <div className="flex gap-2 w-full sm:w-auto">
-                  <button
-                    onClick={() => onSelectProduct(heroGanesha)}
-                    className="flex-1 sm:flex-initial px-4 py-2 bg-[#1c1b1b] text-white text-xs font-label-caps uppercase tracking-wider hover:opacity-90 cursor-pointer text-center"
-                  >
-                    View Details
-                  </button>
-                  <button
-                    onClick={() => onAddToCart(heroGanesha)}
-                    className="px-3 py-2 bg-[#fed65b] text-[#745c00] text-xs font-label-caps uppercase font-bold hover:bg-[#fed65b]/80 cursor-pointer"
-                    title="Add to Basket"
-                  >
-                    <span className="material-symbols-outlined text-sm">shopping_bag</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Right Column - Brand Headline & Story */}
-          <div className="lg:col-span-5 space-y-6">
-            <div className="inline-block border-b-2 border-[#735c00] pb-1">
-              <span className="font-label-caps text-xs uppercase tracking-widest text-[#735c00] font-bold">
-                Handcrafted Heritage Woodcrafts
-              </span>
-            </div>
-
-            <h1 className="font-display-lg text-3xl sm:text-4xl lg:text-5xl font-bold text-[#1b1c1c] leading-tight italic">
-              {heroContent.headline || 'Ancient Artistry for Modern Spaces'}
-            </h1>
-
-            <p className="font-body-lg text-[#444748] leading-relaxed">
-              {heroContent.description || 'At Irisjev Wooden Crafts, every piece is hand-carved by 8th-generation master sculptors using centuries-old temple traditions. We preserve sacred heritage through ethically sourced aged teak, red sandalwood, and Indian rosewood.'}
-            </p>
-
-            <div className="pt-4 flex flex-col sm:flex-row gap-4 font-label-caps text-xs uppercase tracking-widest">
-              <button
-                onClick={() => setActiveTab('shop')}
-                className="px-8 py-4 bg-[#1c1b1b] text-white font-bold hover:bg-black transition-all cursor-pointer shadow-md text-center flex items-center justify-center gap-2 group"
-              >
-                <span>{heroContent.buttonText || 'Explore Collection'}</span>
-                <span className="material-symbols-outlined text-sm group-hover:translate-x-1 transition-transform">
-                  arrow_forward
-                </span>
-              </button>
-            </div>
+      {/* Dynamic Page-Builder Driven Hero Section */}
+      <HeroSection
+        settings={heroSettings}
+        products={products}
+        onSelectProduct={onSelectProduct}
+        onAddToCart={onAddToCart}
+        setActiveTab={setActiveTab}
+      />
 
             {/* Quick Stats Banner */}
             <div className="grid grid-cols-3 gap-4 pt-8 border-t border-[#c4c7c7]/40 text-center font-body-md">
@@ -123,11 +83,9 @@ export const HomeView: React.FC<HomeViewProps> = ({
                 </div>
               ))}
             </div>
-          </div>
-        </div>
-      </section>
 
       {/* Spotlight Section - Screen 3 & Screen 1 Showcase */}
+
       <section className="max-w-[1200px] mx-auto px-4 md:px-8 space-y-8">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 border-b border-[#c4c7c7]/40 pb-4">
           <div>

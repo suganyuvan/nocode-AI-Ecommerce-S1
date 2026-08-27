@@ -11,6 +11,7 @@ interface InvoiceViewProps {
     address: string;
     subtotal: number;
     discountAmount: number;
+    couponCode?: string;
     total: number;
     invoiceNumber: string;
     dateString: string;
@@ -19,6 +20,7 @@ interface InvoiceViewProps {
   currency: Currency;
   setActiveTab: (tab: ActiveTab) => void;
 }
+
 
 export const InvoiceView: React.FC<InvoiceViewProps> = ({
   invoiceData,
@@ -130,17 +132,18 @@ export const InvoiceView: React.FC<InvoiceViewProps> = ({
 
             {/* Totals */}
             <div className="flex justify-end pt-4">
-              <div className="w-48 space-y-3 text-sm">
+              <div className="w-60 space-y-3 text-sm">
                 <div className="flex justify-between text-[#444748]">
                   <span className="font-bold text-[#1c1b1b]">Subtotal</span>
                   <span>{formatPrice(invoiceData.subtotal, currency)}</span>
                 </div>
                 {invoiceData.discountAmount > 0 && (
-                  <div className="flex justify-between text-[#444748]">
-                    <span>Discount</span>
+                  <div className="flex justify-between text-[#2e6930] font-bold">
+                    <span>{invoiceData.couponCode ? `Coupon (${invoiceData.couponCode})` : 'Discount'}</span>
                     <span>-{formatPrice(invoiceData.discountAmount, currency)}</span>
                   </div>
                 )}
+
                 <div className="flex justify-between text-[#444748] border-b border-[#c4c7c7] pb-3">
                   <span className="font-bold text-[#1c1b1b]">Tax (0%)</span>
                   <span>{formatPrice(0, currency)}</span>

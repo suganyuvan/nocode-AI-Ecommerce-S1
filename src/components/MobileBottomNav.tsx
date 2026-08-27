@@ -1,5 +1,5 @@
 import React from 'react';
-import { ActiveTab } from '../types';
+import { ActiveTab, Customer } from '../types';
 
 interface MobileBottomNavProps {
   activeTab: ActiveTab;
@@ -7,6 +7,8 @@ interface MobileBottomNavProps {
   cartCount: number;
   onOpenCart: () => void;
   onOpenSearch: () => void;
+  customer?: Customer | null;
+  onOpenAuthModal?: () => void;
 }
 
 export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
@@ -15,9 +17,11 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
   cartCount,
   onOpenCart,
   onOpenSearch,
+  customer,
+  onOpenAuthModal,
 }) => {
   return (
-    <nav className="fixed bottom-0 left-0 right-0 w-full z-40 md:hidden bg-[#ffffff] dark:bg-[#303031] shadow-[0_-4px_20px_0_rgba(88,47,14,0.08)] border-t border-[#c4c7c7]/20">
+    <nav className="fixed bottom-0 left-0 right-0 w-full z-40 md:hidden bg-[#ffffff] shadow-[0_-4px_20px_0_rgba(88,47,14,0.08)] border-t border-[#c4c7c7]/20">
       <div className="flex justify-around items-center py-2.5">
         {/* Home */}
         <button
@@ -52,6 +56,27 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
         >
           <span className="material-symbols-outlined">search</span>
           <span className="font-body-md text-[10px] uppercase tracking-tight mt-0.5">Search</span>
+        </button>
+
+        {/* Account / Orders */}
+        <button
+          onClick={() => {
+            if (customer) {
+              setActiveTab('account');
+            } else if (onOpenAuthModal) {
+              onOpenAuthModal();
+            }
+          }}
+          className={`flex flex-col items-center justify-center transition-transform active:scale-95 ${
+            activeTab === 'account' ? 'text-[#735c00] font-bold' : 'text-[#444748]/70'
+          }`}
+        >
+          <span className="material-symbols-outlined" style={{ fontVariationSettings: activeTab === 'account' ? "'FILL' 1" : "'FILL' 0" }}>
+            person
+          </span>
+          <span className="font-body-md text-[10px] uppercase tracking-tight mt-0.5">
+            {customer ? 'Account' : 'Sign In'}
+          </span>
         </button>
 
         {/* Cart */}

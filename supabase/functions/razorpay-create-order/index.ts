@@ -34,7 +34,14 @@ Deno.serve(async (req: Request) => {
     }
 
     // Amount must be an integer in smallest currency sub-unit (paise for INR)
-    const amountInPaise = Math.round(Number(amount));
+    let amountInPaise = Math.round(Number(amount));
+
+    // Razorpay test mode has a maximum limit of ₹5,00,000 (50,000,000 paise).
+    // We cap it here to allow test payments to proceed without error.
+    if (keyId.startsWith('rzp_test_') && amountInPaise > 50000000) {
+      console.warn(`Capping test mode amount from ${amountInPaise} to 50000000 paise`);
+      amountInPaise = 50000000;
+    }
 
     const basicAuth = btoa(`${keyId}:${keySecret}`);
 

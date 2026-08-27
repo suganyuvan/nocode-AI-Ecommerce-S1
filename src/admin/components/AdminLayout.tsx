@@ -11,7 +11,11 @@ import {
   X, 
   CreditCard, 
   ExternalLink,
-  User
+  User,
+  Settings,
+  Truck,
+  Gift,
+  Ticket
 } from 'lucide-react';
 import { supabase } from '../../utils/supabaseClient';
 import irisjevLogo from '../../assets/images/irisjev_logo_1785688429320.jpg';
@@ -27,15 +31,19 @@ export function AdminLayout() {
 
   const navItems = [
     { name: 'Dashboard', path: '/admin', icon: LayoutDashboard },
+    { name: 'Page Builder', path: '/admin/page-builder', icon: Settings, badge: 'NEW' },
     { name: 'Analytics & Orders', path: '/admin/orders', icon: ShoppingCart },
     { name: 'Products & Inventory', path: '/admin/products', icon: ShoppingBag },
     { name: 'Clients & Customers', path: '/admin/customers', icon: Users },
     { name: 'Leads & Enquiries', path: '/admin/leads', icon: Mail },
-    { name: 'Payment Details', path: '/admin/payment-logs', icon: CreditCard },
+    { name: 'Coupons & Discounts', path: '/admin/coupons', icon: Ticket, badge: 'PROMO' },
+    { name: 'Promotional Banners', path: '/admin/promotional-banners', icon: Gift, badge: 'NEW' },
+    { name: 'Payment Transactions', path: '/admin/payment-logs', icon: CreditCard },
+    { name: 'Shipping & Payments', path: '/admin/shipping', icon: Truck, badge: 'NEW' },
   ];
 
   return (
-    <div className="min-h-screen bg-[#0d1312] flex font-sans text-[#1b1c1c] p-2 md:p-3 selection:bg-[#fed65b] selection:text-[#1b1c1c]">
+    <div className="h-screen overflow-hidden bg-[#0d1312] flex font-sans text-[#1b1c1c] p-2 md:p-3 selection:bg-[#fed65b] selection:text-[#1b1c1c]">
       {/* Mobile Sidebar Overlay */}
       {isMobileOpen && (
         <div 
@@ -102,6 +110,11 @@ export function AdminLayout() {
                         <item.icon className="w-4 h-4" />
                       </div>
                       <span className="flex-1">{item.name}</span>
+                      {item.badge && (
+                        <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-[#fed65b] text-[#0d1312] font-label-caps uppercase tracking-wider shadow-2xs">
+                          {item.badge}
+                        </span>
+                      )}
                       {isActive && (
                         <span className="w-1.5 h-1.5 rounded-full bg-[#fed65b] animate-pulse"></span>
                       )}
@@ -156,7 +169,7 @@ export function AdminLayout() {
       </aside>
 
       {/* Main Content Canvas */}
-      <main className="flex-1 flex flex-col min-w-0 bg-[#ffffff] rounded-[24px] md:rounded-[32px] border border-[#e8e4dc] shadow-2xl overflow-hidden min-h-[calc(100vh-16px)] md:min-h-[calc(100vh-24px)]">
+      <main className="flex-1 flex flex-col min-w-0 bg-[#ffffff] rounded-[24px] md:rounded-[32px] border border-[#e8e4dc] shadow-2xl overflow-hidden h-full">
         
         {/* Mobile Header Bar */}
         <header className="md:hidden bg-white border-b border-[#eeebe4] px-5 py-4 flex items-center justify-between sticky top-0 z-30">
