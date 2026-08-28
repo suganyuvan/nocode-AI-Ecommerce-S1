@@ -23,13 +23,14 @@ export function AdminLogin() {
     if (error) {
       setError(error.message);
       setLoading(false);
-    } else if (data.user?.email !== 'hi ') {
-      await supabase.auth.signOut();
-      setError('Unauthorized: Only the super admin can access this dashboard.');
-      setLoading(false);
-    } else {
+    } else if (data.user) {
+      // Successfully authenticated admin user (e.g. admin@irisjev.com)
       navigate('/admin');
+    } else {
+      setError('Failed to authenticate admin session.');
+      setLoading(false);
     }
+
   };
 
   return (
