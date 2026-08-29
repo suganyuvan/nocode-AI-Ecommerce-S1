@@ -17,6 +17,8 @@ import { CouponsManager } from './views/CouponsManager';
 import { PromoBannersManager } from './views/PromoBannersManager';
 import { PageBuilderManager } from './views/PageBuilderManager';
 import { ShippingLabelManager } from './views/ShippingLabelManager';
+import { SalesAnalyticsManager } from './views/SalesAnalyticsManager';
+
 
 export function AdminApp() {
 
@@ -81,14 +83,16 @@ export function AdminApp() {
       <Route element={<AdminLayout />}>
         <Route index element={<DashboardOverview />} />
         <Route path="page-builder" element={<PageBuilderManager />} />
+        <Route path="sales-analytics" element={<SalesAnalyticsManager />} />
         <Route path="products" element={<ProductsManager />} />
+
 
         <Route path="orders" element={<OrdersManager />} />
         <Route path="customers" element={<CustomersManager />} />
         <Route path="leads" element={<LeadsManager />} />
         <Route path="coupons" element={<CouponsManager />} />
+        <Route path="promotions" element={<StoreSettingsManager />} />
         <Route path="promotional-banners" element={<PromoBannersManager />} />
-        <Route path="promotions" element={<PromoBannersManager />} />
         <Route path="payment-logs" element={<WebhookLogsManager />} />
         <Route path="webhook-logs" element={<WebhookLogsManager />} />
         <Route path="shipping" element={<ShippingManager />} />

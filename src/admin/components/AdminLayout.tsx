@@ -16,7 +16,8 @@ import {
   Truck,
   Gift,
   Ticket,
-  Printer
+  Printer,
+  TrendingUp
 } from 'lucide-react';
 
 import { supabase } from '../../utils/supabaseClient';
@@ -34,16 +35,21 @@ export function AdminLayout() {
   const navItems = [
     { name: 'Dashboard', path: '/admin', icon: LayoutDashboard },
     { name: 'Page Builder', path: '/admin/page-builder', icon: Settings, badge: 'NEW' },
-    { name: 'Analytics & Orders', path: '/admin/orders', icon: ShoppingCart },
+    { name: 'Analytics', path: '/admin/sales-analytics', icon: TrendingUp, badge: 'ANALYTICS' },
+    { name: 'Orders Center', path: '/admin/orders', icon: ShoppingCart },
     { name: 'Products & Inventory', path: '/admin/products', icon: ShoppingBag },
     { name: 'Clients & Customers', path: '/admin/customers', icon: Users },
     { name: 'Leads & Enquiries', path: '/admin/leads', icon: Mail },
     { name: 'Coupons & Discounts', path: '/admin/coupons', icon: Ticket, badge: 'PROMO' },
+    { name: 'Promotional & Gifts', path: '/admin/promotions', icon: Gift, badge: 'GIFT' },
     { name: 'Promotional Banners', path: '/admin/promotional-banners', icon: Gift, badge: 'NEW' },
     { name: 'Payment Transactions', path: '/admin/payment-logs', icon: CreditCard },
     { name: 'Shipping & Payments', path: '/admin/shipping', icon: Truck, badge: 'NEW' },
     { name: 'Shipping Labels', path: '/admin/shipping-labels', icon: Printer, badge: 'NEW' },
   ];
+
+
+
 
 
   return (

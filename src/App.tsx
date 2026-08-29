@@ -31,6 +31,8 @@ import { ShippingView } from './views/ShippingView';
 import { ContactView } from './views/ContactView';
 import { TrackOrderView } from './views/TrackOrderView';
 
+import { trackPageViewEvent, trackCartAdd } from './utils/pageViewAnalyticsEngine';
+
 export function Storefront() {
 
   const [activeTab, setActiveTab] = useState<ActiveTab>('home');
@@ -113,6 +115,11 @@ export function Storefront() {
     };
     fetchData();
   }, []);
+
+  useEffect(() => {
+    trackPageViewEvent(activeTab);
+  }, [activeTab]);
+
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [wishlistIds, setWishlistIds] = useState<string[]>(['ganesha-sculpture-01']);
   const [currency, setCurrency] = useState<Currency>('INR');
@@ -127,6 +134,7 @@ export function Storefront() {
 
   // Cart Handler
   const handleAddToCart = (product: Product, selectedTimber?: string, isGift: boolean = false) => {
+    trackCartAdd({ id: product.id, name: product.name, category: product.category });
     const timber = selectedTimber || product.timberOptions[0] || product.material;
     setCartItems((prev) => {
       const existingIndex = prev.findIndex(
@@ -294,6 +302,9 @@ export function Storefront() {
               setAuthModalMode('login');
               setIsAuthModalOpen(true);
             }}
+            onLoginSuccess={(c) => {
+              setCustomer(c);
+            }}
             onLogout={() => {
               localStorage.removeItem('irisjev_customer_user');
               setCustomer(null);
@@ -390,6 +401,10 @@ export function Storefront() {
         initialMode={authModalMode}
         onLoginSuccess={(c) => {
           setCustomer(c);
+        }}
+        onTrackOrder={(query) => {
+          setIsAuthModalOpen(false);
+          setActiveTab('track');
         }}
       />
       <TrackOrderModal

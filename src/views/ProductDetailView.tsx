@@ -5,6 +5,8 @@ import { supabase } from '../utils/supabaseClient';
 import { DEFAULT_SHIPPING_PAYMENT_SETTINGS, PINCODE_CITY_STATE_MAP } from '../admin/views/ShippingManager';
 import { validateIndianPincode } from '../utils/pincodeValidator';
 
+import { trackProductView } from '../utils/pageViewAnalyticsEngine';
+
 interface ProductDetailViewProps {
   product: Product;
   onAddToCart: (product: Product, timber: string) => void;
@@ -46,6 +48,12 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
   const [transitEstimate, setTransitEstimate] = useState<TransitEstimate | null>(null);
   const [isCheckingPincode, setIsCheckingPincode] = useState(false);
   const [addedToast, setAddedToast] = useState(false);
+
+  useEffect(() => {
+    if (product) {
+      trackProductView({ id: product.id, name: product.name, category: product.category });
+    }
+  }, [product?.id]);
 
   // Review states
   const [reviews, setReviews] = useState<Review[]>([]);

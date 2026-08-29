@@ -14,6 +14,8 @@ import {
 import { validateCoupon, recordCouponUsage } from '../utils/couponEngine';
 import { PromotionalBanner } from '../components/PromotionalBanner';
 
+import { trackCheckoutStart } from '../utils/pageViewAnalyticsEngine';
+
 interface CheckoutViewProps {
   cartItems: CartItem[];
   currency: Currency;
@@ -48,19 +50,43 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
   const [showInvoice, setShowInvoice] = useState(false);
   const [invoiceData, setInvoiceData] = useState<any>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [showExitConfirmModal, setShowExitConfirmModal] = useState(false);
+  const [pendingCancelOrderInfo, setPendingCancelOrderInfo] = useState<{ id: string; orderNumber: string; options?: any } | null>(null);
 
-  // Form states for checkout
-  const [customerName, setCustomerName] = useState(customer?.full_name || '');
-  const [customerEmail, setCustomerEmail] = useState(customer?.email || '');
-  const [countryCode, setCountryCode] = useState(customer?.country_code || '+91');
-  const [customerPhone, setCustomerPhone] = useState(customer?.phone ? customer.phone.replace(/\D/g, '').slice(-10) : '');
-  const [address, setAddress] = useState(customer?.address || '');
-  const [city, setCity] = useState(customer?.city || '');
-  const [state, setState] = useState(customer?.state || 'Karnataka');
-  const [postalCode, setPostalCode] = useState(customer?.postal_code || '');
-  const [country, setCountry] = useState('India');
+  useEffect(() => {
+    trackCheckoutStart();
+  }, []);
+
+  // Helper to retrieve saved session delivery info
+  const getSavedSessionDeliveryInfo = () => {
+    try {
+      const stored = sessionStorage.getItem('irisjev_saved_delivery_info') || localStorage.getItem('irisjev_saved_delivery_info');
+      if (stored) return JSON.parse(stored);
+    } catch (e) {
+      console.warn('Could not parse saved session delivery info:', e);
+    }
+    return null;
+  };
+
+  const initialSaved = getSavedSessionDeliveryInfo();
+
+  // Form states for checkout initialized with customer profile or session storage
+  const [customerName, setCustomerName] = useState(() => customer?.full_name || initialSaved?.customerName || '');
+  const [customerEmail, setCustomerEmail] = useState(() => customer?.email || initialSaved?.customerEmail || '');
+  const [countryCode, setCountryCode] = useState(() => customer?.country_code || initialSaved?.countryCode || '+91');
+  const [customerPhone, setCustomerPhone] = useState(() => {
+    if (customer?.phone) return customer.phone.replace(/\D/g, '').slice(-10);
+    if (initialSaved?.customerPhone) return initialSaved.customerPhone.replace(/\D/g, '').slice(-10);
+    return '';
+  });
+  const [address, setAddress] = useState(() => customer?.address || initialSaved?.address || '');
+  const [city, setCity] = useState(() => customer?.city || initialSaved?.city || '');
+  const [state, setState] = useState(() => customer?.state || initialSaved?.state || 'Tamil Nadu');
+  const [postalCode, setPostalCode] = useState(() => customer?.postal_code || initialSaved?.postalCode || '');
+  const [country, setCountry] = useState(() => initialSaved?.country || 'India');
   const [paymentMethod, setPaymentMethod] = useState<'prepaid' | 'cod'>('prepaid');
   const [gstRate, setGstRate] = useState(3);
+  const [isSessionRestored, setIsSessionRestored] = useState(!!initialSaved);
 
   // Coupon state in Checkout
   const [checkoutCouponInput, setCheckoutCouponInput] = useState('');
@@ -70,8 +96,32 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
   const [couponSuccessMsg, setCouponSuccessMsg] = useState('');
   const [isValidatingCoupon, setIsValidatingCoupon] = useState(false);
 
-  // Auto-sync customer details when logged in
+  // Auto-save delivery info to session & local storage whenever user types
   useEffect(() => {
+    if (customerName || customerEmail || customerPhone || address || postalCode) {
+      const payload = {
+        customerName,
+        customerEmail,
+        countryCode,
+        customerPhone,
+        address,
+        city,
+        state,
+        postalCode,
+        country
+      };
+      try {
+        sessionStorage.setItem('irisjev_saved_delivery_info', JSON.stringify(payload));
+        localStorage.setItem('irisjev_saved_delivery_info', JSON.stringify(payload));
+      } catch (e) {
+        console.warn('Failed to auto-save delivery info:', e);
+      }
+    }
+  }, [customerName, customerEmail, countryCode, customerPhone, address, city, state, postalCode, country]);
+
+  // Auto-sync customer details when logged in or restored from session
+  useEffect(() => {
+    const savedInfo = getSavedSessionDeliveryInfo();
     if (customer) {
       if (customer.full_name) setCustomerName(customer.full_name);
       if (customer.email) setCustomerEmail(customer.email);
@@ -83,8 +133,31 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
       if (customer.city) setCity(customer.city);
       if (customer.state) setState(customer.state);
       if (customer.postal_code) setPostalCode(customer.postal_code);
+    } else if (savedInfo) {
+      if (savedInfo.customerName && !customerName) setCustomerName(savedInfo.customerName);
+      if (savedInfo.customerEmail && !customerEmail) setCustomerEmail(savedInfo.customerEmail);
+      if (savedInfo.customerPhone && !customerPhone) setCustomerPhone(savedInfo.customerPhone);
+      if (savedInfo.address && !address) setAddress(savedInfo.address);
+      if (savedInfo.city && !city) setCity(savedInfo.city);
+      if (savedInfo.state && !state) setState(savedInfo.state);
+      if (savedInfo.postalCode && !postalCode) setPostalCode(savedInfo.postalCode);
+      setIsSessionRestored(true);
     }
   }, [customer]);
+
+  const handleClearSavedSessionInfo = () => {
+    sessionStorage.removeItem('irisjev_saved_delivery_info');
+    localStorage.removeItem('irisjev_saved_delivery_info');
+    setCustomerName('');
+    setCustomerEmail('');
+    setCustomerPhone('');
+    setAddress('');
+    setCity('');
+    setState('Tamil Nadu');
+    setPostalCode('');
+    setGeoAddressFound(null);
+    setIsSessionRestored(false);
+  };
 
   // Map & Live Location states
   const [localities, setLocalities] = useState<string[]>([]);
@@ -359,6 +432,30 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
       matchedProfileName: matchedProfile ? matchedProfile.name : 'Standard Delivery'
     };
   };
+
+  // Auto-apply unlocked welcome coupon if newly registered
+  useEffect(() => {
+    try {
+      const unlocked = localStorage.getItem('irisjev_unlocked_coupon');
+      if (unlocked && !appliedCoupon && rawTotalINR > 0) {
+        setCheckoutCouponInput(unlocked);
+        validateCoupon({
+          code: unlocked,
+          cartSubtotal: rawTotalINR,
+          customerEmail: customerEmail,
+          shippingFee: checkoutCalc.baseShippingFee,
+        }).then(res => {
+          if (res.isValid && res.coupon) {
+            setAppliedCoupon(res.coupon);
+            setCouponDiscountINR(res.discountAmount);
+            setCouponSuccessMsg(`✨ Welcome Offer applied: 10% OFF code ${unlocked}`);
+          }
+        });
+      }
+    } catch (err) {
+      console.warn('Welcome coupon auto-apply notice:', err);
+    }
+  }, [rawTotalINR]);
 
   // Auto re-validate coupon if cart subtotal changes while applied
   useEffect(() => {
@@ -819,9 +916,27 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
           backdrop_color: 'rgba(28, 27, 27, 0.7)',
         },
         modal: {
-          ondismiss: () => {
+          confirm_close: true,
+          ondismiss: async () => {
             setIsProcessing(false);
             console.log('Payment modal dismissed by user');
+            if (newOrder?.id) {
+              await supabase
+                .from('orders')
+                .update({
+                  status: 'cancelled',
+                  payment_status: 'cancelled',
+                  payment_info: 'Cancelled and exited by customer',
+                  updated_at: new Date().toISOString(),
+                })
+                .eq('id', newOrder.id);
+            }
+            setPendingCancelOrderInfo({
+              id: newOrder.id,
+              orderNumber,
+              options,
+            });
+            setShowExitConfirmModal(true);
           },
         },
       };
@@ -1010,6 +1125,22 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
                   </h5>
                   <span className="text-xs text-[#747878] font-label-caps uppercase">White-Glove Courier</span>
                 </div>
+
+                {isSessionRestored && (
+                  <div className="flex items-center justify-between p-2.5 bg-emerald-50 border border-emerald-200 rounded-xs text-xs text-emerald-900 animate-fadeIn">
+                    <div className="flex items-center gap-2">
+                      <span className="material-symbols-outlined text-base text-emerald-700">history</span>
+                      <span className="font-semibold">Restored your saved delivery details from this session</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleClearSavedSessionInfo}
+                      className="text-[11px] font-bold text-emerald-800 underline hover:text-emerald-950 cursor-pointer"
+                    >
+                      Clear Saved Info
+                    </button>
+                  </div>
+                )}
 
                 {/* GPS Location Quick Autofill Bar (Optional) */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 bg-[#faf9f6] border border-[#e4e2e2] rounded-xs">
@@ -1682,6 +1813,68 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
           paymentMethod={invoiceData.paymentMethod}
           codHandlingFee={invoiceData.codHandlingFee}
         />
+      )}
+
+      {/* EXIT CONFIRMATION MODAL WITH CANCEL AND EXIT BUTTON */}
+      {showExitConfirmModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs animate-fadeIn font-sans">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full text-center space-y-6 shadow-2xl border border-gray-100 relative">
+            <button 
+              onClick={() => setShowExitConfirmModal(false)}
+              className="absolute right-4 top-4 text-gray-400 hover:text-gray-600 p-1 cursor-pointer"
+            >
+              <span className="material-symbols-outlined text-lg">close</span>
+            </button>
+
+            <div className="w-20 h-20 bg-gray-100 rounded-2xl mx-auto flex items-center justify-center">
+              <span className="material-symbols-outlined text-4xl text-[#1b1c1c]">logout</span>
+            </div>
+
+            <div className="space-y-2">
+              <h3 className="text-xl font-bold text-[#1b1c1c]">Are you sure you want to exit?</h3>
+              <p className="text-xs text-gray-500 font-medium">
+                You will be taken back to Irisjev Wooden Crafts website
+              </p>
+            </div>
+
+            <div className="space-y-3 pt-2">
+              <button
+                onClick={() => {
+                  setShowExitConfirmModal(false);
+                  if (pendingCancelOrderInfo?.options) {
+                    const rzp = new window.Razorpay(pendingCancelOrderInfo.options);
+                    rzp.open();
+                  }
+                }}
+                className="w-full py-3 bg-white border border-gray-300 rounded-xl text-xs font-extrabold text-[#1b1c1c] hover:bg-gray-50 transition-colors cursor-pointer shadow-2xs"
+              >
+                Continue to payment
+              </button>
+
+              <button
+                onClick={async () => {
+                  setShowExitConfirmModal(false);
+                  setIsProcessing(false);
+                  if (pendingCancelOrderInfo?.id) {
+                    await supabase
+                      .from('orders')
+                      .update({
+                        status: 'cancelled',
+                        payment_status: 'cancelled',
+                        payment_info: 'Cancelled and exited by customer',
+                        updated_at: new Date().toISOString(),
+                      })
+                      .eq('id', pendingCancelOrderInfo.id);
+                  }
+                  setErrorMessage(`Order payment was cancelled and order #${pendingCancelOrderInfo?.orderNumber || ''} has been marked as cancelled.`);
+                }}
+                className="w-full py-3 bg-[#0d1312] text-white rounded-xl text-xs font-extrabold hover:bg-black transition-colors cursor-pointer shadow-md"
+              >
+                Cancel and Exit
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

@@ -3,6 +3,8 @@ import { Customer, Order, Currency, ActiveTab, CartItem, Product } from '../type
 import { supabase } from '../utils/supabaseClient';
 import { formatPrice } from '../utils/currency';
 import { InvoiceModal } from '../components/InvoiceModal';
+import { TrackOrderModal } from '../components/TrackOrderModal';
+import { CustomerAuthCard } from '../components/CustomerAuthCard';
 
 interface MyAccountViewProps {
   customer: Customer | null;
@@ -13,6 +15,7 @@ interface MyAccountViewProps {
   setActiveTab: (tab: ActiveTab) => void;
   onOpenAuthModal: () => void;
   onLogout: () => void;
+  onLoginSuccess?: (customer: Customer) => void;
 }
 
 export const MyAccountView: React.FC<MyAccountViewProps> = ({
@@ -24,11 +27,17 @@ export const MyAccountView: React.FC<MyAccountViewProps> = ({
   setActiveTab,
   onOpenAuthModal,
   onLogout,
+  onLoginSuccess,
 }) => {
   const [orders, setOrders] = useState<any[]>([]);
   const [isLoadingOrders, setIsLoadingOrders] = useState(true);
   const [selectedInvoiceOrder, setSelectedInvoiceOrder] = useState<any | null>(null);
   const [activeSubTab, setActiveSubTab] = useState<'orders' | 'address' | 'overview'>('orders');
+
+  // Live Tracking Modal & Guest Search states
+  const [trackModalOpen, setTrackModalOpen] = useState(false);
+  const [selectedTrackingQuery, setSelectedTrackingQuery] = useState('');
+  const [guestOrderQuery, setGuestOrderQuery] = useState('');
 
   // Address edit state
   const [savedAddress, setSavedAddress] = useState(customer?.address || '');
@@ -48,16 +57,29 @@ export const MyAccountView: React.FC<MyAccountViewProps> = ({
 
       setIsLoadingOrders(true);
       try {
-        // Query by customer_id or phone
-        let query = supabase.from('orders').select('*, order_items(*)').order('created_at', { ascending: false });
+        const isUuid = !!customer.id && /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(customer.id);
+        const cleanPhone = (customer.phone || '').replace(/\D/g, '');
 
-        if (customer.id) {
-          query = query.or(`customer_id.eq.${customer.id},payment_info.ilike.%${customer.phone || ''}%`);
+        const orConditions: string[] = [];
+        if (isUuid) {
+          orConditions.push(`customer_id.eq.${customer.id}`);
+        }
+        if (cleanPhone && cleanPhone.length >= 4) {
+          orConditions.push(`payment_info.ilike.%${cleanPhone}%`);
         }
 
-        const { data, error } = await query;
-        if (data) {
-          setOrders(data);
+        if (orConditions.length > 0) {
+          const { data, error } = await supabase
+            .from('orders')
+            .select('*, order_items(*)')
+            .or(orConditions.join(','))
+            .order('created_at', { ascending: false });
+
+          if (data) {
+            setOrders(data);
+          }
+        } else {
+          setOrders([]);
         }
       } catch (err) {
         console.warn('Orders fetch error:', err);
@@ -75,7 +97,8 @@ export const MyAccountView: React.FC<MyAccountViewProps> = ({
 
     setIsSavingAddress(true);
     try {
-      if (customer.id) {
+      const isUuid = !!customer.id && /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(customer.id);
+      if (isUuid) {
         await supabase
           .from('customers')
           .update({
@@ -107,21 +130,27 @@ export const MyAccountView: React.FC<MyAccountViewProps> = ({
 
   if (!customer) {
     return (
-      <div className="max-w-4xl mx-auto px-4 py-16 text-center animate-fadeIn">
-        <div className="bg-white p-10 border border-[#e4e2e2] shadow-sm rounded-xs max-w-md mx-auto space-y-5">
-          <span className="material-symbols-outlined text-5xl text-[#735c00]">account_circle</span>
-          <h2 className="font-display-lg text-2xl text-[#1b1c1c] italic">Collector Portal Sign-In</h2>
-          <p className="text-xs text-[#444748]">
-            Sign in with your mobile number to view and track your past orders, access tax invoices, and manage your delivery details.
-          </p>
-          <button
-            onClick={onOpenAuthModal}
-            className="w-full py-3.5 bg-[#1c1b1b] text-white font-label-caps text-xs uppercase tracking-widest hover:bg-black transition-colors rounded-xs font-bold cursor-pointer flex items-center justify-center gap-2"
-          >
-            <span className="material-symbols-outlined text-sm">sms</span>
-            Sign In with Mobile OTP
-          </button>
-        </div>
+      <div className="max-w-md mx-auto px-4 py-16 animate-fadeIn font-body-md">
+        <CustomerAuthCard
+          onLoginSuccess={(newCust) => {
+            if (onLoginSuccess) {
+              onLoginSuccess(newCust);
+            }
+          }}
+          onTrackOrder={(query) => {
+            if (query) {
+              setSelectedTrackingQuery(query);
+              setTrackModalOpen(true);
+            }
+          }}
+          initialTab="signin"
+        />
+
+        <TrackOrderModal
+          isOpen={trackModalOpen}
+          onClose={() => setTrackModalOpen(false)}
+          initialQuery={selectedTrackingQuery}
+        />
       </div>
     );
   }
@@ -258,6 +287,19 @@ export const MyAccountView: React.FC<MyAccountViewProps> = ({
                             {formatPrice(order.total_amount || 0, currency)}
                           </span>
                         </div>
+
+                        {/* Live Track Shipment Button */}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedTrackingQuery(order.order_number || order.tracking_number || order.id);
+                            setTrackModalOpen(true);
+                          }}
+                          className="px-3 py-1.5 bg-[#1c1b1b] text-white text-xs font-label-caps uppercase font-bold rounded-xs hover:bg-black transition-colors cursor-pointer flex items-center gap-1 shadow-2xs"
+                        >
+                          <span className="material-symbols-outlined text-sm">local_shipping</span>
+                          Track Shipment
+                        </button>
 
                         {/* View Invoice Button */}
                         <button
@@ -535,6 +577,13 @@ export const MyAccountView: React.FC<MyAccountViewProps> = ({
           codHandlingFee={selectedInvoiceOrder.codHandlingFee}
         />
       )}
+
+      {/* Live Track Order Modal */}
+      <TrackOrderModal
+        isOpen={trackModalOpen}
+        onClose={() => setTrackModalOpen(false)}
+        initialQuery={selectedTrackingQuery}
+      />
     </div>
   );
 };
