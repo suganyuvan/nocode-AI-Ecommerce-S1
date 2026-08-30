@@ -245,44 +245,74 @@ export const TrackOrderModal: React.FC<TrackOrderModalProps> = ({ isOpen, onClos
                 </h3>
 
                 {/* Milestone Event Item (Matching Image 2) */}
-                <div className="relative pl-6 space-y-4">
-                  <div className="flex items-start gap-3 relative">
-                    {/* Circle Pin Icon */}
-                    <div className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 border-2 border-emerald-600 flex items-center justify-center shrink-0 mt-0.5 z-10">
-                      <CheckCircle2 className="w-3 h-3 text-emerald-700" />
-                    </div>
+                {(() => {
+                  let meta: any = {};
+                  try {
+                    const raw = localStorage.getItem(`irisjev_order_tracking_meta_${foundOrder.id}`) || 
+                                localStorage.getItem(`irisjev_order_tracking_meta_${foundOrder.order_number}`) ||
+                                localStorage.getItem(`irisjev_order_tracking_meta_${foundOrder.tracking_number}`);
+                    if (raw) meta = JSON.parse(raw);
+                  } catch (e) {}
 
-                    <div className="flex-1 bg-[#faf9f6] p-4 rounded-xl border border-gray-200">
-                      <div className="flex justify-between items-center">
-                        <span className="font-extrabold text-xs text-[#111615]">Dispatched via Courier</span>
-                        <span className="text-[11px] text-gray-500 font-semibold">
-                          {new Date(foundOrder.updated_at || foundOrder.created_at).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
-                        </span>
-                      </div>
-                      
-                      <p className="text-xs text-gray-600 mt-1">
-                        Tracking AWB assigned: <span className="font-mono font-bold text-gray-900">{foundOrder.tracking_number || 'DEL-2153-530192-IN'}</span>.
-                      </p>
-                      
-                      <div className="flex justify-between items-center mt-2">
-                        <span className="text-[11px] text-gray-500 font-medium flex items-center gap-1">
-                          <MapPin className="w-3.5 h-3.5 text-gray-400" />
-                          <span>Chennai Central Logistics Center, TN</span>
-                        </span>
+                  const milestoneTitle = meta.milestone_title || foundOrder.milestone_title || 'Dispatched via Courier';
+                  const milestoneLoc = meta.milestone_location || foundOrder.milestone_location || 'Chennai Central Logistics Center, TN';
+                  const milestoneDesc = meta.milestone_description || foundOrder.milestone_description || 'Package verified and handed over to carrier hub.';
+                  const fulfillmentNote = meta.fulfillment_note || foundOrder.fulfillment_note || '';
 
-                        <a
-                          href={getCourierTrackingUrl(foundOrder.courier_name, foundOrder.tracking_number)}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-xs font-bold text-blue-700 hover:underline flex items-center gap-1"
-                        >
-                          <span>Live Carrier Portal</span>
-                          <ExternalLink className="w-3 h-3" />
-                        </a>
+                  return (
+                    <div className="relative pl-6 space-y-4">
+                      <div className="flex items-start gap-3 relative">
+                        {/* Circle Pin Icon */}
+                        <div className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 border-2 border-emerald-600 flex items-center justify-center shrink-0 mt-0.5 z-10">
+                          <CheckCircle2 className="w-3 h-3 text-emerald-700" />
+                        </div>
+
+                        <div className="flex-1 bg-[#faf9f6] p-4 rounded-xl border border-gray-200 space-y-2">
+                          <div className="flex justify-between items-center">
+                            <span className="font-extrabold text-xs text-[#111615]">{milestoneTitle}</span>
+                            <span className="text-[11px] text-gray-500 font-semibold">
+                              {new Date(foundOrder.updated_at || foundOrder.created_at).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                            </span>
+                          </div>
+                          
+                          <p className="text-xs text-gray-600">
+                            Tracking AWB assigned: <span className="font-mono font-bold text-gray-900">{foundOrder.tracking_number || 'DEL-2153-530192-IN'}</span>.
+                          </p>
+
+                          {milestoneDesc && (
+                            <p className="text-xs text-[#444748] bg-white p-2 rounded-lg border border-[#e8e4dc]">
+                              {milestoneDesc}
+                            </p>
+                          )}
+
+                          {fulfillmentNote && (
+                            <p className="text-[11px] text-[#735c00] bg-[#fbf7eb] p-2 rounded-lg border border-[#fed65b]/40 flex items-center gap-1.5 font-medium">
+                              <Sparkles className="w-3.5 h-3.5 shrink-0 text-[#735c00]" />
+                              <span>Fulfillment Note: {fulfillmentNote}</span>
+                            </p>
+                          )}
+                          
+                          <div className="flex justify-between items-center pt-1">
+                            <span className="text-[11px] text-gray-500 font-medium flex items-center gap-1">
+                              <MapPin className="w-3.5 h-3.5 text-gray-400" />
+                              <span>{milestoneLoc}</span>
+                            </span>
+
+                            <a
+                              href={getCourierTrackingUrl(foundOrder.courier_name, foundOrder.tracking_number)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-xs font-bold text-blue-700 hover:underline flex items-center gap-1"
+                            >
+                              <span>Live Carrier Portal</span>
+                              <ExternalLink className="w-3 h-3" />
+                            </a>
+                          </div>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </div>
+                  );
+                })()}
               </div>
 
               {/* CONTAINER 2: ITEMS IN THIS SHIPMENT (MATCHING IMAGE 2) */}

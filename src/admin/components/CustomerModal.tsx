@@ -95,7 +95,9 @@ export const CustomerModal: React.FC<CustomerModalProps> = ({ isOpen, onClose, c
                 <tbody className="divide-y divide-gray-100">
                   {orders.map((order) => (
                     <tr key={order.id} className="hover:bg-gray-50">
-                      <td className="p-3 font-medium text-gray-900">#{order.id.slice(0, 6).toUpperCase()}</td>
+                      <td className="p-3 font-medium text-gray-900 font-mono">
+                        {order.order_number || `#${order.id?.slice(0, 6)?.toUpperCase()}`}
+                      </td>
                       <td className="p-3 text-gray-600">{new Date(order.created_at).toLocaleDateString()}</td>
                       <td className="p-3">
                         <span className={`px-2 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wider ${

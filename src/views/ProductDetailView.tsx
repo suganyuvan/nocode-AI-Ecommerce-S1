@@ -49,12 +49,6 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
   const [isCheckingPincode, setIsCheckingPincode] = useState(false);
   const [addedToast, setAddedToast] = useState(false);
 
-  useEffect(() => {
-    if (product) {
-      trackProductView({ id: product.id, name: product.name, category: product.category });
-    }
-  }, [product?.id]);
-
   // Review states
   const [reviews, setReviews] = useState<Review[]>([]);
   const [newReviewName, setNewReviewName] = useState('');
@@ -69,7 +63,7 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
         .from('reviews')
         .select('*')
         .eq('product_id', product.id);
-      
+
       if (data) {
         setReviews(data.map(r => ({
           id: r.id,
@@ -157,7 +151,7 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
     });
 
     if (!matchedProfile && detectedState) {
-      matchedProfile = profiles.find(p => 
+      matchedProfile = profiles.find(p =>
         p.applicableStates && p.applicableStates.some(s => s.toLowerCase() === detectedState.toLowerCase())
       );
     }
@@ -174,11 +168,11 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
 
     // Shipping charge calculation
     const isFreeShipping = matchedProfile.freeShippingThreshold > 0 && product.priceINR >= matchedProfile.freeShippingThreshold;
-    const shippingChargeText = isFreeShipping 
-      ? 'FREE White-Glove Insured Delivery' 
-      : matchedProfile.baseCharge > 0 
-      ? `₹${matchedProfile.baseCharge} Insured Shipping` 
-      : 'FREE Insured Delivery';
+    const shippingChargeText = isFreeShipping
+      ? 'FREE White-Glove Insured Delivery'
+      : matchedProfile.baseCharge > 0
+        ? `₹${matchedProfile.baseCharge} Insured Shipping`
+        : 'FREE Insured Delivery';
 
     // COD check
     const isCodRestricted = (shippingSettings.cod.restrictedPincodes || '')
@@ -289,9 +283,8 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
             <div className="absolute top-4 right-4 flex gap-2">
               <button
                 onClick={() => onToggleWishlist(product)}
-                className={`p-2.5 rounded-full shadow-md transition-colors ${
-                  isWishlisted ? 'bg-[#ba1a1a] text-white' : 'bg-white/90 text-[#1b1c1c] hover:bg-white'
-                }`}
+                className={`p-2.5 rounded-full shadow-md transition-colors ${isWishlisted ? 'bg-[#ba1a1a] text-white' : 'bg-white/90 text-[#1b1c1c] hover:bg-white'
+                  }`}
                 title={isWishlisted ? 'Saved in Wishlist' : 'Save to Wishlist'}
               >
                 <span
@@ -327,11 +320,10 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
                 <button
                   key={idx}
                   onClick={() => setSelectedImage(img)}
-                  className={`w-20 h-20 rounded-xs overflow-hidden border-2 flex-shrink-0 cursor-pointer transition-all ${
-                    selectedImage === img
+                  className={`w-20 h-20 rounded-xs overflow-hidden border-2 flex-shrink-0 cursor-pointer transition-all ${selectedImage === img
                       ? 'border-[#1c1b1b] scale-105 shadow-md'
                       : 'border-[#c4c7c7]/40 hover:border-[#1c1b1b]/50'
-                  }`}
+                    }`}
                 >
                   <img src={img} alt={`Thumbnail ${idx + 1}`} className="w-full h-full object-cover" />
                 </button>
@@ -399,11 +391,10 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
                 <button
                   key={timber}
                   onClick={() => setSelectedTimber(timber)}
-                  className={`px-3.5 py-2 text-xs font-label-caps uppercase rounded-xs border cursor-pointer transition-colors ${
-                    selectedTimber === timber
+                  className={`px-3.5 py-2 text-xs font-label-caps uppercase rounded-xs border cursor-pointer transition-colors ${selectedTimber === timber
                       ? 'bg-[#1c1b1b] text-white border-[#1c1b1b] font-bold'
                       : 'bg-white text-[#444748] border-[#c4c7c7] hover:border-[#1b1c1c]'
-                  }`}
+                    }`}
                 >
                   {timber}
                 </button>
@@ -517,7 +508,7 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
                       {transitEstimate.shippingChargeText}
                     </span>
                     <span className="text-[10px] text-[#444748] block">
-                      {transitEstimate.isCodAvailable 
+                      {transitEstimate.isCodAvailable
                         ? `✓ COD Available ${transitEstimate.codFee > 0 ? `(₹${transitEstimate.codFee} fee)` : ''}`
                         : '✕ Prepaid Orders Only'}
                     </span>

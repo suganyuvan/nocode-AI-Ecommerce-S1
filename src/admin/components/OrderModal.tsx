@@ -137,7 +137,7 @@ export const OrderModal: React.FC<OrderModalProps> = ({
             </div>
             <div>
               <h3 className="font-extrabold text-lg tracking-tight">
-                Order Details #{order.order_number || order.id?.slice(0, 8)}
+                Order Details {order.order_number || `#${order.id?.slice(0, 8)}`}
               </h3>
               <p className="text-xs text-gray-300 flex items-center gap-1 mt-0.5">
                 <Calendar className="w-3.5 h-3.5 text-emerald-400" />

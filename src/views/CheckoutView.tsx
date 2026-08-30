@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { CartItem, Currency, ActiveTab, Customer, Coupon } from '../types';
+import { CartItem, Currency, ActiveTab, Customer, Coupon, SavedAddress } from '../types';
 import { formatPrice } from '../utils/currency';
 import { InvoiceModal } from '../components/InvoiceModal';
 import { supabase } from '../utils/supabaseClient';
@@ -13,6 +13,8 @@ import {
 } from '../utils/pincodeValidator';
 import { validateCoupon, recordCouponUsage } from '../utils/couponEngine';
 import { PromotionalBanner } from '../components/PromotionalBanner';
+import { getSavedAddressList, saveAddressToBook } from '../utils/addressBookManager';
+import { dispatchWebhookEvent } from '../utils/webhookDispatcher';
 
 import { trackCheckoutStart } from '../utils/pageViewAnalyticsEngine';
 
@@ -57,11 +59,21 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
     trackCheckoutStart();
   }, []);
 
-  // Helper to retrieve saved session delivery info
+  // Helper to retrieve saved session delivery info (matching current customer)
   const getSavedSessionDeliveryInfo = () => {
     try {
-      const stored = sessionStorage.getItem('irisjev_saved_delivery_info') || localStorage.getItem('irisjev_saved_delivery_info');
-      if (stored) return JSON.parse(stored);
+      const custKey = (customer?.email || '').toLowerCase().trim().replace(/[^a-z0-9]/g, '_');
+      const scopedKey = custKey ? `irisjev_saved_delivery_info_${custKey}` : '';
+      const stored = (scopedKey ? (sessionStorage.getItem(scopedKey) || localStorage.getItem(scopedKey)) : null) ||
+                     sessionStorage.getItem('irisjev_saved_delivery_info') || 
+                     localStorage.getItem('irisjev_saved_delivery_info');
+
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (!customer || !customer.email || !parsed.customerEmail || parsed.customerEmail.toLowerCase().trim() === customer.email.toLowerCase().trim()) {
+          return parsed;
+        }
+      }
     } catch (e) {
       console.warn('Could not parse saved session delivery info:', e);
     }
@@ -87,6 +99,62 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
   const [paymentMethod, setPaymentMethod] = useState<'prepaid' | 'cod'>('prepaid');
   const [gstRate, setGstRate] = useState(3);
   const [isSessionRestored, setIsSessionRestored] = useState(!!initialSaved);
+
+  // Multiple Saved Addresses State
+  const [savedAddressesList, setSavedAddressesList] = useState<SavedAddress[]>(() => getSavedAddressList(customer));
+  const [selectedSavedAddressId, setSelectedSavedAddressId] = useState<string | null>(() => {
+    const list = getSavedAddressList(customer);
+    return list.find(a => a.isDefault)?.id || list[0]?.id || null;
+  });
+  const [shouldSaveToAddressBook, setShouldSaveToAddressBook] = useState(true);
+
+  // Sync saved addresses and fields if customer changes
+  useEffect(() => {
+    const list = getSavedAddressList(customer);
+    setSavedAddressesList(list);
+    const defaultAddr = list.find(a => a.isDefault) || list[0];
+    if (defaultAddr) {
+      setSelectedSavedAddressId(defaultAddr.id);
+      if (defaultAddr.fullName) setCustomerName(defaultAddr.fullName);
+      if (defaultAddr.email) setCustomerEmail(defaultAddr.email);
+      if (defaultAddr.phone) setCustomerPhone(defaultAddr.phone.replace(/\D/g, '').slice(-10));
+      if (defaultAddr.address) setAddress(defaultAddr.address);
+      if (defaultAddr.city) setCity(defaultAddr.city);
+      if (defaultAddr.state) setState(defaultAddr.state);
+      if (defaultAddr.postalCode) setPostalCode(defaultAddr.postalCode);
+      if (defaultAddr.country) setCountry(defaultAddr.country);
+    } else if (customer) {
+      setSelectedSavedAddressId(null);
+      setCustomerName(customer.full_name || '');
+      setCustomerEmail(customer.email || '');
+      setCustomerPhone(customer.phone ? customer.phone.replace(/\D/g, '').slice(-10) : '');
+      setAddress(customer.address || '');
+      setCity(customer.city || '');
+      setState(customer.state || 'Tamil Nadu');
+      setPostalCode(customer.postal_code || '');
+    }
+  }, [customer]);
+
+  const handleSelectSavedAddress = (addr: SavedAddress) => {
+    setSelectedSavedAddressId(addr.id);
+    if (addr.fullName) setCustomerName(addr.fullName);
+    if (addr.email) setCustomerEmail(addr.email);
+    if (addr.phone) setCustomerPhone(addr.phone.replace(/\D/g, '').slice(-10));
+    if (addr.address) setAddress(addr.address);
+    if (addr.city) setCity(addr.city);
+    if (addr.state) setState(addr.state);
+    if (addr.postalCode) setPostalCode(addr.postalCode);
+    if (addr.country) setCountry(addr.country);
+    setErrors({});
+  };
+
+  const handleAddNewAddressOption = () => {
+    setSelectedSavedAddressId(null);
+    setAddress('');
+    setCity('');
+    setState('Tamil Nadu');
+    setPostalCode('');
+  };
 
   // Coupon state in Checkout
   const [checkoutCouponInput, setCheckoutCouponInput] = useState('');
@@ -559,10 +627,14 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
   const finalTotalINR = Math.max(0, rawTotalINR - totalDiscountINR + gstAmountINR + baseShippingCharge + codHandlingFee);
 
   const fullShippingAddress = {
-    street: address,
-    city: city || 'Bengaluru',
-    state: state || 'Karnataka',
-    postalCode: postalCode || '560001',
+    customerName: customerName.trim(),
+    phone: `${countryCode} ${customerPhone.trim()}`.trim(),
+    email: customerEmail.trim(),
+    address: address.trim(),
+    street: address.trim(),
+    city: city.trim() || 'Bengaluru',
+    state: state.trim() || 'Karnataka',
+    postalCode: postalCode.trim() || '560001',
     country: country || 'India',
   };
 
@@ -712,6 +784,22 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
         customerId = newCustomer.id;
       }
 
+      // Save delivery address to address book if selected
+      if (shouldSaveToAddressBook) {
+        saveAddressToBook({
+          id: selectedSavedAddressId || undefined,
+          label: 'Delivery Address',
+          fullName: customerName,
+          email: customerEmail,
+          phone: customerPhone,
+          address,
+          city,
+          state,
+          postalCode,
+          country,
+        }, customer || ({ id: customerId, email: customerEmail, full_name: customerName } as any));
+      }
+
       // 3. Create Pending Order in Supabase
       const orderNumber = `SWARNA-${Math.floor(100000 + Math.random() * 900000)}`;
       const { data: newOrder, error: orderError } = await supabase
@@ -750,6 +838,28 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
 
       const { error: itemsErr } = await supabase.from('order_items').insert(orderItemsPayload);
       if (itemsErr) console.warn('Order items insert notice:', itemsErr);
+
+      // Dispatch outgoing webhook event for new order
+      dispatchWebhookEvent('order.created', {
+        order_id: newOrder.id,
+        order_number: orderNumber,
+        customer_name: customerName,
+        customer_email: customerEmail,
+        customer_phone: customerPhone,
+        shipping_address: fullShippingAddress,
+        total_amount: finalTotalINR,
+        subtotal: rawTotalINR,
+        discount_amount: totalDiscountINR,
+        shipping_charge: baseShippingCharge,
+        payment_method: paymentMethod,
+        currency,
+        items: cartItems.map(i => ({
+          name: i.product.name,
+          quantity: i.quantity,
+          selected_timber: i.selectedTimber,
+          unit_price: i.product.priceINR
+        }))
+      });
 
       // 5. If COD, complete order directly without Razorpay
       if (paymentMethod === 'cod') {
@@ -850,6 +960,18 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
 
             // Clear Cart
             onClearCart();
+
+            // Dispatch order.paid webhook event
+            dispatchWebhookEvent('order.paid', {
+              order_id: newOrder.id,
+              order_number: orderNumber,
+              customer_name: customerName,
+              customer_email: customerEmail,
+              total_amount: finalTotalINR,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_order_id: response.razorpay_order_id,
+              currency,
+            });
 
             // Set Invoice Data
             setInvoiceData({
@@ -1125,6 +1247,70 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
                   </h5>
                   <span className="text-xs text-[#747878] font-label-caps uppercase">White-Glove Courier</span>
                 </div>
+
+                {/* Multiple Saved Addresses Picker (if available) */}
+                {savedAddressesList.length > 0 && (
+                  <div className="space-y-2 p-3.5 bg-[#faf9f8] border border-[#e4e2e2] rounded-xs">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="font-bold font-label-caps uppercase text-[#735c00] flex items-center gap-1.5">
+                        <span className="material-symbols-outlined text-sm">home_pin</span>
+                        Select from Saved Addresses ({savedAddressesList.length})
+                      </span>
+                      <button
+                        type="button"
+                        onClick={handleAddNewAddressOption}
+                        className={`text-[11px] font-bold uppercase transition-colors cursor-pointer ${
+                          !selectedSavedAddressId
+                            ? 'text-[#1c1b1b] underline'
+                            : 'text-[#735c00] hover:text-[#1c1b1b]'
+                        }`}
+                      >
+                        + New Delivery Address
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
+                      {savedAddressesList.map((addr) => {
+                        const isSelected = selectedSavedAddressId === addr.id;
+                        return (
+                          <div
+                            key={addr.id}
+                            onClick={() => handleSelectSavedAddress(addr)}
+                            className={`p-3 rounded-xs border text-xs cursor-pointer transition-all ${
+                              isSelected
+                                ? 'bg-white border-[#1c1b1b] ring-1 ring-[#1c1b1b] shadow-xs'
+                                : 'bg-white/80 border-[#e4e2e2] hover:border-[#c4c7c7] text-[#444748]'
+                            }`}
+                          >
+                            <div className="flex items-center justify-between gap-1 mb-1">
+                              <span className="font-bold font-label-caps uppercase text-[10px] text-[#1c1b1b]">
+                                {addr.label || 'Saved Address'}
+                              </span>
+                              {addr.isDefault && (
+                                <span className="text-[9px] bg-[#fed65b]/30 text-[#735c00] font-bold px-1.5 py-0.2 rounded-full">
+                                  Default
+                                </span>
+                              )}
+                              {isSelected && (
+                                <span className="material-symbols-outlined text-sm text-[#2e6930]">check_circle</span>
+                              )}
+                            </div>
+                            <p className="font-bold text-[#1b1c1c] truncate">{addr.fullName}</p>
+                            <p className="text-[11px] text-[#747878] truncate">
+                              {addr.address}, {addr.city} ({addr.postalCode})
+                            </p>
+                            {(addr.email || customer?.email) && (
+                              <p className="text-[10px] text-[#747878] truncate flex items-center gap-1 mt-0.5">
+                                <span className="material-symbols-outlined text-[12px] text-[#735c00]">mail</span>
+                                <span>{addr.email || customer?.email}</span>
+                              </p>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
 
                 {isSessionRestored && (
                   <div className="flex items-center justify-between p-2.5 bg-emerald-50 border border-emerald-200 rounded-xs text-xs text-emerald-900 animate-fadeIn">
@@ -1525,6 +1711,20 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
                     </div>
                   </div>
                 )}
+
+                {/* Save to Address Book Checkbox */}
+                <div className="p-3 bg-[#faf9f8] border border-[#e4e2e2] rounded-xs flex items-center justify-between">
+                  <label className="flex items-center gap-2.5 text-xs text-[#1b1c1c] font-medium cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={shouldSaveToAddressBook}
+                      onChange={(e) => setShouldSaveToAddressBook(e.target.checked)}
+                      className="w-4 h-4 rounded text-[#1c1b1b] focus:ring-0 cursor-pointer"
+                    />
+                    <span>Save this delivery address to my Saved Address Book for future 1-click checkouts</span>
+                  </label>
+                  <span className="material-symbols-outlined text-sm text-[#735c00]">bookmark_added</span>
+                </div>
               </div>
 
               {/* Payment Gateway Information */}

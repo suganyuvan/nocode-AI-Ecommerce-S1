@@ -37,6 +37,7 @@ import { TrackOrderModal } from '../../components/TrackOrderModal';
 import { ShippingLabelSlip } from '../../components/ShippingLabelSlip';
 import { fetchShippingLabelSettings, DEFAULT_SHIPPING_LABEL_SETTINGS } from '../../utils/shippingLabelEngine';
 import { ShippingLabelSettings } from '../../types';
+import { dispatchWebhookEvent } from '../../utils/webhookDispatcher';
 
 const COURIER_OPTIONS = [
   'Delhivery Express',
@@ -49,13 +50,77 @@ const COURIER_OPTIONS = [
 ];
 
 const STATUS_OPTIONS = [
-  { id: 'shipped', label: 'Shipped', color: 'bg-purple-100 text-purple-900 border-purple-200' },
+  { id: 'shipped', label: 'Shipped / Dispatched', color: 'bg-purple-100 text-purple-900 border-purple-200' },
   { id: 'out_for_delivery', label: 'Out for Delivery', color: 'bg-indigo-100 text-indigo-900 border-indigo-200' },
   { id: 'delivered', label: 'Delivered', color: 'bg-emerald-100 text-emerald-900 border-emerald-200' },
   { id: 'processing', label: 'Processing', color: 'bg-blue-100 text-blue-900 border-blue-200' },
   { id: 'pending', label: 'Pending', color: 'bg-amber-100 text-amber-900 border-amber-200' },
   { id: 'cancelled', label: 'Cancelled', color: 'bg-red-100 text-red-900 border-red-200' },
 ];
+
+export const generateCourierAWB = (courierName?: string, orderNumber?: string) => {
+  const cleanOrderNum = (orderNumber || '913527').replace(/\D/g, '').slice(-6) || '913527';
+  const rand8 = Math.floor(10000000 + Math.random() * 90000000);
+  const rand9 = Math.floor(100000000 + Math.random() * 900000000);
+  const rand12 = Math.floor(100000000000 + Math.random() * 900000000000);
+
+  const c = (courierName || 'Delhivery Express').toLowerCase();
+
+  if (c.includes('delhivery')) {
+    const code = `DEL-${cleanOrderNum}-${rand8}-IN`;
+    return {
+      trackingNumber: code,
+      trackingUrl: `https://www.delhivery.com/track/package/${code}`
+    };
+  }
+  if (c.includes('bluedart')) {
+    const code = `BLUEDART-${rand9}`;
+    return {
+      trackingNumber: code,
+      trackingUrl: `https://www.bluedart.com/tracking?trackNumber=${code}`
+    };
+  }
+  if (c.includes('fedex')) {
+    const code = `FDX-${rand12}`;
+    return {
+      trackingNumber: code,
+      trackingUrl: `https://www.fedex.com/fedextrack/?trknbr=${code}`
+    };
+  }
+  if (c.includes('dtdc')) {
+    const code = `DTDC-${cleanOrderNum}-${rand8}IN`;
+    return {
+      trackingNumber: code,
+      trackingUrl: `https://www.dtdc.in/tracking/shipment-tracking.asp?strCnno=${code}`
+    };
+  }
+  if (c.includes('india post')) {
+    const code = `EM${rand9}IN`;
+    return {
+      trackingNumber: code,
+      trackingUrl: `https://www.indiapost.gov.in/_layouts/15/dpt.cpt.tracking/trackconsignment.aspx?consignmentNo=${code}`
+    };
+  }
+  if (c.includes('dhl')) {
+    const code = `DHL-${Math.floor(1000000000 + Math.random() * 9000000000)}`;
+    return {
+      trackingNumber: code,
+      trackingUrl: `https://www.dhl.com/en/express/tracking.html?AWB=${code}`
+    };
+  }
+  if (c.includes('xpressbees')) {
+    const code = `XB-${cleanOrderNum}-${rand8}`;
+    return {
+      trackingNumber: code,
+      trackingUrl: `https://www.xpressbees.com/shipment/tracking?awb=${code}`
+    };
+  }
+  const code = `AWB-${cleanOrderNum}-${rand8}-EXP`;
+  return {
+    trackingNumber: code,
+    trackingUrl: `https://track.swarnakalanjali.com/?awb=${code}`
+  };
+};
 
 export interface ManualTrackingRow {
   id: string;
@@ -365,12 +430,38 @@ export function OrdersManager() {
       courier_name: trackingEditOrder.courier_name,
       tracking_number: trackingEditOrder.tracking_number,
       tracking_url: trackingEditOrder.tracking_url,
+      fulfillment_note: trackingEditOrder.fulfillment_note || '',
+      milestone_title: trackingEditOrder.milestone_title || 'Dispatched via Courier',
+      milestone_location: trackingEditOrder.milestone_location || 'Chennai Central Logistics Center, TN',
+      milestone_description: trackingEditOrder.milestone_description || 'Package verified and handed over to carrier hub.',
       updated_at: new Date().toISOString(),
     };
 
     if (trackingEditOrder.estimated_delivery_date) {
       const parsedTS = parseValidTimestamp(trackingEditOrder.estimated_delivery_date);
       if (parsedTS) payload.estimated_delivery_date = parsedTS;
+    }
+
+    // Save tracking metadata & milestone details in local storage for instant live lookup
+    const metaPayload = {
+      fulfillment_note: trackingEditOrder.fulfillment_note || '',
+      milestone_title: trackingEditOrder.milestone_title || 'Dispatched via Courier',
+      milestone_location: trackingEditOrder.milestone_location || 'Chennai Central Logistics Center, TN',
+      milestone_description: trackingEditOrder.milestone_description || 'Package verified and handed over to carrier hub.',
+      updated_at: new Date().toISOString()
+    };
+    try {
+      if (trackingEditOrder.id) {
+        localStorage.setItem(`irisjev_order_tracking_meta_${trackingEditOrder.id}`, JSON.stringify(metaPayload));
+      }
+      if (trackingEditOrder.order_number) {
+        localStorage.setItem(`irisjev_order_tracking_meta_${trackingEditOrder.order_number}`, JSON.stringify(metaPayload));
+      }
+      if (trackingEditOrder.tracking_number) {
+        localStorage.setItem(`irisjev_order_tracking_meta_${trackingEditOrder.tracking_number}`, JSON.stringify(metaPayload));
+      }
+    } catch (e) {
+      console.warn('Failed to save tracking milestone meta to local storage:', e);
     }
 
     const { data, error } = await supabase
@@ -381,7 +472,20 @@ export function OrdersManager() {
 
     if (!error && data && data.length > 0) {
       const updatedItem = data[0];
-      setNotice({ type: 'success', message: `Tracking info & status updated to ${updatedItem.status?.toUpperCase()} for Order ${updatedItem.order_number || updatedItem.id}!` });
+      setNotice({ type: 'success', message: `Tracking info, AWB & Milestone updated for Order ${updatedItem.order_number || updatedItem.id}!` });
+      
+      // Dispatch order.shipped webhook
+      dispatchWebhookEvent('order.shipped', {
+        order_id: updatedItem.id,
+        order_number: updatedItem.order_number,
+        courier_name: payload.courier_name,
+        tracking_number: payload.tracking_number,
+        tracking_url: payload.tracking_url,
+        estimated_delivery_date: payload.estimated_delivery_date,
+        fulfillment_note: payload.fulfillment_note,
+        status: payload.status || 'shipped / dispatched'
+      });
+
       setTrackingEditOrder(null);
       await fetchOrders();
     } else {
@@ -585,7 +689,7 @@ export function OrdersManager() {
                       {/* COLUMN 1: ORDER REFERENCE (Order # + COD/PREPAID Badge) */}
                       <td className="p-4 font-mono">
                         <div className="font-extrabold text-sm text-[#0f1513]">
-                          #{order.order_number || order.id?.slice(0, 8)}
+                          {order.order_number || `#${order.id?.slice(0, 8)}`}
                         </div>
                         <div className="mt-1">
                           {isCOD ? (
@@ -625,12 +729,27 @@ export function OrdersManager() {
                           </div>
                         ) : (
                           <button
-                            onClick={() => setTrackingEditOrder({
-                              ...order,
-                              status: (order.status === 'delivered' || order.status === 'out_for_delivery') ? order.status : 'shipped',
-                              courier_name: courier,
-                              tracking_number: `AWB-${(order.order_number || '9021').replace('#', '')}-EXP`
-                            })}
+                            onClick={() => {
+                              const initialCourier = courier || 'Delhivery Express';
+                              const auto = generateCourierAWB(initialCourier, order.order_number || order.id);
+                              let existingMeta: any = {};
+                              try {
+                                const raw = localStorage.getItem(`irisjev_order_tracking_meta_${order.id}`) || localStorage.getItem(`irisjev_order_tracking_meta_${order.order_number}`);
+                                if (raw) existingMeta = JSON.parse(raw);
+                              } catch (e) {}
+
+                              setTrackingEditOrder({
+                                ...order,
+                                status: (order.status === 'delivered' || order.status === 'out_for_delivery') ? order.status : 'shipped',
+                                courier_name: initialCourier,
+                                tracking_number: order.tracking_number || auto.trackingNumber,
+                                tracking_url: order.tracking_url || auto.trackingUrl,
+                                fulfillment_note: existingMeta.fulfillment_note || order.fulfillment_note || '',
+                                milestone_title: existingMeta.milestone_title || 'Dispatched via Courier',
+                                milestone_location: existingMeta.milestone_location || 'Chennai Central Logistics Center, TN',
+                                milestone_description: existingMeta.milestone_description || 'Package verified and handed over to carrier hub.'
+                              });
+                            }}
                             className="text-blue-600 hover:text-blue-800 font-extrabold text-xs cursor-pointer flex items-center gap-1 hover:underline"
                           >
                             <Plus className="w-3.5 h-3.5" />
@@ -1133,8 +1252,8 @@ export function OrdersManager() {
       {/* SINGLE ORDER TRACKING UPDATE MODAL DRAWER */}
       {trackingEditOrder && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs animate-fadeIn">
-          <div className="bg-white text-[#1b1c1c] w-full max-w-lg rounded-[24px] overflow-hidden shadow-2xl border border-[#e8e4dc]">
-            <div className="bg-[#0f1513] text-white p-5 flex justify-between items-center border-b border-gray-800">
+          <div className="bg-white text-[#1b1c1c] w-full max-w-lg rounded-[24px] overflow-hidden shadow-2xl border border-[#e8e4dc] max-h-[90vh] flex flex-col">
+            <div className="bg-[#0f1513] text-white p-5 flex justify-between items-center border-b border-gray-800 shrink-0">
               <div className="flex items-center gap-2">
                 <Truck className="w-5 h-5 text-[#fed65b]" />
                 <h3 className="font-bold text-base">Update Order Status & AWB Tracking</h3>
@@ -1144,12 +1263,13 @@ export function OrdersManager() {
               </button>
             </div>
 
-            <form onSubmit={handleSaveSingleTracking} className="p-6 space-y-4 text-xs">
+            <form onSubmit={handleSaveSingleTracking} className="p-6 space-y-4 text-xs overflow-y-auto custom-scrollbar flex-1">
               <div className="bg-[#f9f7f3] p-3 rounded-xl border border-[#e8e4dc] flex justify-between items-center">
                 <span className="font-bold text-[#0f1513]">Order Number:</span>
                 <span className="font-mono font-extrabold text-sm">{trackingEditOrder.order_number || trackingEditOrder.id}</span>
               </div>
 
+              {/* 1. Shipment Status */}
               <div>
                 <label className="block font-bold text-gray-700 mb-1">Shipment Status *</label>
                 <select
@@ -1162,16 +1282,27 @@ export function OrdersManager() {
                   ))}
                 </select>
                 <span className="text-[10px] text-purple-700 font-semibold mt-1 block">
-                  ✨ Automatically set to "Shipped" when editing shipping details.
+                  ✨ Set status to "Shipped / Dispatched" to trigger collector tracking milestone updates.
                 </span>
               </div>
 
+              {/* 2. Courier Partner & AWB Tracking Number with Auto-Generate Button */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block font-bold text-gray-700 mb-1">Courier Partner</label>
                   <select
                     value={trackingEditOrder.courier_name || ''}
-                    onChange={e => setTrackingEditOrder({ ...trackingEditOrder, courier_name: e.target.value, status: trackingEditOrder.status === 'delivered' ? 'delivered' : 'shipped' })}
+                    onChange={e => {
+                      const newCourier = e.target.value;
+                      const auto = generateCourierAWB(newCourier, trackingEditOrder.order_number || trackingEditOrder.id);
+                      setTrackingEditOrder({
+                        ...trackingEditOrder,
+                        courier_name: newCourier,
+                        tracking_number: auto.trackingNumber,
+                        tracking_url: auto.trackingUrl,
+                        status: trackingEditOrder.status === 'delivered' ? 'delivered' : 'shipped'
+                      });
+                    }}
                     className="w-full px-3 py-2 bg-[#fbfaf8] border border-[#e5e1d8] rounded-xl font-bold text-xs focus:outline-none"
                   >
                     {COURIER_OPTIONS.map(c => (
@@ -1181,7 +1312,25 @@ export function OrdersManager() {
                 </div>
 
                 <div>
-                  <label className="block font-bold text-gray-700 mb-1">AWB Tracking Number</label>
+                  <div className="flex justify-between items-center mb-1">
+                    <label className="block font-bold text-gray-700">AWB Tracking Number</label>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const auto = generateCourierAWB(trackingEditOrder.courier_name, trackingEditOrder.order_number || trackingEditOrder.id);
+                        setTrackingEditOrder({
+                          ...trackingEditOrder,
+                          tracking_number: auto.trackingNumber,
+                          tracking_url: auto.trackingUrl,
+                          status: trackingEditOrder.status === 'delivered' ? 'delivered' : 'shipped'
+                        });
+                      }}
+                      className="text-[10px] font-bold text-[#735c00] hover:text-[#1c1b1b] flex items-center gap-0.5 cursor-pointer"
+                    >
+                      <Wand2 className="w-3 h-3 text-[#735c00]" />
+                      Auto-Generate AWB
+                    </button>
+                  </div>
                   <input
                     type="text"
                     value={trackingEditOrder.tracking_number || ''}
@@ -1213,6 +1362,60 @@ export function OrdersManager() {
                 />
               </div>
 
+              {/* 3. Delivery Fulfillment Note (Optional) */}
+              <div>
+                <label className="block font-bold text-gray-700 mb-1">Delivery Fulfillment Note (Optional)</label>
+                <input
+                  type="text"
+                  value={trackingEditOrder.fulfillment_note || ''}
+                  onChange={e => setTrackingEditOrder({ ...trackingEditOrder, fulfillment_note: e.target.value })}
+                  placeholder="e.g. Package verified, insured crate with white-glove courier handling."
+                  className="w-full px-3 py-2 bg-[#fbfaf8] border border-[#e5e1d8] rounded-xl text-xs focus:outline-none"
+                />
+              </div>
+
+              {/* 4. Add Tracking Timeline Milestone (Matching User Uploaded Screenshot) */}
+              <div className="bg-[#f7faf8] border border-[#cbe6d2] rounded-2xl p-4 space-y-3 shadow-2xs">
+                <div className="flex items-center gap-1.5 text-xs font-bold text-[#2e6930]">
+                  <Clock className="w-4 h-4 text-[#2e6930]" />
+                  <span>Add Tracking Timeline Milestone</span>
+                </div>
+
+                <div>
+                  <label className="block font-semibold text-gray-700 mb-1 text-[11px]">Milestone Event Title</label>
+                  <input
+                    type="text"
+                    value={trackingEditOrder.milestone_title !== undefined ? trackingEditOrder.milestone_title : 'Dispatched via Courier'}
+                    onChange={e => setTrackingEditOrder({ ...trackingEditOrder, milestone_title: e.target.value })}
+                    placeholder="Dispatched via Courier"
+                    className="w-full px-3 py-2 bg-white border border-[#cbe6d2] rounded-xl font-medium text-xs focus:outline-none focus:border-[#2e6930]"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block font-semibold text-gray-700 mb-1 text-[11px]">Location</label>
+                    <input
+                      type="text"
+                      value={trackingEditOrder.milestone_location !== undefined ? trackingEditOrder.milestone_location : 'Chennai Central Logistics Center, TN'}
+                      onChange={e => setTrackingEditOrder({ ...trackingEditOrder, milestone_location: e.target.value })}
+                      placeholder="Chennai Central Logistics Center, TN"
+                      className="w-full px-3 py-2 bg-white border border-[#e5e1d8] rounded-xl text-xs focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-semibold text-gray-700 mb-1 text-[11px]">Description (Optional)</label>
+                    <input
+                      type="text"
+                      value={trackingEditOrder.milestone_description !== undefined ? trackingEditOrder.milestone_description : 'Package verified and handed over to carrier hub.'}
+                      onChange={e => setTrackingEditOrder({ ...trackingEditOrder, milestone_description: e.target.value })}
+                      placeholder="Package verified and handed over to carrier hub."
+                      className="w-full px-3 py-2 bg-white border border-[#e5e1d8] rounded-xl text-xs focus:outline-none"
+                    />
+                  </div>
+                </div>
+              </div>
+
               <div className="flex justify-end gap-3 pt-4 border-t border-[#e8e4dc]">
                 <button
                   type="button"
@@ -1241,11 +1444,24 @@ export function OrdersManager() {
         order={selectedOrder}
         onOpenUpdateTracking={(ord) => {
           setSelectedOrder(null);
+          const initialCourier = ord.courier_name || 'Delhivery Express';
+          const auto = generateCourierAWB(initialCourier, ord.order_number || ord.id);
+          let existingMeta: any = {};
+          try {
+            const raw = localStorage.getItem(`irisjev_order_tracking_meta_${ord.id}`) || localStorage.getItem(`irisjev_order_tracking_meta_${ord.order_number}`);
+            if (raw) existingMeta = JSON.parse(raw);
+          } catch (e) {}
+
           setTrackingEditOrder({
             ...ord,
             status: (ord.status === 'delivered' || ord.status === 'out_for_delivery') ? ord.status : 'shipped',
-            courier_name: ord.courier_name || 'Delhivery Express',
-            tracking_number: ord.tracking_number || `AWB-${(ord.order_number || '9021').replace('#', '')}-EXP`
+            courier_name: initialCourier,
+            tracking_number: ord.tracking_number || auto.trackingNumber,
+            tracking_url: ord.tracking_url || auto.trackingUrl,
+            fulfillment_note: existingMeta.fulfillment_note || ord.fulfillment_note || '',
+            milestone_title: existingMeta.milestone_title || 'Dispatched via Courier',
+            milestone_location: existingMeta.milestone_location || 'Chennai Central Logistics Center, TN',
+            milestone_description: existingMeta.milestone_description || 'Package verified and handed over to carrier hub.'
           });
         }}
         onOpenPrintLabel={(ord) => {

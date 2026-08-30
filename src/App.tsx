@@ -46,7 +46,14 @@ export function Storefront() {
   const [customer, setCustomer] = useState<Customer | null>(() => {
     try {
       const stored = localStorage.getItem('irisjev_customer_user');
-      return stored ? JSON.parse(stored) : null;
+      if (!stored) return null;
+      const parsed = JSON.parse(stored);
+      // Clean up if an admin account was previously cached in customer storage
+      if (parsed?.email === 'admin@irisjev.com' || parsed?.email?.startsWith('admin@')) {
+        localStorage.removeItem('irisjev_customer_user');
+        return null;
+      }
+      return parsed;
     } catch (e) {
       return null;
     }
@@ -67,6 +74,80 @@ export function Storefront() {
       return () => clearTimeout(timer);
     }
   }, [customer]);
+
+  // Listen for Supabase OAuth sign-in callback (e.g. Google Auth for Customers)
+  useEffect(() => {
+    const handleAuthSession = async (session: any) => {
+      if (!session?.user?.email) return;
+      const user = session.user;
+      const userEmail = user.email.toLowerCase().trim();
+
+      // Completely ignore admin emails in customer storefront
+      if (userEmail === 'admin@irisjev.com' || userEmail.startsWith('admin@')) {
+        return;
+      }
+
+      const userName = user.user_metadata?.full_name || user.user_metadata?.name || userEmail.split('@')[0] || 'Collector';
+      const userPhone = user.user_metadata?.phone || '';
+
+      try {
+        // Find or create customer record in Supabase
+        const { data: existingCustomer } = await supabase
+          .from('customers')
+          .select('*')
+          .eq('email', userEmail)
+          .maybeSingle();
+
+        if (existingCustomer) {
+          setCustomer(existingCustomer);
+          localStorage.setItem('irisjev_customer_user', JSON.stringify(existingCustomer));
+        } else {
+          const isUuid = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(user.id || '');
+          const newCustRecord: any = {
+            email: userEmail,
+            full_name: userName,
+            phone: userPhone,
+            city: '',
+            state: '',
+            postal_code: '',
+            address: '',
+            country_code: '+91',
+          };
+          if (isUuid) {
+            newCustRecord.id = user.id;
+          }
+
+          const { data: created, error } = await supabase
+            .from('customers')
+            .insert([newCustRecord])
+            .select()
+            .maybeSingle();
+
+          const finalCust = (!error && created) ? created : { id: user.id || `cust-${Date.now()}`, ...newCustRecord };
+          setCustomer(finalCust);
+          localStorage.setItem('irisjev_customer_user', JSON.stringify(finalCust));
+        }
+      } catch (err) {
+        console.warn('OAuth customer sync error:', err);
+      }
+    };
+
+    // 1. Check current active session on mount
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) handleAuthSession(session);
+    });
+
+    // 2. Subscribe to auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session) {
+        handleAuthSession(session);
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
 
   React.useEffect(() => {
     const fetchData = async () => {
@@ -305,8 +386,13 @@ export function Storefront() {
             onLoginSuccess={(c) => {
               setCustomer(c);
             }}
-            onLogout={() => {
+            onLogout={async () => {
               localStorage.removeItem('irisjev_customer_user');
+              sessionStorage.removeItem('irisjev_saved_delivery_info');
+              localStorage.removeItem('irisjev_saved_delivery_info');
+              try {
+                await supabase.auth.signOut();
+              } catch (e) {}
               setCustomer(null);
               setActiveTab('home');
             }}

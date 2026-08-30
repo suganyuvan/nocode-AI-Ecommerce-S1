@@ -81,6 +81,8 @@ export interface Customer {
   city?: string;
   state?: string;
   postal_code?: string;
+  password?: string;
+  saved_addresses?: SavedAddress[];
   created_at?: string;
 }
 
@@ -322,5 +324,84 @@ export interface ShippingLabelSettings {
   dispatch_hub_phone: string;
 }
 
+export interface SavedAddress {
+  id: string;
+  label: string;
+  fullName: string;
+  phone: string;
+  email?: string;
+  address: string;
+  city: string;
+  state: string;
+  postalCode: string;
+  country: string;
+  isDefault?: boolean;
+}
+
+export type TicketPriority = 'Low' | 'Medium' | 'High' | 'Urgent';
+export type TicketStatus = 'open' | 'in_progress' | 'resolved' | 'closed';
+export type TicketCategory = 
+  | 'Order & Shipment'
+  | 'Product & Craftsmanship'
+  | 'Bespoke Custom Commission'
+  | 'Returns & Replacement'
+  | 'Payment & Billing'
+  | 'General Inquiry';
+
+export interface TicketMessage {
+  id: string;
+  sender: 'customer' | 'admin';
+  sender_name: string;
+  message: string;
+  created_at: string;
+}
+
+export interface SupportTicket {
+  id?: string;
+  ticket_number: string;
+  customer_id?: string;
+  customer_name: string;
+  customer_email: string;
+  customer_phone?: string;
+  order_id?: string;
+  order_number?: string;
+  category: TicketCategory;
+  subject: string;
+  description: string;
+  priority: TicketPriority;
+  status: TicketStatus;
+  admin_response?: string;
+  admin_responded_at?: string;
+  admin_responder_name?: string;
+  internal_notes?: string;
+  messages?: TicketMessage[];
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface OutgoingWebhook {
+  id?: string;
+  name: string;
+  url: string;
+  secret_key?: string;
+  events: string[];
+  is_active: boolean;
+  headers?: Record<string, string>;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface WebhookDelivery {
+  id?: string;
+  webhook_id?: string;
+  event_name: string;
+  target_url: string;
+  payload: any;
+  response_status?: number;
+  response_body?: string;
+  duration_ms?: number;
+  status: 'success' | 'failed';
+  created_at?: string;
+}
 
 

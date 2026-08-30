@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Routes, Route, useNavigate } from 'react-router-dom';
-import { supabase } from '../utils/supabaseClient';
+import { adminSupabase } from '../utils/supabaseClient';
 import { AdminLayout } from './components/AdminLayout';
 import { AdminLogin } from './AdminLogin';
 
@@ -18,17 +18,16 @@ import { PromoBannersManager } from './views/PromoBannersManager';
 import { PageBuilderManager } from './views/PageBuilderManager';
 import { ShippingLabelManager } from './views/ShippingLabelManager';
 import { SalesAnalyticsManager } from './views/SalesAnalyticsManager';
-
+import { SupportTicketsManager } from './views/SupportTicketsManager';
+import { WebhooksManager } from './views/WebhooksManager';
 
 export function AdminApp() {
-
-
   const [session, setSession] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    adminSupabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setLoading(false);
       if (!session) {
@@ -38,7 +37,7 @@ export function AdminApp() {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = adminSupabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       if (!session) {
         navigate('/admin/login');
@@ -60,24 +59,6 @@ export function AdminApp() {
     return <Routes><Route path="login" element={<AdminLogin />} /></Routes>;
   }
 
-  if (session.user?.email !== 'admin@irisjev.com') {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-[#fbf9f8] text-[#1b1c1c] p-4 text-center space-y-4">
-        <h1 className="text-3xl font-bold text-red-600">Unauthorized Access</h1>
-        <p className="text-gray-600">This dashboard is restricted to the super admin.</p>
-        <button 
-          onClick={async () => {
-            await supabase.auth.signOut();
-            navigate('/admin/login');
-          }}
-          className="bg-[#1b1c1c] text-white px-6 py-3 rounded-lg font-semibold hover:bg-gray-800"
-        >
-          Sign Out
-        </button>
-      </div>
-    );
-  }
-
   return (
     <Routes>
       <Route element={<AdminLayout />}>
@@ -89,12 +70,14 @@ export function AdminApp() {
 
         <Route path="orders" element={<OrdersManager />} />
         <Route path="customers" element={<CustomersManager />} />
+        <Route path="support-tickets" element={<SupportTicketsManager />} />
         <Route path="leads" element={<LeadsManager />} />
         <Route path="coupons" element={<CouponsManager />} />
         <Route path="promotions" element={<StoreSettingsManager />} />
         <Route path="promotional-banners" element={<PromoBannersManager />} />
         <Route path="payment-logs" element={<WebhookLogsManager />} />
         <Route path="webhook-logs" element={<WebhookLogsManager />} />
+        <Route path="webhooks" element={<WebhooksManager />} />
         <Route path="shipping" element={<ShippingManager />} />
         <Route path="shipping-labels" element={<ShippingLabelManager />} />
         <Route path="settings" element={<StoreSettingsManager />} />
