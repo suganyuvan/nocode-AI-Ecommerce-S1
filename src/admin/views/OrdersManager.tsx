@@ -38,6 +38,7 @@ import { ShippingLabelSlip } from '../../components/ShippingLabelSlip';
 import { fetchShippingLabelSettings, DEFAULT_SHIPPING_LABEL_SETTINGS } from '../../utils/shippingLabelEngine';
 import { ShippingLabelSettings } from '../../types';
 import { dispatchWebhookEvent } from '../../utils/webhookDispatcher';
+import { sendOrderShippedEmail } from '../../utils/resendEmailEngine';
 
 const COURIER_OPTIONS = [
   'Delhivery Express',
@@ -485,6 +486,20 @@ export function OrdersManager() {
         fulfillment_note: payload.fulfillment_note,
         status: payload.status || 'shipped / dispatched'
       });
+
+      // Send luxury HTML tracking & AWB email via Resend
+      if (updatedItem.shipping_address) {
+        sendOrderShippedEmail({
+          orderNumber: updatedItem.order_number || updatedItem.id,
+          customerName: updatedItem.customer_name || 'Valued Collector',
+          customerEmail: updatedItem.customer_email || (typeof updatedItem.shipping_address === 'object' ? updatedItem.shipping_address.email : ''),
+          courierName: payload.courier_name,
+          trackingNumber: payload.tracking_number,
+          trackingUrl: payload.tracking_url,
+          estimatedDelivery: payload.estimated_delivery_date,
+          fulfillmentNote: payload.fulfillment_note,
+        }).catch(err => console.warn('Resend shipping email notice:', err));
+      }
 
       setTrackingEditOrder(null);
       await fetchOrders();

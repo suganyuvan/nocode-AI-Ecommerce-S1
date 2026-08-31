@@ -7,6 +7,7 @@ import { TrackOrderModal } from '../components/TrackOrderModal';
 import { CustomerAuthCard } from '../components/CustomerAuthCard';
 import { getSavedAddressList, saveAddressToBook, deleteAddressFromBook, setDefaultAddressInBook } from '../utils/addressBookManager';
 import { dispatchWebhookEvent } from '../utils/webhookDispatcher';
+import { sendSupportTicketCreatedEmail } from '../utils/resendEmailEngine';
 
 interface MyAccountViewProps {
   customer: Customer | null;
@@ -246,6 +247,18 @@ export const MyAccountView: React.FC<MyAccountViewProps> = ({
         status: created.status,
         created_at: created.created_at || new Date().toISOString()
       });
+
+      // Send luxury HTML support ticket confirmation & admin alert via Resend
+      sendSupportTicketCreatedEmail({
+        ticketNumber: created.ticket_number,
+        customerName: created.customer_name,
+        customerEmail: created.customer_email,
+        subject: created.subject,
+        category: created.category,
+        priority: created.priority,
+        description: created.description,
+        orderNumber: created.order_number,
+      }).catch(err => console.warn('Resend ticket email notice:', err));
 
       setTicketSuccess(`Support ticket #${ticketNumber} created successfully! Our concierge team has been notified.`);
       setIsCreatingTicket(false);

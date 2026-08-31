@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Mail, Lock, User, Phone, Eye, EyeOff, LogIn, UserPlus, ArrowRight, Truck, CheckCircle2, AlertCircle, Sparkles, Copy, Check } from 'lucide-react';
 import { supabase } from '../utils/supabaseClient';
 import { Customer } from '../types';
+import { sendWelcomeDiscountEmail } from '../utils/resendEmailEngine';
 
 interface CustomerAuthCardProps {
   onLoginSuccess: (customer: Customer) => void;
@@ -291,6 +292,16 @@ export const CustomerAuthCard: React.FC<CustomerAuthCardProps> = ({
       // Unlock 10% coupon for checkout
       localStorage.setItem('irisjev_unlocked_coupon', 'WELCOME10');
       localStorage.setItem('irisjev_customer_user', JSON.stringify(customerRecord));
+
+      // Send luxury Welcome 10% OFF voucher email via Resend
+      if (cleanEmail) {
+        sendWelcomeDiscountEmail({
+          customerName: fullName || 'Valued Collector',
+          customerEmail: cleanEmail,
+          couponCode: 'WELCOME10',
+        }).catch(err => console.warn('Resend welcome email error:', err));
+      }
+
       setSuccessMsg('Account registered! 10% Welcome Discount code WELCOME10 is now active.');
       setTimeout(() => {
         onLoginSuccess(customerRecord);

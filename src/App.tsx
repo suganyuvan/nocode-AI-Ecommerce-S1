@@ -30,8 +30,9 @@ import { RefundView } from './views/RefundView';
 import { ShippingView } from './views/ShippingView';
 import { ContactView } from './views/ContactView';
 import { TrackOrderView } from './views/TrackOrderView';
-
 import { trackPageViewEvent, trackCartAdd } from './utils/pageViewAnalyticsEngine';
+import { sendContactInquiryEmail, sendWelcomeDiscountEmail } from './utils/resendEmailEngine';
+import { dispatchWebhookEvent } from './utils/webhookDispatcher';
 
 export function Storefront() {
 
@@ -126,6 +127,15 @@ export function Storefront() {
           const finalCust = (!error && created) ? created : { id: user.id || `cust-${Date.now()}`, ...newCustRecord };
           setCustomer(finalCust);
           localStorage.setItem('irisjev_customer_user', JSON.stringify(finalCust));
+
+          // Send luxury Welcome 10% OFF voucher email via Resend
+          if (userEmail && !userEmail.startsWith('admin@')) {
+            sendWelcomeDiscountEmail({
+              customerName: userName || 'Valued Collector',
+              customerEmail: userEmail,
+              couponCode: 'WELCOME10'
+            }).catch(e => console.warn('OAuth welcome email notice:', e));
+          }
         }
       } catch (err) {
         console.warn('OAuth customer sync error:', err);
@@ -282,6 +292,23 @@ export function Storefront() {
   // Handle Bespoke Inquiry submit
   const handleBespokeInquirySubmit = (inquiry: BespokeInquiry) => {
     setInquiries((prev) => [inquiry, ...prev]);
+
+    // Send confirmation to customer and notification to admin via Resend
+    sendContactInquiryEmail({
+      name: inquiry.customerName,
+      email: inquiry.customerEmail,
+      phone: inquiry.customerPhone,
+      message: inquiry.details,
+      inquiryType: 'Bespoke Custom Wood Commission'
+    }).catch(err => console.warn('Bespoke email inquiry notice:', err));
+
+    dispatchWebhookEvent('lead.created', {
+      name: inquiry.customerName,
+      email: inquiry.customerEmail,
+      phone: inquiry.customerPhone,
+      details: inquiry.details,
+      type: 'bespoke_inquiry'
+    });
   };
 
   const wishlistProducts = products.filter((p) => wishlistIds.includes(p.id));

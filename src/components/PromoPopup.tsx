@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../utils/supabaseClient';
+import { sendWelcomeDiscountEmail } from '../utils/resendEmailEngine';
+import { dispatchWebhookEvent } from '../utils/webhookDispatcher';
 
 export const PromoPopup: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -39,6 +41,23 @@ export const PromoPopup: React.FC = () => {
 
     if (error) {
       console.error('Error submitting promo form:', error);
+    }
+
+    // Send Welcome 10% discount email voucher via Resend
+    if (email) {
+      sendWelcomeDiscountEmail({
+        customerName: name || 'Valued Collector',
+        customerEmail: email,
+        couponCode: 'WELCOME10'
+      }).catch(err => console.warn('Welcome promo email notice:', err));
+
+      dispatchWebhookEvent('lead.created', {
+        name,
+        email,
+        phone,
+        country_code: countryCode,
+        promo: 'WELCOME10'
+      });
     }
 
     setIsSubmitted(true);

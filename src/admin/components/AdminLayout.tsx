@@ -36,6 +36,7 @@ export function AdminLayout() {
 
   const navItems = [
     { name: 'Dashboard', path: '/admin', icon: LayoutDashboard },
+    { name: 'Email Notifications', path: '/admin/emails', icon: Mail, badge: 'RESEND' },
     { name: 'Outgoing Webhooks', path: '/admin/webhooks', icon: Webhook, badge: 'API' },
     { name: 'Customer Support', path: '/admin/support-tickets', icon: LifeBuoy, badge: 'SUPPORT' },
     { name: 'Page Builder', path: '/admin/page-builder', icon: Settings, badge: 'NEW' },

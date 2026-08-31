@@ -24,6 +24,7 @@ import {
   Flame
 } from 'lucide-react';
 import { dispatchWebhookEvent } from '../../utils/webhookDispatcher';
+import { sendSupportTicketResponseEmail } from '../../utils/resendEmailEngine';
 
 const QUICK_RESPONSES = [
   {
@@ -200,6 +201,18 @@ export function SupportTicketsManager() {
         admin_response: adminResponseText.trim() || undefined,
         responded_at: new Date().toISOString()
       });
+
+      // Send luxury HTML concierge response email via Resend
+      if (adminResponseText.trim()) {
+        sendSupportTicketResponseEmail({
+          ticketNumber: activeTicket.ticket_number,
+          customerName: activeTicket.customer_name,
+          customerEmail: activeTicket.customer_email,
+          subject: activeTicket.subject,
+          adminResponse: adminResponseText.trim(),
+          status: adminStatus,
+        }).catch(err => console.warn('Resend ticket response email notice:', err));
+      }
 
       setTickets(prev => prev.map(t => t.id === activeTicket.id ? updatedTicket : t));
       setActiveTicket(updatedTicket);

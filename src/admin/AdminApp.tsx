@@ -20,6 +20,7 @@ import { ShippingLabelManager } from './views/ShippingLabelManager';
 import { SalesAnalyticsManager } from './views/SalesAnalyticsManager';
 import { SupportTicketsManager } from './views/SupportTicketsManager';
 import { WebhooksManager } from './views/WebhooksManager';
+import { EmailNotificationsManager } from './views/EmailNotificationsManager';
 
 export function AdminApp() {
   const [session, setSession] = useState<any>(null);
@@ -78,6 +79,7 @@ export function AdminApp() {
         <Route path="payment-logs" element={<WebhookLogsManager />} />
         <Route path="webhook-logs" element={<WebhookLogsManager />} />
         <Route path="webhooks" element={<WebhooksManager />} />
+        <Route path="emails" element={<EmailNotificationsManager />} />
         <Route path="shipping" element={<ShippingManager />} />
         <Route path="shipping-labels" element={<ShippingLabelManager />} />
         <Route path="settings" element={<StoreSettingsManager />} />

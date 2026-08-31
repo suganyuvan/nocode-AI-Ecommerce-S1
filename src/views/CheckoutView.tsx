@@ -15,6 +15,7 @@ import { validateCoupon, recordCouponUsage } from '../utils/couponEngine';
 import { PromotionalBanner } from '../components/PromotionalBanner';
 import { getSavedAddressList, saveAddressToBook } from '../utils/addressBookManager';
 import { dispatchWebhookEvent } from '../utils/webhookDispatcher';
+import { sendOrderConfirmationEmail } from '../utils/resendEmailEngine';
 
 import { trackCheckoutStart } from '../utils/pageViewAnalyticsEngine';
 
@@ -860,6 +861,26 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
           unit_price: i.product.priceINR
         }))
       });
+
+      // Send luxury HTML order confirmation & invoice email via Resend
+      sendOrderConfirmationEmail({
+        orderNumber,
+        customerName,
+        customerEmail,
+        customerPhone,
+        items: cartItems.map(i => ({
+          name: i.isGift ? `${i.product.name} (Free Gift)` : i.product.name,
+          quantity: i.quantity,
+          selectedTimber: i.selectedTimber,
+          unitPrice: i.isGift ? 0 : i.product.priceINR
+        })),
+        totalAmount: finalTotalINR,
+        subtotal: rawTotalINR,
+        discountAmount: totalDiscountINR,
+        shippingCharge: baseShippingCharge,
+        paymentMethod: paymentMethod === 'cod' ? 'Cash on Delivery' : 'Prepaid (Razorpay)',
+        shippingAddress: formattedAddressStr,
+      }).catch(err => console.warn('Resend email trigger notice:', err));
 
       // 5. If COD, complete order directly without Razorpay
       if (paymentMethod === 'cod') {
