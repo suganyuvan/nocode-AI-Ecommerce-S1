@@ -146,6 +146,45 @@ export async function trackPageView(event: PageViewEvent): Promise<boolean> {
         const { error } = await supabase.from('page_view_events').insert([payload]);
         const local = getLocalEvents();
         saveLocalEvents([payload, ...local]);
+
+        // Forward event to Google Analytics (gtag.js)
+        if (typeof window !== 'undefined' && (window as any).gtag) {
+            try {
+                (window as any).gtag('event', payload.event_type, {
+                    page_title: payload.page_name,
+                    page_location: window.location.href,
+                    page_path: payload.page_path,
+                    product_id: payload.product_id,
+                    product_name: payload.product_name,
+                    category: payload.category,
+                    ...(payload.metadata || {}),
+                });
+            } catch (gtagErr) {
+                console.warn('Google Analytics event push notice:', gtagErr);
+            }
+        }
+
+        // Forward event to Meta Pixel (fbq)
+        if (typeof window !== 'undefined' && (window as any).fbq) {
+            try {
+                let metaEventName = 'CustomEvent';
+                if (payload.event_type === 'page_view') metaEventName = 'PageView';
+                else if (payload.event_type === 'product_view') metaEventName = 'ViewContent';
+                else if (payload.event_type === 'cart_add') metaEventName = 'AddToCart';
+                else if (payload.event_type === 'checkout_start') metaEventName = 'InitiateCheckout';
+                else if (payload.event_type === 'payment_success' || payload.event_type === 'checkout_complete') metaEventName = 'Purchase';
+
+                (window as any).fbq('track', metaEventName, {
+                    content_name: payload.product_name || payload.page_name,
+                    content_category: payload.category,
+                    content_ids: payload.product_id ? [payload.product_id] : undefined,
+                    ...(payload.metadata || {})
+                });
+            } catch (fbqErr) {
+                console.warn('Meta Pixel event push notice:', fbqErr);
+            }
+        }
+
         return !error;
     } catch (err) {
         console.warn('Page view tracking fallback:', err);
