@@ -123,7 +123,7 @@ export const createRazorpayOrder = async (
     // Fallback: Direct call to Edge Function URL if invoke had client header issues
     console.warn('Supabase functions.invoke fallback triggering fetch:', err.message);
     const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://kimkttzdxnkekcoeuvop.supabase.co';
-    const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+    const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtpbWt0dHpkeG5rZWtjb2V1dm9wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY5ODQxOTgsImV4cCI6MjEwMjU2MDE5OH0.OyadTTtuEA12OichfOtJQ543eY1Jp8zLwuqm0dUoMj8';
 
     const response = await fetch(`${supabaseUrl}/functions/v1/razorpay-create-order`, {
       method: 'POST',
@@ -173,7 +173,7 @@ export const verifyRazorpayPayment = async (payload: {
   } catch (err: any) {
     console.warn('Fallback direct verify fetch triggering:', err.message);
     const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://kimkttzdxnkekcoeuvop.supabase.co';
-    const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+    const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtpbWt0dHpkeG5rZWtjb2V1dm9wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY5ODQxOTgsImV4cCI6MjEwMjU2MDE5OH0.OyadTTtuEA12OichfOtJQ543eY1Jp8zLwuqm0dUoMj8';
 
     const response = await fetch(`${supabaseUrl}/functions/v1/razorpay-verify-payment`, {
       method: 'POST',

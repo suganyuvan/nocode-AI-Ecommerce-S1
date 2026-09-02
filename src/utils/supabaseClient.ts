@@ -1,11 +1,12 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const supabaseUrl = 
+  import.meta.env.VITE_SUPABASE_URL || 
+  'https://kimkttzdxnkekcoeuvop.supabase.co';
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Missing Supabase environment variables');
-}
+const supabaseAnonKey = 
+  import.meta.env.VITE_SUPABASE_ANON_KEY || 
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtpbWt0dHpkeG5rZWtjb2V1dm9wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY5ODQxOTgsImV4cCI6MjEwMjU2MDE5OH0.OyadTTtuEA12OichfOtJQ543eY1Jp8zLwuqm0dUoMj8';
 
 /**
  * 1. Customer Storefront Supabase Client

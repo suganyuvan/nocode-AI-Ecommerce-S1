@@ -15,13 +15,13 @@ COPY package.json package-lock.json ./
 RUN npm ci --legacy-peer-deps
 
 # Declare Build Arguments (passed by Dokploy / Docker Build)
-ARG VITE_SUPABASE_URL
-ARG VITE_SUPABASE_ANON_KEY
-ARG VITE_RAZORPAY_KEY_ID
-ARG VITE_RESEND_API_KEY
-ARG VITE_ADMIN_NOTIFICATION_EMAIL
-ARG VITE_RESEND_SENDER_EMAIL
-ARG VITE_SITE_URL
+ARG VITE_SUPABASE_URL=https://kimkttzdxnkekcoeuvop.supabase.co
+ARG VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtpbWt0dHpkeG5rZWtjb2V1dm9wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY5ODQxOTgsImV4cCI6MjEwMjU2MDE5OH0.OyadTTtuEA12OichfOtJQ543eY1Jp8zLwuqm0dUoMj8
+ARG VITE_RAZORPAY_KEY_ID=""
+ARG VITE_RESEND_API_KEY=""
+ARG VITE_ADMIN_NOTIFICATION_EMAIL=suganyyvi77@gmail.com
+ARG VITE_RESEND_SENDER_EMAIL=send@irisjev.in
+ARG VITE_SITE_URL=https://irisjev.in
 
 # Expose build args as environment variables for Vite bundle
 ENV VITE_SUPABASE_URL=$VITE_SUPABASE_URL
