@@ -252,6 +252,9 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             <img
               src={heroImgUrl}
               alt={settings.headline}
+              fetchPriority="high"
+              loading="eager"
+              decoding="async"
               className="w-full h-[380px] sm:h-[480px] md:h-[540px] object-cover object-center group-hover:scale-102 transition-transform duration-700"
             />
             {settings.badge && (

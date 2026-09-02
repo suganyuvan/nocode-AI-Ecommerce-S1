@@ -21,6 +21,7 @@ import { SalesAnalyticsManager } from './views/SalesAnalyticsManager';
 import { SupportTicketsManager } from './views/SupportTicketsManager';
 import { WebhooksManager } from './views/WebhooksManager';
 import { EmailNotificationsManager } from './views/EmailNotificationsManager';
+import { SeoSettingsManager } from './views/SeoSettingsManager';
 
 export function AdminApp() {
   const [session, setSession] = useState<any>(null);
@@ -82,6 +83,7 @@ export function AdminApp() {
         <Route path="emails" element={<EmailNotificationsManager />} />
         <Route path="shipping" element={<ShippingManager />} />
         <Route path="shipping-labels" element={<ShippingLabelManager />} />
+        <Route path="seo" element={<SeoSettingsManager />} />
         <Route path="settings" element={<StoreSettingsManager />} />
 
       </Route>

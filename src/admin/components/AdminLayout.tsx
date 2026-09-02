@@ -19,7 +19,8 @@ import {
   Printer,
   TrendingUp,
   LifeBuoy,
-  Webhook
+  Webhook,
+  Globe
 } from 'lucide-react';
 
 import { adminSupabase } from '../../utils/supabaseClient';
@@ -36,6 +37,7 @@ export function AdminLayout() {
 
   const navItems = [
     { name: 'Dashboard', path: '/admin', icon: LayoutDashboard },
+    { name: 'SEO & GEO Center', path: '/admin/seo', icon: Globe, badge: 'SEO' },
     { name: 'Email Notifications', path: '/admin/emails', icon: Mail, badge: 'RESEND' },
     { name: 'Outgoing Webhooks', path: '/admin/webhooks', icon: Webhook, badge: 'API' },
     { name: 'Customer Support', path: '/admin/support-tickets', icon: LifeBuoy, badge: 'SUPPORT' },

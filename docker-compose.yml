@@ -1,0 +1,26 @@
+services:
+  storefront:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        VITE_SUPABASE_URL: ${VITE_SUPABASE_URL}
+        VITE_SUPABASE_ANON_KEY: ${VITE_SUPABASE_ANON_KEY}
+        VITE_RAZORPAY_KEY_ID: ${VITE_RAZORPAY_KEY_ID}
+        VITE_RESEND_API_KEY: ${VITE_RESEND_API_KEY}
+        VITE_ADMIN_NOTIFICATION_EMAIL: ${VITE_ADMIN_NOTIFICATION_EMAIL}
+        VITE_RESEND_SENDER_EMAIL: ${VITE_RESEND_SENDER_EMAIL}
+        VITE_SITE_URL: ${VITE_SITE_URL:-https://swarnawoodencrafts.com}
+    image: swarna-wooden-crafts:latest
+    container_name: swarna-wooden-crafts
+    restart: unless-stopped
+    ports:
+      - "${PORT:-3000}:80"
+    environment:
+      - NODE_ENV=production
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 5s

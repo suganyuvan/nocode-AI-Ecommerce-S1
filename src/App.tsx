@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useSearchParams } from 'react-router-dom';
 import { AdminApp } from './admin/AdminApp';
 import { Product, CartItem, Currency, ActiveTab, BespokeInquiry, PageContent, StoreSettings, Customer } from './types';
 import { supabase } from './utils/supabaseClient';
@@ -13,6 +13,7 @@ import { BespokeOrderModal } from './components/BespokeOrderModal';
 import { CustomerAuthModal } from './components/CustomerAuthModal';
 import { WhatsAppButton } from './components/WhatsAppButton';
 import { TrackOrderModal } from './components/TrackOrderModal';
+import { SeoHead } from './components/SeoHead';
 
 
 import { HomeView } from './views/HomeView';
@@ -35,7 +36,7 @@ import { sendContactInquiryEmail, sendWelcomeDiscountEmail } from './utils/resen
 import { dispatchWebhookEvent } from './utils/webhookDispatcher';
 
 export function Storefront() {
-
+  const [searchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState<ActiveTab>('home');
   const [products, setProducts] = useState<Product[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -207,6 +208,22 @@ export function Storefront() {
     fetchData();
   }, []);
 
+  // Listen to URL search parameters (?tab=... and ?id=...) for deep linking and search indexing
+  useEffect(() => {
+    const tabParam = searchParams.get('tab') as ActiveTab | null;
+    const idParam = searchParams.get('id');
+
+    if (tabParam) {
+      setActiveTab(tabParam);
+    }
+    if (idParam && products.length > 0) {
+      const match = products.find((p) => p.id === idParam);
+      if (match) {
+        setSelectedProduct(match);
+      }
+    }
+  }, [searchParams, products]);
+
   useEffect(() => {
     trackPageViewEvent(activeTab);
   }, [activeTab]);
@@ -326,6 +343,9 @@ export function Storefront() {
 
   return (
     <div className="min-h-screen flex flex-col bg-[#fbf9f8] text-[#1b1c1c] selection:bg-[#1c1b1b] selection:text-white">
+      {/* Dynamic SEO, OpenGraph, Geo Meta Tags & Schema Manager */}
+      <SeoHead activeTab={activeTab} selectedProduct={selectedProduct} />
+
       {/* Header */}
       <Header
         activeTab={activeTab}

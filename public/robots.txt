@@ -1,0 +1,49 @@
+# Robots.txt for Swarna Wooden Crafts / IrisJev
+# Generated with agentic-awesome-skills SEO suite
+
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+Disallow: /*?*checkout*
+Disallow: /*?*account*
+
+User-agent: Googlebot
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+
+User-agent: Bingbot
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+
+# AI Search Engine & Large Language Model Crawlers (AEO / GEO Enabled)
+User-agent: GPTBot
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+
+User-agent: ClaudeBot
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+
+User-agent: PerplexityBot
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+
+User-agent: OAI-SearchBot
+Allow: /
+Disallow: /admin/
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
+
+# Sitemaps and AI Documentation Indices
+Sitemap: https://swarnawoodencrafts.com/sitemap.xml
+Host: https://swarnawoodencrafts.com

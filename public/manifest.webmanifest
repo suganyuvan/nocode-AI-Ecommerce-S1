@@ -1,0 +1,16 @@
+{
+  "name": "Swarna Wooden Crafts",
+  "short_name": "Swarna Crafts",
+  "description": "Ancient Artistry for Modern Spaces. Sanctified temple architecture, god sculptures, and bespoke wood carvings.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fbf9f8",
+  "theme_color": "#0f1513",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
