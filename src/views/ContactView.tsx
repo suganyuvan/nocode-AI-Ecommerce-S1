@@ -86,7 +86,7 @@ export const ContactView: React.FC = () => {
         {/* Left: Contact Info Card */}
         <div className="lg:col-span-2 bg-[#17201e] text-white p-8 rounded-2xl border border-[#283634] shadow-xl flex flex-col justify-between space-y-6">
           <div>
-            <h3 className="text-xl font-serif text-[#fed65b] font-bold mb-2">Irisjev Wooden Crafts</h3>
+            <h3 className="text-xl font-serif text-[#fed65b] font-bold mb-2">Swarna Wooden Crafts</h3>
             <p className="text-xs text-[#a19f99] leading-relaxed">
               Sacred woodcarving heritage spanning generations. Our master artisans in Swamimalai & Madurai sculpt timeless treasures.
             </p>
@@ -97,8 +97,8 @@ export const ContactView: React.FC = () => {
               <Mail className="w-4 h-4 text-[#fed65b] mt-0.5 shrink-0" />
               <div>
                 <strong className="block text-[11px] font-label-caps uppercase text-[#747878] tracking-widest">Email Concierge</strong>
-                <a href="mailto:support@irisjev.com" className="text-white hover:text-[#fed65b] transition-colors">
-                  support@irisjev.com
+                <a href="mailto:support@swarnawoodencrafts.com" className="text-white hover:text-[#fed65b] transition-colors">
+                  support@swarnawoodencrafts.com
                 </a>
               </div>
             </div>
@@ -121,7 +121,7 @@ export const ContactView: React.FC = () => {
           </div>
 
           <div className="pt-4 border-t border-[#2a3a37] text-[11px] text-[#747878]">
-            <p>GSTIN: 33MOCKIRISJEV1234Z1</p>
+            <p>GSTIN: 33MOCKSWARNA1234Z1</p>
             <p className="text-emerald-400 mt-1">● Real-time Resend Email Notifications Active</p>
           </div>
         </div>
@@ -135,7 +135,7 @@ export const ContactView: React.FC = () => {
               </div>
               <h3 className="text-2xl font-serif text-[#111615] font-bold">Inquiry Transmitted</h3>
               <p className="text-sm text-[#747878] max-w-md mx-auto">
-                Thank you for contacting Irisjev Wooden Crafts. A confirmation email has been sent via Resend, and our master artisans will reach out to you shortly.
+                Thank you for contacting Swarna Wooden Crafts. A confirmation email has been sent via Resend, and our master artisans will reach out to you shortly.
               </p>
               <button
                 onClick={() => setIsSubmitted(false)}

@@ -236,7 +236,7 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({
                   ) : (
                     <>
                       <div>Briard Bank</div>
-                      <div>Account Name: Irisjev Crafts</div>
+                      <div>Account Name: Swarna Wooden Crafts</div>
                       <div>Account No.: 9876543210</div>
                       <div>Pay by: {payByString}</div>
                     </>

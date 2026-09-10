@@ -6,19 +6,19 @@
 
 **Last Updated:** 21 August 2026
 
-Welcome to **IRISJEV**. These Terms & Conditions govern your access to and use of the IRISJEV website and your purchase of products through our online store.
+Welcome to **Swarna Wooden Crafts**. These Terms & Conditions govern your access to and use of the Swarna Wooden Crafts website and your purchase of products through our online store.
 
 By accessing or using this website, placing an order, or purchasing any product, you agree to these Terms & Conditions. If you do not agree with any part of these terms, please do not use the website.
 
-## 1. About IRISJEV
+## 1. About Swarna Wooden Crafts
 
-IRISJEV is an online store offering physical products to customers in India.
+Swarna Wooden Crafts is an online store offering physical products to customers in India.
 
-**Legal/Business Name:** IRISJEV Retail Ventures  
+**Legal/Business Name:** Swarna Wooden Crafts Retail Ventures  
 **Registered/Business Address:** 24, Temple Street, Chennai, Tamil Nadu – 600024  
-**Email:** support@irisjev.example  
+**Email:** support@swarnawoodencrafts.com  
 **Phone:** +91 90000 12345  
-**GSTIN:** 33MOCKIRISJEV1234Z1
+**GSTIN:** 33MOCKSwarna Wooden Crafts1234Z1
 
 ## 2. Products
 
@@ -42,15 +42,15 @@ All prices displayed on the website are in Indian Rupees (INR).
 
 Prices may include or exclude applicable taxes depending on how the product price is displayed at checkout. Any applicable shipping charges or additional charges will be shown before order confirmation.
 
-IRISJEV reserves the right to correct pricing or product-information errors. If an order has been placed at an obviously incorrect price, we may contact the customer before processing the order.
+Swarna Wooden Crafts reserves the right to correct pricing or product-information errors. If an order has been placed at an obviously incorrect price, we may contact the customer before processing the order.
 
 ## 4. Orders
 
 An order placed through the website constitutes a request to purchase the selected products.
 
-An order is considered accepted when IRISJEV sends an order confirmation or otherwise confirms acceptance.
+An order is considered accepted when Swarna Wooden Crafts sends an order confirmation or otherwise confirms acceptance.
 
-IRISJEV may cancel an order where reasonably necessary, including in cases involving:
+Swarna Wooden Crafts may cancel an order where reasonably necessary, including in cases involving:
 
 - Product unavailability
 - Incorrect pricing or product information
@@ -66,13 +66,13 @@ If an order is cancelled after payment has been received, the eligible amount wi
 
 Customers are responsible for providing accurate information including name, phone number, email address and delivery address.
 
-IRISJEV is not responsible for delivery problems caused by incorrect or incomplete information supplied by the customer.
+Swarna Wooden Crafts is not responsible for delivery problems caused by incorrect or incomplete information supplied by the customer.
 
 ## 6. Payments
 
 Payments may be processed through third-party payment service providers.
 
-IRISJEV does not ordinarily receive or store complete card numbers, CVV numbers or banking credentials when payment is processed through a third-party payment gateway.
+Swarna Wooden Crafts does not ordinarily receive or store complete card numbers, CVV numbers or banking credentials when payment is processed through a third-party payment gateway.
 
 Customers must follow the payment provider's authentication and security procedures.
 
@@ -89,7 +89,7 @@ Estimated delivery timelines are indicative and may vary due to:
 - Remote delivery locations
 - Government restrictions
 - Incorrect address information
-- Other circumstances outside IRISJEV's reasonable control
+- Other circumstances outside Swarna Wooden Crafts's reasonable control
 
 ## 8. Cancellation, Returns and Refunds
 
@@ -99,13 +99,13 @@ Customers should review those policies before placing an order.
 
 ## 9. Damaged or Incorrect Products
 
-If a product arrives damaged, defective or different from the product ordered, the customer should contact IRISJEV within the period specified in the Return & Exchange Policy.
+If a product arrives damaged, defective or different from the product ordered, the customer should contact Swarna Wooden Crafts within the period specified in the Return & Exchange Policy.
 
 Customers may be requested to provide photographs, videos, packaging details, order information or other reasonable evidence to help investigate the issue.
 
 ## 10. Intellectual Property
 
-All website content, including text, logos, graphics, photographs, product descriptions, designs and other materials, belongs to IRISJEV or its respective licensors unless otherwise stated.
+All website content, including text, logos, graphics, photographs, product descriptions, designs and other materials, belongs to Swarna Wooden Crafts or its respective licensors unless otherwise stated.
 
 You may not reproduce, copy, modify, distribute, sell or commercially exploit website content without prior written permission.
 
@@ -129,15 +129,15 @@ Those services may have their own terms and privacy policies.
 
 ## 13. Limitation of Liability
 
-IRISJEV will take reasonable steps to provide accurate product information and reliable services.
+Swarna Wooden Crafts will take reasonable steps to provide accurate product information and reliable services.
 
-To the extent permitted by applicable law, IRISJEV shall not be liable for indirect or consequential losses arising from circumstances beyond its reasonable control.
+To the extent permitted by applicable law, Swarna Wooden Crafts shall not be liable for indirect or consequential losses arising from circumstances beyond its reasonable control.
 
 Nothing in these Terms & Conditions is intended to exclude or restrict any consumer rights that cannot lawfully be excluded.
 
 ## 14. Force Majeure
 
-IRISJEV will not be responsible for delays or failures caused by circumstances beyond reasonable control, including natural disasters, severe weather, strikes, transportation disruption, government restrictions, technical failures or other extraordinary events.
+Swarna Wooden Crafts will not be responsible for delays or failures caused by circumstances beyond reasonable control, including natural disasters, severe weather, strikes, transportation disruption, government restrictions, technical failures or other extraordinary events.
 
 ## 15. Governing Law
 
@@ -147,7 +147,7 @@ Any dispute shall be subject to the jurisdiction of the competent courts having 
 
 ## 16. Changes to These Terms
 
-IRISJEV may update these Terms & Conditions from time to time.
+Swarna Wooden Crafts may update these Terms & Conditions from time to time.
 
 The updated version will be published on this website with the revised date.
 
@@ -155,6 +155,6 @@ The updated version will be published on this website with the revised date.
 
 For questions regarding these Terms & Conditions:
 
-**Email:** support@irisjev.example  
+**Email:** support@swarnawoodencrafts.com  
 **Phone:** +91 90000 12345  
 **Address:** [FULL BUSINESS ADDRESS]

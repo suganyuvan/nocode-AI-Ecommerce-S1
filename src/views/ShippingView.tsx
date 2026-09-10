@@ -11,7 +11,7 @@ export const ShippingView: React.FC = () => {
             Replace with your actual shipping policy.
           </p>
           <p><strong>Last Updated:</strong> 21 August 2026</p>
-          <p>Welcome to <strong>IRISJEV</strong> Shipping & Delivery Policy.</p>
+          <p>Welcome to <strong>Swarna Wooden Crafts</strong> Shipping & Delivery Policy.</p>
           
           <h2 className="text-xl font-serif mt-8 mb-4">1. Processing Time</h2>
           <p>All orders are processed within 2-3 business days. Masterpiece and custom items may take longer as described on the product page. Orders are not shipped or delivered on weekends or holidays.</p>
@@ -23,7 +23,7 @@ export const ShippingView: React.FC = () => {
           <p>You will receive a Shipment Confirmation email once your order has shipped containing your tracking number(s).</p>
 
           <h2 className="text-xl font-serif mt-8 mb-4">4. Damages</h2>
-          <p>IRISJEV takes utmost care with White-Glove transit for high-value items. If your order arrives damaged, please save all packaging materials and damaged goods and contact us immediately.</p>
+          <p>Swarna Wooden Crafts takes utmost care with White-Glove transit for high-value items. If your order arrives damaged, please save all packaging materials and damaged goods and contact us immediately.</p>
         </div>
       </div>
     </div>

@@ -92,7 +92,7 @@ export function websiteJsonLd(baseUrl = SITE_URL): JsonLd {
     '@id': `${baseUrl}/#website`,
     url: baseUrl,
     name: SITE_NAME,
-    alternateName: ['Swarna Crafts', 'IrisJev Crafts', 'Swarna Wooden Crafts'],
+    alternateName: ['Swarna Crafts', 'Swarna Wooden Crafts'],
     description: SITE_DESCRIPTION,
     publisher: {
       '@id': `${baseUrl}/#store`

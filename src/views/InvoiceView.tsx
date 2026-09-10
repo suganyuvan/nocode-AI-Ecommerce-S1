@@ -62,7 +62,7 @@ export const InvoiceView: React.FC<InvoiceViewProps> = ({
         </p>
         <div className="bg-[#f5f3f3] p-4 rounded-xs border border-[#c4c7c7] text-left text-xs font-label-caps space-y-1 inline-block mx-auto max-w-md w-full mt-4">
           <p><strong>Order ID:</strong> #{invoiceData.invoiceNumber}</p>
-          <p><strong>Craft Studio:</strong> Irisjev Wooden Crafts, Karnataka</p>
+          <p><strong>Craft Studio:</strong> Swarna Wooden Crafts, Karnataka</p>
           <p><strong>Insurance:</strong> 100% Transit Insured</p>
         </div>
         <div className="mt-6">
@@ -168,7 +168,7 @@ export const InvoiceView: React.FC<InvoiceViewProps> = ({
                 <div className="text-[#444748] leading-relaxed">
                   <div>Paid via Credit Card</div>
                   <div>Processed securely.</div>
-                  <div>Account Name: Irisjev Crafts</div>
+                  <div>Account Name: Swarna Wooden Crafts</div>
                 </div>
               </div>
               

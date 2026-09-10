@@ -946,7 +946,7 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
         key: rzpOrder.keyId || import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_TSSXHdcPyRcrR8',
         amount: rzpOrder.amount,
         currency: rzpOrder.currency || 'INR',
-        name: 'Irisjev Wooden Crafts',
+        name: 'Swarna Wooden Crafts',
         description: `Order #${orderNumber} Handcrafted Heritage Sculptures`,
         image: 'https://cdn-icons-png.flaticon.com/512/869/869636.png',
         order_id: rzpOrder.orderId,
@@ -1052,7 +1052,7 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
         notes: {
           order_id: newOrder.id,
           order_number: orderNumber,
-          craft_studio: 'Irisjev Wooden Crafts, Karnataka',
+          craft_studio: 'Swarna Wooden Crafts, Karnataka',
         },
         theme: {
           color: '#1c1b1b',
@@ -1142,7 +1142,7 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
             )}
             <div className="flex justify-between items-center py-1 border-b border-[#e4e2e2]">
               <span className="text-[#747878]">Craft Studio:</span>
-              <span className="text-[#1b1c1c]">Irisjev Wooden Crafts, Karnataka</span>
+              <span className="text-[#1b1c1c]">Swarna Wooden Crafts, Karnataka</span>
             </div>
             <div className="flex justify-between items-center py-1 border-b border-[#e4e2e2]">
               <span className="text-[#747878]">Transit Insurance:</span>
@@ -2054,7 +2054,7 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
             <div className="space-y-2">
               <h3 className="text-xl font-bold text-[#1b1c1c]">Are you sure you want to exit?</h3>
               <p className="text-xs text-gray-500 font-medium">
-                You will be taken back to Irisjev Wooden Crafts website
+                You will be taken back to Swarna Wooden Crafts website
               </p>
             </div>
 

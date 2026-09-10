@@ -262,7 +262,7 @@ export function PageBuilderManager() {
                     type="text"
                     value={settings.badge}
                     onChange={e => setSettings(prev => ({ ...prev, badge: e.target.value }))}
-                    placeholder="e.g. Est. 1995 • Irisjev Heritage Craft Studio"
+                    placeholder="e.g. Est. 1995 • Swarna Wooden Crafts Studio"
                     className="w-full px-3 py-2 bg-[#fbfaf8] border border-[#e5e1d8] rounded-xl font-bold text-xs focus:outline-none"
                   />
                 </div>

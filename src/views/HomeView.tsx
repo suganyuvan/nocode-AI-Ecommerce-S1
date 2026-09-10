@@ -287,7 +287,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
             {instagramContent.handle || '@swarna_wooden_crafts'}
           </h2>
           <p className="font-body-md text-sm text-[#444748]">
-            {instagramContent.description || 'Tag your home shrines with #IrisjevCrafts to be featured in our monthly circle gallery.'}
+            {instagramContent.description || 'Tag your home shrines with #SwarnaWoodenCrafts to be featured in our monthly circle gallery.'}
           </p>
         </div>
 

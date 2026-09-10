@@ -154,7 +154,7 @@ export function SupportTicketsManager() {
         const newMessage: TicketMessage = {
           id: `msg-${Date.now()}`,
           sender: 'admin',
-          sender_name: 'Irisjev Heritage Support Concierge',
+          sender_name: 'Swarna Wooden Crafts Support',
           message: adminResponseText.trim(),
           created_at: new Date().toISOString()
         };
@@ -172,7 +172,7 @@ export function SupportTicketsManager() {
       if (adminResponseText.trim()) {
         updatePayload.admin_response = adminResponseText.trim();
         updatePayload.admin_responded_at = new Date().toISOString();
-        updatePayload.admin_responder_name = 'Irisjev Support Staff';
+        updatePayload.admin_responder_name = 'Swarna Wooden Crafts Support';
       }
 
       const { error } = await supabase

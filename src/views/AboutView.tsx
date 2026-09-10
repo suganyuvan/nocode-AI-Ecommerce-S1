@@ -12,13 +12,13 @@ export const AboutView: React.FC<AboutViewProps> = ({ setActiveTab, onOpenBespok
       {/* Hero */}
       <div className="text-center max-w-3xl mx-auto space-y-4">
         <span className="text-xs font-label-caps uppercase tracking-widest text-[#735c00] font-bold block">
-          Est. 1995 • Irisjev Wooden Crafts
+          Est. 1995 • Swarna Wooden Crafts
         </span>
         <h1 className="font-display-lg text-4xl md:text-5xl font-bold text-[#1b1c1c] italic">
           Preserving Ancient Artistry for Generations
         </h1>
         <p className="font-body-lg text-[#444748] leading-relaxed">
-          Founded four decades ago in the historic woodcarving hub of Karnataka, Irisjev Wooden Crafts is dedicated to keeping centuries-old Indian temple carving traditions alive.
+          Founded four decades ago in the historic woodcarving hub of Karnataka, Swarna Wooden Crafts is dedicated to keeping centuries-old Indian temple carving traditions alive.
         </p>
       </div>
 

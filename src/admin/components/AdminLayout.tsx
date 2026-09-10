@@ -24,7 +24,7 @@ import {
 } from 'lucide-react';
 
 import { adminSupabase } from '../../utils/supabaseClient';
-import irisjevLogo from '../../assets/images/irisjev_logo_1785688429320.jpg';
+import irisjevLogo from '../../assets/images/swarna_wooden_crafts_logo.jpg';
 
 export function AdminLayout() {
   const [isMobileOpen, setIsMobileOpen] = React.useState(false);
@@ -80,13 +80,13 @@ export function AdminLayout() {
             <div className="w-9 h-9 rounded-xl overflow-hidden bg-white p-0.5 shadow-md shadow-[#fed65b]/10 group-hover:scale-105 transition-transform border border-[#fed65b]/40 shrink-0">
               <img 
                 src={irisjevLogo} 
-                alt="Irisjev Wooden Crafts Logo" 
+                alt="Swarna Wooden Crafts Logo" 
                 className="w-full h-full object-contain"
               />
             </div>
             <div className="min-w-0">
               <span className="font-bold text-xs tracking-wide text-white block leading-tight truncate">
-                Irisjev <span className="text-[#fed65b]">Wooden Crafts</span>
+                Swarna <span className="text-[#fed65b]">Wooden Crafts</span>
               </span>
               <span className="text-[10px] font-label-caps uppercase tracking-wider text-[#a19f99] block">
                 Admin Dashboard
@@ -193,7 +193,7 @@ export function AdminLayout() {
             </button>
             <div className="flex items-center gap-2">
               <img src={irisjevLogo} alt="Logo" className="w-6 h-6 object-contain" />
-              <span className="font-bold text-xs sm:text-sm text-[#1b1c1c]">Irisjev Wooden Crafts</span>
+              <span className="font-bold text-xs sm:text-sm text-[#1b1c1c]">Swarna Wooden Crafts</span>
             </div>
           </div>
           <div className="w-8 h-8 rounded-full bg-[#1c2422] text-[#fed65b] border border-[#fed65b]/40 font-bold flex items-center justify-center text-xs">

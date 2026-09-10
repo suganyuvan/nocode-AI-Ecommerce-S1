@@ -381,7 +381,7 @@ export function ShippingLabelManager() {
                     type="text"
                     value={settings.dispatch_hub_name}
                     onChange={e => setSettings({ ...settings, dispatch_hub_name: e.target.value })}
-                    placeholder="Irisjev Heritage Craft Studios"
+                    placeholder="Swarna Wooden Crafts Studios"
                     className="w-full px-3 py-2 bg-[#fbfaf8] border border-[#e5e1d8] rounded-xl font-bold text-xs focus:outline-none"
                   />
                 </div>

@@ -71,7 +71,7 @@ export function EmailNotificationsManager() {
 
   // Direct Form Test Email State
   const [testRecipient, setTestRecipient] = useState(DEFAULT_ADMIN_EMAIL);
-  const [testSubject, setTestSubject] = useState('Resend Notification Verification - Irisjev Wooden Crafts');
+  const [testSubject, setTestSubject] = useState('Resend Notification Verification - Swarna Wooden Crafts');
   const [isSendingTest, setIsSendingTest] = useState(false);
   const [testResult, setTestResult] = useState<{ success: boolean; id?: string; error?: string } | null>(null);
 
@@ -607,7 +607,7 @@ export function EmailNotificationsManager() {
                   className="w-full p-2.5 bg-[#0d1312] border border-[#232f2e] rounded-xl text-white text-xs font-mono focus:outline-none focus:border-[#fed65b]"
                 />
                 <p className="text-[10px] text-gray-500 mt-1">
-                  Note: Verified domain active (send@irisjev.in). Emails will deliver directly to recipient addresses.
+                  Note: Verified domain active (send@swarnawoodencrafts.com). Emails will deliver directly to recipient addresses.
                 </p>
               </div>
 
@@ -704,7 +704,7 @@ export function EmailNotificationsManager() {
                     required
                     value={settings.from_name}
                     onChange={(e) => setSettings({ ...settings, from_name: e.target.value })}
-                    placeholder="Irisjev Wooden Crafts"
+                    placeholder="Swarna Wooden Crafts"
                     className="w-full p-2.5 bg-[#0d1312] border border-[#232f2e] rounded-xl text-white text-xs focus:outline-none focus:border-[#fed65b]"
                   />
                 </div>
@@ -718,7 +718,7 @@ export function EmailNotificationsManager() {
                     required
                     value={settings.from_email}
                     onChange={(e) => setSettings({ ...settings, from_email: e.target.value })}
-                    placeholder="send@irisjev.in"
+                    placeholder="send@swarnawoodencrafts.com"
                     className="w-full p-2.5 bg-[#0d1312] border border-[#232f2e] rounded-xl text-white text-xs font-mono focus:outline-none focus:border-[#fed65b]"
                   />
                 </div>

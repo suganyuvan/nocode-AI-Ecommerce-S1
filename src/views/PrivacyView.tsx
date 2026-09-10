@@ -11,7 +11,7 @@ export const PrivacyView: React.FC = () => {
             Replace with your actual privacy policy.
           </p>
           <p><strong>Last Updated:</strong> 21 August 2026</p>
-          <p>At <strong>IRISJEV</strong>, we are committed to protecting your personal information and your right to privacy.</p>
+          <p>At <strong>Swarna Wooden Crafts</strong>, we are committed to protecting your personal information and your right to privacy.</p>
           
           <h2 className="text-xl font-serif mt-8 mb-4">1. Information We Collect</h2>
           <p>We collect personal information that you provide to us, such as name, address, contact information, passwords and security data, and payment information.</p>
@@ -23,9 +23,9 @@ export const PrivacyView: React.FC = () => {
           <p>We only share information with your consent, to comply with laws, to provide you with services, to protect your rights, or to fulfill business obligations.</p>
 
           <h2 className="text-xl font-serif mt-8 mb-4">4. Contact Us</h2>
-          <p>If you have questions or comments about this policy, you may email us at support@irisjev.example or by post to:</p>
+          <p>If you have questions or comments about this policy, you may email us at support@swarnawoodencrafts.com or by post to:</p>
           <p>
-            IRISJEV Retail Ventures<br/>
+            Swarna Wooden Crafts<br/>
             24, Temple Street, Chennai, Tamil Nadu – 600024
           </p>
         </div>

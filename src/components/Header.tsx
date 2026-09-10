@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ActiveTab, Currency, Customer } from '../types';
-import irisjevLogo from '../assets/images/irisjev_logo_1785688429320.jpg';
+import irisjevLogo from '../assets/images/swarna_wooden_crafts_logo.jpg';
 import { PromotionalBanner } from './PromotionalBanner';
 
 interface HeaderProps {
@@ -45,9 +45,9 @@ export const Header: React.FC<HeaderProps> = ({
       <PromotionalBanner targetPage="header_marquee" />
       <header className="sticky top-0 z-50 bg-[#fbf9f8]/95 backdrop-blur-md border-b border-[#c4c7c7]/30 shadow-xs transition-all duration-300">
       {/* Top Announcement Bar */}
-      <div className="bg-[#1c1b1b] text-[#e5e2e1] text-[11px] font-label-caps uppercase tracking-widest py-1.5 px-4 text-center flex justify-between items-center max-w-[1200px] mx-auto">
-        <span className="hidden sm:inline">Est. 1995 • Irisjev Wooden Crafts</span>
-        <span className="mx-auto sm:mx-0">✨ Free Insured White-Glove Shipping Across India & Worldwide</span>
+      <div className="bg-[#1c1b1b] text-[#e5e2e1] text-[10px] sm:text-[11px] font-label-caps uppercase tracking-widest py-2 px-2 sm:px-4 text-center flex flex-col sm:flex-row justify-between items-center max-w-[1200px] mx-auto gap-1 sm:gap-0">
+        <span className="hidden lg:inline">Est. 1995 • Swarna Wooden Crafts</span>
+        <span className="mx-auto lg:mx-0 truncate w-full sm:w-auto text-center">✨ Free Insured White-Glove Shipping Across India & Worldwide</span>
         <div className="hidden md:flex items-center gap-3">
           <select
             value={currency}
@@ -79,9 +79,9 @@ export const Header: React.FC<HeaderProps> = ({
         <div className="flex items-center gap-8">
           <button
             onClick={() => setActiveTab('home')}
-            className="flex items-center cursor-pointer"
+            className="flex items-center cursor-pointer shrink-0"
           >
-            <img src={irisjevLogo} alt="Irisjev Wooden Crafts" className="h-14 md:h-16 object-contain mix-blend-multiply" />
+            <img src={irisjevLogo} alt="Swarna Wooden Crafts" className="h-10 sm:h-14 md:h-16 object-contain mix-blend-multiply" />
           </button>
           
           {/* Desktop Navigation Links */}
@@ -151,7 +151,7 @@ export const Header: React.FC<HeaderProps> = ({
 
 
         {/* Right Actions */}
-        <div className="flex items-center gap-4 text-[#000000]">
+        <div className="flex items-center gap-2 sm:gap-4 text-[#000000]">
           {/* Search Trigger */}
           <button
             onClick={onOpenSearch}
@@ -168,7 +168,7 @@ export const Header: React.FC<HeaderProps> = ({
           <select
             value={currency}
             onChange={(e) => setCurrency(e.target.value as Currency)}
-            className="md:hidden bg-transparent text-[10px] font-bold px-1.5 py-0.5 border border-[#747878] rounded-xs outline-none"
+            className="md:hidden bg-transparent text-[10px] font-bold px-1 py-0.5 border border-[#747878] rounded-xs outline-none w-[45px] sm:w-auto"
           >
             <option value="INR">INR</option>
             <option value="USD">USD</option>
@@ -301,7 +301,7 @@ export const Header: React.FC<HeaderProps> = ({
             }}
             className="block w-full text-left py-2 text-[#444748] border-b border-[#e9e8e7]"
           >
-            About Irisjev Wooden Crafts
+            About Swarna Wooden Crafts
           </button>
           <button
             onClick={() => {

@@ -11,7 +11,7 @@ export const RefundView: React.FC = () => {
             Replace with your actual cancellation and refund policy.
           </p>
           <p><strong>Last Updated:</strong> 21 August 2026</p>
-          <p>Thank you for shopping at <strong>IRISJEV</strong>. We want you to be completely satisfied with your purchase.</p>
+          <p>Thank you for shopping at <strong>Swarna Wooden Crafts</strong>. We want you to be completely satisfied with your purchase.</p>
           
           <h2 className="text-xl font-serif mt-8 mb-4">1. Order Cancellations</h2>
           <p>You may request an order cancellation within 24 hours of placing the order. Custom or bespoke commissions cannot be cancelled once work has commenced.</p>
@@ -26,7 +26,7 @@ export const RefundView: React.FC = () => {
           <p>You will be responsible for paying for your own shipping costs for returning your item unless the item arrived damaged or defective.</p>
 
           <h2 className="text-xl font-serif mt-8 mb-4">5. Contact Us</h2>
-          <p>If you have any questions on how to return your item to us, contact us at support@irisjev.example.</p>
+          <p>If you have any questions on how to return your item to us, contact us at support@swarnawoodencrafts.com.</p>
         </div>
       </div>
     </div>

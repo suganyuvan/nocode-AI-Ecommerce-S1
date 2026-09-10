@@ -6,18 +6,18 @@ export const SITE_URL = (
   'https://swarnawoodencrafts.com'
 ).replace(/\/+$/, '');
 
-export const SITE_NAME = 'Swarna Wooden Crafts | IrisJev Heritage Studios';
+export const SITE_NAME = 'Swarna Wooden Crafts';
 export const SITE_SHORT_NAME = 'Swarna Wooden Crafts';
-export const BRAND_NAME = 'IrisJev';
+export const BRAND_NAME = 'Swarna Wooden Crafts';
 export const SITE_HANDLE = '@swarnawoodcrafts';
 export const SITE_LOCALE = 'en_IN';
 export const SITE_LANGUAGE = 'en';
 
-export const SITE_TITLE_DEFAULT = 'Swarna Wooden Crafts | Sanctified Temple Architecture & Handcrafted Wood Sculptures';
+export const SITE_TITLE_DEFAULT = 'Swarna Wooden Crafts | Authentic Heritage Wood Sculptures';
 export const SITE_TITLE_TEMPLATE = '%s | Swarna Wooden Crafts';
 
 export const SITE_DESCRIPTION =
-  'India’s premier atelier for handcrafted wooden temple doors, sacred god sculptures, bespoke home mandapams, and heritage rosewood & teakwood wall panels. Certified authentic artisan craftsmanship shipped worldwide with museum-grade crating.';
+  'India’s premier atelier for handcrafted wooden temple doors, sacred god sculptures, and bespoke home mandapams in solid Mysore teakwood and rosewood.';
 
 export const SITE_KEYWORDS = [
   'Wooden Crafts India',
@@ -36,8 +36,8 @@ export const SITE_KEYWORDS = [
   'Export Quality Wood Crafts India'
 ];
 
-export const AUTHOR_NAME = 'Irisjev Heritage Craft Studios';
-export const AUTHOR_EMAIL = 'contact@irisjev.com';
+export const AUTHOR_NAME = 'Swarna Wooden Crafts Studios';
+export const AUTHOR_EMAIL = 'contact@swarnawoodencrafts.com';
 export const AUTHOR_PHONE = '+91 98765 43210';
 export const AUTHOR_WHATSAPP = '+919876543210';
 
@@ -54,7 +54,7 @@ export const GEO_LOCATION: GeoLocationConfig = {
   longitude: 76.639380,
   postalCode: '570001',
   streetAddress: 'Craft Studio Rd, Mysore Heritage Zone, Karnataka - 570001',
-  dispatchHubName: 'Irisjev Heritage Craft Studios'
+  dispatchHubName: 'Swarna Wooden Crafts Studios'
 };
 
 // Verification & Analytics Identifiers
@@ -66,10 +66,10 @@ export const META_PIXEL_ID = '1019531494462407';
 
 // Social Profiles & Citations for GEO Authority (Entity Linking)
 export const SOCIAL_PROFILES = [
-  'https://www.instagram.com/irisjevcrafts',
-  'https://www.facebook.com/irisjevcrafts',
-  'https://www.youtube.com/@irisjevcrafts',
-  'https://www.pinterest.com/irisjevcrafts'
+  'https://www.instagram.com/swarnawoodencrafts',
+  'https://www.facebook.com/swarnawoodencrafts',
+  'https://www.youtube.com/@swarnawoodencrafts',
+  'https://www.pinterest.com/swarnawoodencrafts'
 ];
 
 // Default Database Settings fallback

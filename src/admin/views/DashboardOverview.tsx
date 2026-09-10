@@ -12,7 +12,7 @@ import {
   ShoppingBag,
   Users
 } from 'lucide-react';
-import irisjevLogo from '../../assets/images/irisjev_logo_1785688429320.jpg';
+import irisjevLogo from '../../assets/images/swarna_wooden_crafts_logo.jpg';
 
 export function DashboardOverview() {
   const [stats, setStats] = useState({
@@ -78,7 +78,7 @@ export function DashboardOverview() {
             Dashboard
           </h1>
           <p className="text-xs text-[#747878] font-label-caps uppercase tracking-wider mt-1">
-            Irisjev Wooden Crafts — Master Carvings & Store Analytics
+            Swarna Wooden Crafts — Master Carvings & Store Analytics
           </p>
         </div>
 
@@ -466,7 +466,7 @@ export function DashboardOverview() {
                 <img src={irisjevLogo} alt="Logo" className="w-full h-full object-contain" />
               </div>
               <span className="text-xs font-bold tracking-wider uppercase text-white/90 font-label-caps">
-                Irisjev Wooden Crafts
+                Swarna Wooden Crafts
               </span>
             </div>
 

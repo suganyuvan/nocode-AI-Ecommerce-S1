@@ -1,8 +1,8 @@
-# Complete Atelier Knowledge Base - Swarna Wooden Crafts (IrisJev)
+# Complete Atelier Knowledge Base - Swarna Wooden Crafts
 Generated: 2026-09-02T12:02:46.675Z
 
 ## About The Heritage Atelier
-Swarna Wooden Crafts (IrisJev Heritage Studios) is located in Mysore, Karnataka, India. Founded by traditional master sculptors (Sthapathis), our atelier preserves ancient South Indian Chola, Hoysala, and Vijayanagara carving traditions.
+Swarna Wooden Crafts is located in Mysore, Karnataka, India. Founded by traditional master sculptors (Sthapathis), our atelier preserves ancient South Indian Chola, Hoysala, and Vijayanagara carving traditions.
 
 ## Geographic Coordinates & Hub
 - **Region**: Karnataka, India (ISO: IN-KA)

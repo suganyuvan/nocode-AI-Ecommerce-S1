@@ -1,11 +1,12 @@
-# Swarna Wooden Crafts (IrisJev Heritage Studios)
-> Ancient Artistry for Modern Spaces. India's master woodcarvers creating sanctified temple doors, sacred god sculptures, mandapams, and heritage architectural woodwork from solid Mysore teakwood and rosewood.
+# Swarna Wooden Crafts
+
+> India's premier atelier for handcrafted wooden temple architecture, deity sculptures, and bespoke pooja mandapams. Exporting museum-grade woodwork globally from Mysore, Karnataka.
 
 ## Atelier Information & Authority
-- **Studio Name**: Swarna Wooden Crafts | IrisJev Heritage Studios
-- **Master Atelier**: Irisjev Heritage Craft Studios
-- **Location**: Craft Studio Rd, Mysore Heritage Zone, Karnataka - 570001, India (Geo: 12.29581, 76.63938)
-- **Contact Phone**: +91 98765 43210 | **Email**: contact@irisjev.com
+- **Studio Name**: Swarna Wooden Crafts
+- **Master Atelier**: Swarna Wooden Crafts Studios
+- **Location**: Mysore Heritage Zone, Karnataka, India (570001)
+- **Contact Phone**: +91 98765 43210 | **Email**: contact@swarnawoodencrafts.com
 - **Website**: https://swarnawoodencrafts.com
 - **Full LLM Manifest**: [llms-full.txt](https://swarnawoodencrafts.com/llms-full.txt)
 

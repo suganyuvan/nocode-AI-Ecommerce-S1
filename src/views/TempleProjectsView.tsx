@@ -47,7 +47,7 @@ export const TempleProjectsView: React.FC<TempleProjectsViewProps> = ({
           Grand Temple Projects & Mandapams
         </h1>
         <p className="font-body-lg text-[#444748]">
-          Irisjev Wooden Crafts has executed over 4,500 architectural temple shrines, mandapams, and carved entrance doors for private estates and spiritual centers across India, USA, UK, Singapore, and Dubai.
+          Swarna Wooden Crafts has executed over 4,500 architectural temple shrines, mandapams, and carved entrance doors for private estates and spiritual centers across India, USA, UK, Singapore, and Dubai.
         </p>
       </div>
 

@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS shipping_label_settings (
     show_cod_badge BOOLEAN NOT NULL DEFAULT true,
     custom_declaration_note TEXT DEFAULT 'FRAGILE - Sanctified Heritage Wooden Sculptures • 100% Insured Transit',
     brand_logo_url TEXT DEFAULT 'https://cdn-icons-png.flaticon.com/512/869/869636.png',
-    dispatch_hub_name TEXT DEFAULT 'Irisjev Heritage Craft Studios',
+    dispatch_hub_name TEXT DEFAULT 'Swarna Wooden Crafts Studios',
     dispatch_hub_address TEXT DEFAULT 'Craft Studio Rd, Mysore Heritage Zone, Karnataka - 570001, India',
     dispatch_hub_phone TEXT DEFAULT '+91 98765 43210',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),

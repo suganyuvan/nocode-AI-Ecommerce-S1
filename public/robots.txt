@@ -1,4 +1,4 @@
-# Robots.txt for Swarna Wooden Crafts / IrisJev
+# Robots.txt for Swarna Wooden Crafts
 # Generated with agentic-awesome-skills SEO suite
 
 User-agent: *

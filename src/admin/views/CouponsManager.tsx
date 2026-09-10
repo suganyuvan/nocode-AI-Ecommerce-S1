@@ -51,7 +51,7 @@ export function CouponsManager() {
   // Simulator State
   const [simCode, setSimCode] = useState('');
   const [simCartSubtotal, setSimCartSubtotal] = useState(2500);
-  const [simCustomerEmail, setSimCustomerEmail] = useState('collector@irisjev.com');
+  const [simCustomerEmail, setSimCustomerEmail] = useState('collector@swarnawoodencrafts.com');
   const [simOrderCount, setSimOrderCount] = useState(1);
   const [simDate, setSimDate] = useState(new Date().toISOString().slice(0, 16));
   const [simResult, setSimResult] = useState<any>(null);

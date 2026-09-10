@@ -1759,7 +1759,7 @@ export const MyAccountView: React.FC<MyAccountViewProps> = ({
                             <div className="flex items-center justify-between text-xs text-emerald-800 border-b border-emerald-200 pb-2">
                               <span className="font-bold flex items-center gap-1 text-emerald-900">
                                 <span className="material-symbols-outlined text-base text-emerald-600">verified</span>
-                                Official Concierge Response ({ticket.admin_responder_name || 'Irisjev Concierge'})
+                                Official Concierge Response ({ticket.admin_responder_name || 'Swarna Wooden Crafts Concierge'})
                               </span>
                               <span className="text-[11px] text-emerald-700">
                                 {ticket.admin_responded_at ? new Date(ticket.admin_responded_at).toLocaleString() : 'Recent'}

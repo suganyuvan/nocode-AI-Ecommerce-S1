@@ -336,7 +336,7 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
         <div className="lg:col-span-5 space-y-6">
           <div>
             <span className="text-xs font-label-caps uppercase tracking-widest text-[#735c00] font-bold block mb-1">
-              Irisjev Wooden Crafts Heritage
+              Swarna Wooden Crafts Heritage
             </span>
             <h1 className="font-display-lg text-3xl sm:text-4xl font-bold text-[#1b1c1c] italic leading-tight">
               {product.name}

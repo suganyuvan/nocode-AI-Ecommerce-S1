@@ -126,7 +126,7 @@ export const ShopView: React.FC<ShopViewProps> = ({
       <div className="border-b border-[#c4c7c7]/40 pb-6 flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
         <div>
           <span className="text-xs font-label-caps uppercase tracking-widest text-[#735c00] font-bold block mb-1">
-            Irisjev Wooden Crafts Catalogue
+            Swarna Wooden Crafts Catalogue
           </span>
           <h1 className="font-display-lg text-3xl md:text-4xl font-bold text-[#1b1c1c] italic">
             Curated Collection of Woodcrafts

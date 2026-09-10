@@ -1129,7 +1129,7 @@ export function SalesAnalyticsManager() {
                         onClick={() => {
                           const cleanPhone = (ab.phone || '918610554711').replace(/\D/g, '');
                           const msg = encodeURIComponent(
-                            `Hello ${ab.customerName || 'there'}! We noticed you left items in your cart at Irisjev Wooden Crafts (${ab.topProduct || 'Heritage Sculptures'}). Complete your checkout here: https://irisjevwoodencrafts.com/checkout`
+                            `Hello ${ab.customerName || 'there'}! We noticed you left items in your cart at Swarna Wooden Crafts (${ab.topProduct || 'Heritage Sculptures'}). Complete your checkout here: https://swarnawoodencrafts.com/checkout`
                           );
                           window.open(`https://wa.me/${cleanPhone}?text=${msg}`, '_blank');
                         }}

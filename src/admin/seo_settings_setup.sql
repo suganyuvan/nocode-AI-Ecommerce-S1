@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS seo_settings (
     geo_postal_code TEXT DEFAULT '570001',
     geo_street_address TEXT DEFAULT 'Craft Studio Rd, Mysore Heritage Zone, Karnataka - 570001',
     business_phone TEXT DEFAULT '+91 98765 43210',
-    business_email TEXT DEFAULT 'contact@irisjev.com',
+    business_email TEXT DEFAULT 'contact@swarnawoodencrafts.com',
     google_site_verification TEXT DEFAULT '',
     bing_site_verification TEXT DEFAULT '',
     enable_ai_crawlers BOOLEAN DEFAULT true,
@@ -87,7 +87,7 @@ VALUES (
     '570001',
     'Craft Studio Rd, Mysore Heritage Zone, Karnataka - 570001',
     '+91 98765 43210',
-    'contact@irisjev.com',
+    'contact@swarnawoodencrafts.com',
     true
 )
 ON CONFLICT (id) DO NOTHING;

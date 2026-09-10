@@ -35,7 +35,7 @@ export const ShippingLabelSlip: React.FC<ShippingLabelSlipProps> = ({ order, set
           )}
           <div>
             <h4 className="font-extrabold text-sm uppercase tracking-wider leading-tight">
-              {settings.dispatch_hub_name || 'Irisjev Wooden Crafts'}
+              {settings.dispatch_hub_name || 'Swarna Wooden Crafts'}
             </h4>
             <span className="text-[10px] text-gray-700 font-semibold block">EXPRESS PRIORITY SHIPPING SLIP</span>
           </div>
@@ -196,7 +196,7 @@ export const ShippingLabelSlip: React.FC<ShippingLabelSlipProps> = ({ order, set
       {/* Footer Timestamp & Verification */}
       <div className="flex justify-between items-center text-[8px] text-gray-500 pt-1 border-t border-gray-200">
         <span>Order Date: {new Date(order.created_at || Date.now()).toLocaleDateString('en-IN')}</span>
-        <span>Verified Irisjev Logistics • System Label ID: #{orderNum}</span>
+        <span>Verified Swarna Logistics • System Label ID: #{orderNum}</span>
       </div>
 
     </div>
