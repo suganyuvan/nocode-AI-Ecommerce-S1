@@ -1,0 +1,1088 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IRISJEV Wooden Crafts | Complete Project Submission & Operator Guide</title>
+  <meta name="description" content="Comprehensive technical documentation, real screenshots, database schemas, and step-by-step frontend & backend guides for the Irisjev Wooden Crafts E-Commerce Platform." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <style>
+    body { font-family: 'Outfit', sans-serif; background-color: #0b0f0e; color: #e2e8f0; line-height: 1.7; }
+    h1,h2,h3,h4,.cinzel { font-family: 'Cinzel', serif; }
+    code,pre,.mono { font-family: 'JetBrains Mono', monospace; }
+    .gold { color: #fed65b; }
+    .gold-gradient { background: linear-gradient(135deg,#fed65b,#d4af37,#b8860b); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+    .card { background:#131917; border:1px solid #2b3a35; border-radius:16px; }
+    .step-card { background:#0d1110; border:1px solid #2b3a35; border-radius:12px; padding:16px; }
+    ::-webkit-scrollbar { width:5px; height:5px; }
+    ::-webkit-scrollbar-track { background:#0b0f0e; }
+    ::-webkit-scrollbar-thumb { background:#2b3a35; border-radius:99px; }
+    ::-webkit-scrollbar-thumb:hover { background:#d4af37; }
+    .img-frame { border-radius:12px; border:1px solid #2b3a35; box-shadow:0 8px 32px rgba(0,0,0,.5); cursor:zoom-in; transition:transform .2s,box-shadow .2s; display:block; width:100%; }
+    .img-frame:hover { transform:translateY(-2px); box-shadow:0 16px 48px rgba(0,0,0,.6),0 0 20px rgba(212,175,55,.15); }
+    .callout { border-left:3px solid #fed65b; background:rgba(212,175,55,.07); padding:12px 16px; border-radius:0 8px 8px 0; }
+    .callout.warn { border-color:#f97316; background:rgba(249,115,22,.07); }
+    .callout.info { border-color:#38bdf8; background:rgba(56,189,248,.07); }
+    .callout.success { border-color:#10b981; background:rgba(16,185,129,.07); }
+    .badge { display:inline-flex; align-items:center; padding:2px 8px; border-radius:99px; font-size:10px; font-weight:700; letter-spacing:.08em; font-family:'JetBrains Mono',monospace; }
+    .badge-gold { background:rgba(212,175,55,.2); color:#fed65b; border:1px solid rgba(212,175,55,.4); }
+    .badge-green { background:rgba(16,185,129,.2); color:#10b981; border:1px solid rgba(16,185,129,.4); }
+    .badge-blue { background:rgba(56,189,248,.2); color:#38bdf8; border:1px solid rgba(56,189,248,.4); }
+    .badge-orange { background:rgba(249,115,22,.2); color:#fb923c; border:1px solid rgba(249,115,22,.4); }
+    .code-block { background:#060908; border:1px solid #1e2d28; border-radius:10px; padding:16px; overflow-x:auto; font-size:11px; line-height:1.6; }
+    .nav-link { display:flex; align-items:center; gap:8px; padding:7px 12px; border-radius:8px; font-size:12px; color:#9ca3af; transition:all .15s; text-decoration:none; }
+    .nav-link:hover { color:#fed65b; background:#131917; }
+    .nav-link.active { color:#fed65b; background:rgba(212,175,55,.12); }
+    .toc-section { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.1em; color:#4b6058; padding:6px 12px; margin-top:12px; }
+    table.data-table { width:100%; border-collapse:collapse; font-size:12px; }
+    table.data-table th { background:#0d1110; padding:10px 12px; text-align:left; font-size:10px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:#6b7280; border-bottom:1px solid #2b3a35; }
+    table.data-table td { padding:10px 12px; border-bottom:1px solid #1a2520; color:#d1d5db; vertical-align:top; }
+    table.data-table tr:hover td { background:#131917; }
+    @media print { .no-print { display:none!important; } body { background:#fff!important; color:#111!important; } .card { border-color:#e5e7eb!important; background:#f9fafb!important; } h1,h2,h3,h4 { color:#111!important; } }
+  </style>
+</head>
+<body class="selection:bg-[#fed65b] selection:text-[#0b0f0e]">
+
+  <!-- TOP BANNER -->
+  <div class="no-print sticky top-0 z-50 bg-[#0d1110] border-b border-[#2b3a35] px-4 py-2 flex flex-wrap items-center justify-between text-xs font-mono backdrop-blur-md">
+    <div class="flex items-center gap-3">
+      <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse inline-block"></span>
+      <span class="text-[#fed65b] font-bold tracking-wider uppercase">IRISJEV WOODEN CRAFTS</span>
+      <span class="text-gray-500">|</span>
+      <span class="text-gray-300">Project Submission & Complete Operator Guide v1.4.0</span>
+    </div>
+    <div class="flex items-center gap-3 text-gray-400">
+      <span>React 19 · Supabase · Razorpay · TypeScript · Vite 6</span>
+      <button onclick="window.print()" class="bg-[#2b3a35] hover:bg-[#d4af37] hover:text-black text-white px-3 py-1 rounded text-[11px] font-bold transition-colors cursor-pointer">⎙ Print PDF</button>
+    </div>
+  </div>
+
+  <div class="flex min-h-screen">
+
+    <!-- SIDEBAR NAV -->
+    <aside class="no-print w-72 bg-[#0d1110] border-r border-[#2b3a35] flex-shrink-0 hidden lg:flex flex-col sticky top-8 h-[calc(100vh-32px)] overflow-y-auto">
+      <div class="p-5 border-b border-[#2b3a35]">
+        <div class="flex items-center gap-3 mb-4">
+          <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-[#fed65b] to-[#b8860b] flex items-center justify-center text-black font-black text-lg">IJ</div>
+          <div>
+            <div class="text-white font-bold text-sm">Irisjev Wooden Crafts</div>
+            <div class="text-[10px] text-gray-400 font-mono uppercase tracking-wider">Operator Master Guide</div>
+          </div>
+        </div>
+        <input type="text" id="tocSearch" placeholder="Filter sections..." oninput="filterNav(this.value)" class="w-full bg-[#131917] border border-[#2b3a35] rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-[#fed65b] transition-colors" />
+      </div>
+      <nav class="p-3 space-y-0.5 text-xs overflow-y-auto flex-1" id="tocNav">
+        <div class="toc-section">Introduction</div>
+        <a href="#overview" class="nav-link"><span class="gold font-bold mono">01</span> Executive Overview</a>
+        <a href="#tech-stack" class="nav-link"><span class="gold font-bold mono">02</span> Tech Stack & Architecture</a>
+        <a href="#database" class="nav-link"><span class="gold font-bold mono">03</span> Database Schema & SQL</a>
+        <a href="#storefront" class="nav-link"><span class="gold font-bold mono">04</span> Customer Storefront Guide</a>
+        <div class="toc-section">Admin Operator Guides</div>
+        <a href="#guide-login" class="nav-link"><span class="gold font-bold mono">05</span> Admin Login & Access</a>
+        <a href="#guide-dashboard" class="nav-link"><span class="gold font-bold mono">06</span> Dashboard Overview</a>
+        <a href="#guide-products" class="nav-link"><span class="gold font-bold mono">07</span> ★ How to Update Products</a>
+        <a href="#guide-orders" class="nav-link"><span class="gold font-bold mono">08</span> Orders & Dispatch Center</a>
+        <a href="#guide-shipping-labels" class="nav-link"><span class="gold font-bold mono">09</span> Shipping Label Slips</a>
+        <a href="#guide-shipping-zones" class="nav-link"><span class="gold font-bold mono">10</span> Shipping Zones & COD</a>
+        <a href="#guide-coupons" class="nav-link"><span class="gold font-bold mono">11</span> Coupons & Vouchers</a>
+        <a href="#guide-banners" class="nav-link"><span class="gold font-bold mono">12</span> Promotional Banners</a>
+        <a href="#guide-pagebuilder" class="nav-link"><span class="gold font-bold mono">13</span> Page Builder & Hero</a>
+        <a href="#guide-support" class="nav-link"><span class="gold font-bold mono">14</span> Customer Support Desk</a>
+        <a href="#guide-webhooks" class="nav-link"><span class="gold font-bold mono">15</span> Webhooks & Email</a>
+        <a href="#guide-seo" class="nav-link"><span class="gold font-bold mono">16</span> SEO, GEO & Analytics</a>
+        <div class="toc-section">Deployment</div>
+        <a href="#deployment" class="nav-link"><span class="gold font-bold mono">17</span> Docker & Dokploy Deploy</a>
+        <a href="#verification" class="nav-link"><span class="gold font-bold mono">18</span> Testing Checklist</a>
+      </nav>
+      <div class="p-4 border-t border-[#2b3a35] mono text-[10px] text-gray-500 space-y-1">
+        <div class="flex justify-between"><span>Dev Server:</span><span class="text-white">localhost:3000–3002</span></div>
+        <div class="flex justify-between"><span>Admin Route:</span><span class="text-white">/admin/login</span></div>
+        <div class="flex justify-between"><span>Supabase DB:</span><span class="text-emerald-400">PostgreSQL 15 ✓</span></div>
+        <div class="flex justify-between"><span>Lighthouse:</span><span class="gold">98 / 100</span></div>
+      </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="flex-1 max-w-5xl mx-auto px-6 md:px-10 py-10 space-y-20">
+
+      <!-- HERO -->
+      <section class="space-y-6 pb-12 border-b border-[#2b3a35]">
+        <span class="badge badge-gold">🏛️ Enterprise E-Commerce · Sacred Indian Woodcraft</span>
+        <h1 class="text-4xl md:text-5xl font-black cinzel text-white leading-tight">
+          Irisjev Wooden Crafts<br>
+          <span class="gold-gradient text-3xl font-bold">Project Submission & Operator Master Guide</span>
+        </h1>
+        <p class="text-gray-300 text-base max-w-3xl leading-relaxed">
+          This document is the definitive technical reference and operational guide for the Irisjev Wooden Crafts full-stack e-commerce platform. It covers every admin workflow with real screenshots, exact field names from source code, complete database schemas, and step-by-step instructions for managing products, orders, shipping, coupons, SEO, and more.
+        </p>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div class="card p-4"><div class="text-[10px] mono text-gray-400 uppercase mb-1">Frontend</div><div class="text-white font-bold">React 19 + Vite 6</div><div class="text-[11px] text-[#fed65b]">TypeScript v5.8 strict</div></div>
+          <div class="card p-4"><div class="text-[10px] mono text-gray-400 uppercase mb-1">Backend / DB</div><div class="text-white font-bold">Supabase Cloud</div><div class="text-[11px] text-emerald-400">PostgreSQL 15 + RLS + Edge</div></div>
+          <div class="card p-4"><div class="text-[10px] mono text-gray-400 uppercase mb-1">Payments</div><div class="text-white font-bold">Razorpay API</div><div class="text-[11px] text-[#fed65b]">HMAC SHA256 verified</div></div>
+          <div class="card p-4"><div class="text-[10px] mono text-gray-400 uppercase mb-1">Deployment</div><div class="text-white font-bold">Docker + Nginx</div><div class="text-[11px] text-emerald-400">Dokploy SPA optimized</div></div>
+        </div>
+      </section>
+
+      <!-- SECTION 01: EXECUTIVE OVERVIEW -->
+      <section id="overview" class="space-y-5">
+        <div class="flex items-center gap-3"><span class="text-2xl mono gold font-bold">01</span><h2 class="text-2xl cinzel font-bold text-white">Executive Overview</h2></div>
+        <div class="card p-6 space-y-4 text-sm text-gray-300">
+          <p><strong class="text-white">Irisjev Wooden Crafts</strong> is a high-ticket specialized luxury e-commerce platform engineered to sell master-carved Hindu deity sculptures, temple panels, and bespoke woodcraft commissions. The business operates in the premium artisanal segment (avg. order value ₹1,40,000–₹3,50,000), requiring distinct workflows that generic platforms cannot handle:</p>
+          <div class="grid md:grid-cols-3 gap-4 pt-2">
+            <div class="step-card space-y-2">
+              <div class="text-[#fed65b] font-bold">🛡️ Dual-Session Auth Isolation</div>
+              <p class="text-xs text-gray-400">Customer OAuth sessions (<code class="text-white mono">irisjev_customer_auth_token</code>) are fully isolated from Admin sessions (<code class="text-white mono">irisjev_admin_auth_token</code>) using separate Supabase client instances to prevent session collisions.</p>
+            </div>
+            <div class="step-card space-y-2">
+              <div class="text-[#fed65b] font-bold">📦 Fragile Sacred Cargo Logistics</div>
+              <p class="text-xs text-gray-400">Automated generation of legally compliant thermal A4/A5/4×6 inch packing slips with barcodes, QR parcel tracking, and mandatory "FRAGILE – SACRED WOODEN ARTIFACT" warning banners required by courier insurers.</p>
+            </div>
+            <div class="step-card space-y-2">
+              <div class="text-[#fed65b] font-bold">⚡ Edge Function Payments</div>
+              <p class="text-xs text-gray-400">3 Supabase Deno Edge Functions handle the complete Razorpay lifecycle: <code class="text-white mono">razorpay-create-order</code>, <code class="text-white mono">razorpay-verify-payment</code>, <code class="text-white mono">razorpay-webhook</code>. HMAC-SHA256 cryptographic signature validation prevents payment tampering.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 02: ARCHITECTURE -->
+      <section id="tech-stack" class="space-y-5">
+        <div class="flex items-center gap-3"><span class="text-2xl mono gold font-bold">02</span><h2 class="text-2xl cinzel font-bold text-white">Tech Stack & System Architecture</h2></div>
+        <div class="card p-6 space-y-4">
+          <div class="code-block text-gray-300 mono text-[11px] leading-relaxed">
+<span class="text-[#fed65b]">IRISJEV WOODEN CRAFTS — SYSTEM ARCHITECTURE</span>
+<span class="text-gray-500">════════════════════════════════════════════</span>
+
+<span class="text-emerald-400">[ CUSTOMER STOREFRONT ]</span>          <span class="text-blue-400">[ ADMIN CONTROL CENTER ]</span>
+  React 19 + TypeScript             React 19 + TypeScript
+  TailwindCSS 4 + Lucide            TailwindCSS 4 + Lucide
+  React Router DOM v7               React Router DOM v7
+  Supabase JS @^2.109               Supabase JS @^2.109
+  Auth Token: customer_auth_token   Auth Token: admin_auth_token
+  Routes: /* (all public routes)    Routes: /admin/* (all admin)
+
+              │                                │
+              └──────────────┬─────────────────┘
+                             ▼
+<span class="text-[#fed65b]">[ SUPABASE CLOUD — kimkttzdxnkekcoeuvop.supabase.co ]</span>
+  PostgreSQL 15 Database
+  ├── products           (catalog, timber specs, gallery_images[])
+  ├── orders             (razorpay_order_id, status, shipping_address JSONB)
+  ├── order_items        (product_id, selected_timber, unit_price)
+  ├── customers          (saved_addresses JSONB[], country_code)
+  ├── coupons            (customer_order_eligibility, expiry_date)
+  ├── coupon_usages      (order_id, coupon_code, discount_applied)
+  ├── promo_banners      (style_preset, animation_type, target_page)
+  ├── store_settings     (minimum_order_amount, gift_product_ids[])
+  ├── shipping_settings  (profiles JSONB, cod JSONB, prepaid JSONB)
+  ├── shipping_labels    (paper_size, slips_per_sheet, show_barcode)
+  ├── seo_settings       (meta_title, keywords[], og_image)
+  ├── page_content       (section, content JSONB)
+  ├── leads              (email, source, status)
+  └── support_tickets    (ticket_number, priority, messages JSONB[])
+
+  Storage Buckets:
+  └── product_images/    (public read, auth write, 230KB soft limit)
+
+  Edge Functions (Deno):
+  ├── razorpay-create-order    (creates Razorpay order server-side)
+  ├── razorpay-verify-payment  (HMAC-SHA256 signature verification)
+  └── razorpay-webhook         (async payment capture + status update)
+
+<span class="text-[#fed65b]">[ EXTERNAL INTEGRATIONS ]</span>
+  Razorpay API ──── UPI, Cards, NetBanking, EMI, Wallet
+  Resend API   ──── Order confirmations, Welcome vouchers, AWB alerts
+  Google OAuth ──── Customer Sign-In + Admin Sign-In
+          </div>
+        </div>
+
+        <div class="card p-5 space-y-3">
+          <h3 class="font-bold text-white text-sm">📁 Repository File Structure</h3>
+          <div class="code-block text-[11px] mono text-gray-300">
+nocode-AI-Ecommerce-S1/
+├── src/
+│   ├── App.tsx                     <span class="text-gray-500">← Root router: /admin/* → AdminApp, /* → Storefront</span>
+│   ├── types.ts                    <span class="text-gray-500">← All TypeScript interfaces (Product, Order, Coupon, etc.)</span>
+│   ├── admin/
+│   │   ├── AdminApp.tsx            <span class="text-gray-500">← Admin auth guard + route tree</span>
+│   │   ├── AdminLogin.tsx          <span class="text-gray-500">← Email+password & Google OAuth login</span>
+│   │   ├── components/
+│   │   │   ├── AdminLayout.tsx     <span class="text-gray-500">← Sidebar nav (17 items) + main canvas</span>
+│   │   │   ├── ProductModal.tsx    <span class="text-gray-500">← Add/Edit sculpture modal form</span>
+│   │   │   └── OrderModal.tsx      <span class="text-gray-500">← Order detail view modal</span>
+│   │   └── views/
+│   │       ├── DashboardOverview.tsx   <span class="text-gray-500">← KPI cards, sparklines, gauge chart</span>
+│   │       ├── ProductsManager.tsx     <span class="text-gray-500">← Catalog table + category filter</span>
+│   │       ├── OrdersManager.tsx       <span class="text-gray-500">← Orders table, bulk update, AWB</span>
+│   │       ├── ShippingManager.tsx     <span class="text-gray-500">← Zone profiles, COD, prepaid rules</span>
+│   │       ├── ShippingLabelManager.tsx← Paper size, features, batch print</span>
+│   │       ├── CouponsManager.tsx      <span class="text-gray-500">← Directory, simulator, usage logs</span>
+│   │       ├── PromoBannersManager.tsx ← 10 presets, animations, placement</span>
+│   │       ├── SeoSettingsManager.tsx  <span class="text-gray-500">← Meta, schema, sitemap, llms.txt</span>
+│   │       ├── SalesAnalyticsManager.tsx
+│   │       ├── PageBuilderManager.tsx
+│   │       ├── SupportTicketsManager.tsx
+│   │       └── EmailNotificationsManager.tsx
+│   ├── utils/
+│   │   ├── supabaseClient.ts       <span class="text-gray-500">← Two separate Supabase clients (customer + admin)</span>
+│   │   ├── couponEngine.ts         <span class="text-gray-500">← Validate, apply, fetch coupons</span>
+│   │   ├── resendEmailEngine.ts    <span class="text-gray-500">← 4 email templates (order, welcome, AWB, contact)</span>
+│   │   ├── webhookDispatcher.ts    <span class="text-gray-500">← outgoing webhook event dispatcher</span>
+│   │   ├── shippingLabelEngine.ts  <span class="text-gray-500">← Fetch/save label settings</span>
+│   │   └── pageViewAnalyticsEngine.ts
+│   └── views/                      <span class="text-gray-500">← 16 customer-facing pages</span>
+├── supabase/functions/             <span class="text-gray-500">← 3 Deno Edge Functions</span>
+├── Dockerfile                      <span class="text-gray-500">← Multi-stage Node → Nginx build</span>
+├── docker-compose.yml
+└── nginx.conf                      <span class="text-gray-500">← SPA routing, gzip, cache headers</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 03: DATABASE SCHEMA -->
+      <section id="database" class="space-y-5">
+        <div class="flex items-center gap-3"><span class="text-2xl mono gold font-bold">03</span><h2 class="text-2xl cinzel font-bold text-white">Database Schema & Supabase SQL</h2></div>
+        <div class="callout"><strong class="text-[#fed65b]">How to apply:</strong> Go to <strong>Supabase Dashboard → SQL Editor</strong>, paste each block below, and click Run. Tables are safe to re-run with <code class="mono">IF NOT EXISTS</code>.</div>
+        <div class="card p-5 space-y-3">
+          <div class="code-block text-[11px] mono text-gray-300">
+<span class="text-[#fed65b]">-- ═══════════════════════════════════════════════════════════</span>
+<span class="text-[#fed65b]">-- IRISJEV PRODUCTION DATABASE SCHEMA</span>
+<span class="text-[#fed65b]">-- ═══════════════════════════════════════════════════════════</span>
+
+<span class="text-blue-400">-- 1. PRODUCTS (Heritage Catalog)</span>
+CREATE TABLE IF NOT EXISTS products (
+  id             TEXT PRIMARY KEY,                 <span class="text-gray-500">-- format: prod-{timestamp}</span>
+  name           TEXT NOT NULL,
+  category       TEXT NOT NULL,                    <span class="text-gray-500">-- 'God Sculptures' | 'Wall Mounts' | 'Square Panels'</span>
+  price_inr      NUMERIC NOT NULL,                 <span class="text-gray-500">-- master price; USD = price_inr / 83.33</span>
+  price_usd      NUMERIC,
+  image          TEXT NOT NULL,                    <span class="text-gray-500">-- primary image URL (gallery_images[0])</span>
+  gallery_images TEXT[] DEFAULT '{}',              <span class="text-gray-500">-- array of image URLs</span>
+  description    TEXT,
+  dimensions     TEXT DEFAULT '18" H x 12" W x 8" D',
+  material       TEXT DEFAULT 'Aged Teak Wood',
+  style          TEXT DEFAULT 'Artisanal Heritage',
+  authenticity   TEXT DEFAULT 'Artisan Signed & Certified',
+  timber_options TEXT[] DEFAULT '{Aged Teak Wood,Country Rosewood,Sandalwood}',
+  weight         TEXT,
+  rating         NUMERIC DEFAULT 5.0,
+  review_count   INT DEFAULT 1,
+  is_new_arrival BOOLEAN DEFAULT true,
+  is_limited_edition BOOLEAN DEFAULT false,
+  is_best_seller BOOLEAN DEFAULT false,
+  featured_in_spotlight BOOLEAN DEFAULT false,
+  created_at     TIMESTAMPTZ DEFAULT now(),
+  updated_at     TIMESTAMPTZ DEFAULT now()
+);
+
+<span class="text-blue-400">-- 2. CUSTOMERS</span>
+CREATE TABLE IF NOT EXISTS customers (
+  id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  full_name      TEXT NOT NULL,
+  email          TEXT UNIQUE NOT NULL,
+  phone          TEXT,
+  country_code   TEXT DEFAULT '+91',
+  address        TEXT,
+  city           TEXT,
+  state          TEXT,
+  postal_code    TEXT,
+  saved_addresses JSONB DEFAULT '[]',
+  created_at     TIMESTAMPTZ DEFAULT now()
+);
+
+<span class="text-blue-400">-- 3. ORDERS</span>
+CREATE TABLE IF NOT EXISTS orders (
+  id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  order_number        TEXT UNIQUE NOT NULL,       <span class="text-gray-500">-- format: IJ-YYYYMMDD-NNN</span>
+  customer_id         UUID REFERENCES customers(id),
+  subtotal            NUMERIC NOT NULL,
+  discount_amount     NUMERIC DEFAULT 0,
+  shipping_charge     NUMERIC DEFAULT 0,
+  gst_amount          NUMERIC DEFAULT 0,
+  total_amount        NUMERIC NOT NULL,
+  currency            TEXT DEFAULT 'INR',
+  status              TEXT DEFAULT 'pending',     <span class="text-gray-500">-- pending|processing|shipped|out_for_delivery|delivered|cancelled</span>
+  payment_status      TEXT DEFAULT 'unpaid',      <span class="text-gray-500">-- unpaid|paid|failed|COD|refunded</span>
+  payment_method      TEXT DEFAULT 'prepaid',     <span class="text-gray-500">-- prepaid|cod</span>
+  payment_info        TEXT,
+  razorpay_order_id   TEXT,
+  razorpay_payment_id TEXT,
+  razorpay_signature  TEXT,
+  shipping_address    JSONB NOT NULL,             <span class="text-gray-500">-- {name, address, city, state, zip, phone}</span>
+  courier_name        TEXT,
+  tracking_number     TEXT,
+  tracking_url        TEXT,
+  estimated_delivery_date DATE,
+  webhook_verified    BOOLEAN DEFAULT false,
+  created_at          TIMESTAMPTZ DEFAULT now(),
+  updated_at          TIMESTAMPTZ DEFAULT now()
+);
+
+<span class="text-blue-400">-- 4. ORDER ITEMS</span>
+CREATE TABLE IF NOT EXISTS order_items (
+  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  order_id        UUID REFERENCES orders(id) ON DELETE CASCADE,
+  product_id      TEXT NOT NULL,
+  product_name    TEXT NOT NULL,
+  selected_timber TEXT,
+  quantity        INT NOT NULL,
+  unit_price      NUMERIC NOT NULL,
+  created_at      TIMESTAMPTZ DEFAULT now()
+);
+
+<span class="text-blue-400">-- 5. COUPONS & DISCOUNTS</span>
+CREATE TABLE IF NOT EXISTS coupons (
+  id                       UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  code                     TEXT UNIQUE NOT NULL,
+  description              TEXT,
+  discount_type            TEXT NOT NULL,          <span class="text-gray-500">-- percentage|fixed|free_shipping</span>
+  discount_value           NUMERIC NOT NULL,
+  max_discount_amount      NUMERIC,
+  min_cart_amount          NUMERIC DEFAULT 0,
+  min_usage_count          INT DEFAULT 0,
+  max_usage_count          INT,
+  max_usage_per_customer   INT DEFAULT 1,
+  current_usage_count      INT DEFAULT 0,
+  customer_order_eligibility TEXT DEFAULT 'all',   <span class="text-gray-500">-- all|first_order_only|repeat_orders_only</span>
+  min_previous_orders      INT,
+  max_previous_orders      INT,
+  start_date               TIMESTAMPTZ DEFAULT now(),
+  expiry_date              TIMESTAMPTZ,
+  is_active                BOOLEAN DEFAULT true,
+  created_at               TIMESTAMPTZ DEFAULT now()
+);
+
+<span class="text-blue-400">-- 6. RLS POLICIES</span>
+ALTER TABLE products ENABLE ROW LEVEL SECURITY;
+ALTER TABLE orders   ENABLE ROW LEVEL SECURITY;
+ALTER TABLE customers ENABLE ROW LEVEL SECURITY;
+ALTER TABLE coupons  ENABLE ROW LEVEL SECURITY;
+
+<span class="text-green-400">CREATE POLICY</span> "Public read products" ON products FOR SELECT TO public USING (true);
+<span class="text-green-400">CREATE POLICY</span> "Admin all products"   ON products FOR ALL  TO authenticated USING (true);
+<span class="text-green-400">CREATE POLICY</span> "Public create order"  ON orders   FOR INSERT TO public WITH CHECK (true);
+<span class="text-green-400">CREATE POLICY</span> "Public read order"    ON orders   FOR SELECT TO public USING (true);
+<span class="text-green-400">CREATE POLICY</span> "Admin all orders"     ON orders   FOR ALL  TO authenticated USING (true);
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 04: CUSTOMER STOREFRONT -->
+      <section id="storefront" class="space-y-5">
+        <div class="flex items-center gap-3"><span class="text-2xl mono gold font-bold">04</span><h2 class="text-2xl cinzel font-bold text-white">Customer Storefront Walkthrough</h2></div>
+        <div class="card p-5 space-y-4">
+          <p class="text-sm text-gray-300">The customer-facing app lives at <code class="mono text-white">http://localhost:3000/</code> (or your production domain). Navigation uses URL search params: <code class="mono text-white">?tab=shop</code>, <code class="mono text-white">?tab=product-detail&amp;id=prod-xxx</code>, etc.</p>
+          <div class="grid md:grid-cols-3 gap-3 text-xs">
+            <div class="step-card"><strong class="text-[#fed65b] block mb-1">16 Customer Views</strong><div class="text-gray-400 mono space-y-0.5"><div>HomeView, ShopView</div><div>ProductDetailView</div><div>CheckoutView, MyAccountView</div><div>TempleProjectsView</div><div>TrackOrderView</div><div>AboutView, ContactView</div><div>TermsView, PrivacyView…</div></div></div>
+            <div class="step-card"><strong class="text-[#fed65b] block mb-1">Multi-Currency Engine</strong><div class="text-gray-400">Converts live from INR to: USD, OMR, JPY, SGD, MYR, IDR, LKR. Toggle in header currency selector. All prices recalculate in real-time client-side.</div></div>
+            <div class="step-card"><strong class="text-[#fed65b] block mb-1">Auth System</strong><div class="text-gray-400">Customer register/login via Email OTP (Supabase Auth) or Google OAuth. Session stored in <code class="mono text-white">irisjev_customer_auth_token</code>. Welcome email + 10% OFF code auto-dispatched via Resend.</div></div>
+          </div>
+          <img src="./docs/screenshots/storefront-hero-catalog.jpg" alt="Storefront Homepage" class="img-frame" onclick="zoom(this)" />
+          <p class="text-xs text-gray-500 text-center mt-1">Storefront homepage showcasing product catalog with multi-currency toggle, wishlist, and cart drawer</p>
+        </div>
+      </section>
+
+      <!-- ═══════════════════════════════════════════════ -->
+      <!-- ADMIN GUIDES -->
+      <!-- ═══════════════════════════════════════════════ -->
+
+      <div class="border-t border-[#2b3a35] pt-8">
+        <h2 class="text-2xl cinzel font-bold text-[#fed65b] mb-2">Admin Control Center — Operator Guides</h2>
+        <p class="text-sm text-gray-400">Everything below is a step-by-step guide for store operators to manage every aspect of the admin dashboard at <code class="mono text-white">/admin</code>.</p>
+      </div>
+
+      <!-- SECTION 05: ADMIN LOGIN -->
+      <section id="guide-login" class="space-y-5">
+        <div class="flex items-center gap-3"><span class="text-2xl mono gold font-bold">05</span><h2 class="text-2xl cinzel font-bold text-white">Admin Login & Secure Access</h2></div>
+        <div class="callout"><strong class="gold">Route:</strong> <code class="mono text-white">/admin/login</code> — Protected. Any unauthenticated visit to <code class="mono text-white">/admin/*</code> redirects here automatically.</div>
+        <div class="card p-5 space-y-5">
+          <div class="grid md:grid-cols-2 gap-6 items-start">
+            <div class="space-y-4">
+              <h3 class="font-bold text-white">Authentication Methods</h3>
+              <div class="space-y-3 text-sm text-gray-300">
+                <div class="step-card">
+                  <div class="font-bold text-white mb-1">Method A: Email + Password</div>
+                  <ol class="list-decimal list-inside space-y-1 text-xs text-gray-400">
+                    <li>Open <code class="mono text-white">/admin/login</code></li>
+                    <li>Enter your admin email address (e.g. <code class="mono">admin@irisjev.com</code>)</li>
+                    <li>Enter your password in the lock-icon field</li>
+                    <li>Click <strong class="text-white">"Sign In with Password"</strong> (black button)</li>
+                    <li>On success → redirected to <code class="mono text-white">/admin</code> Dashboard</li>
+                  </ol>
+                </div>
+                <div class="step-card">
+                  <div class="font-bold text-white mb-1">Method B: Google OAuth</div>
+                  <ol class="list-decimal list-inside space-y-1 text-xs text-gray-400">
+                    <li>Click <strong class="text-white">"Sign in with Google"</strong> (white button)</li>
+                    <li>Google popup opens → choose authorized Google account</li>
+                    <li>Redirects to <code class="mono text-white">/admin</code> with session established</li>
+                    <li>Session persists in <code class="mono text-white">irisjev_admin_auth_token</code> (localStorage)</li>
+                  </ol>
+                </div>
+                <div class="callout warn text-xs"><strong>Security Note:</strong> Admin and customer sessions use completely separate Supabase client instances. A customer logging out on the storefront will never invalidate your admin session, and vice versa.</div>
+              </div>
+            </div>
+            <div>
+              <img src="./docs/screenshots/real-admin-login.jpg" alt="Admin Login Page" class="img-frame" onclick="zoom(this)" />
+              <p class="text-xs text-gray-500 text-center mt-2">Actual admin login page — <code class="mono">/admin/login</code></p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 06: DASHBOARD -->
+      <section id="guide-dashboard" class="space-y-5">
+        <div class="flex items-center gap-3"><span class="text-2xl mono gold font-bold">06</span><h2 class="text-2xl cinzel font-bold text-white">Dashboard Overview</h2></div>
+        <div class="callout"><strong class="gold">Route:</strong> <code class="mono text-white">/admin</code> (index) — First page after login. Component: <code class="mono text-white">DashboardOverview.tsx</code></div>
+        <div class="card p-5 space-y-5">
+          <img src="./docs/screenshots/real-admin-dashboard.jpg" alt="Admin Dashboard" class="img-frame" onclick="zoom(this)" />
+          <p class="text-xs text-gray-500 text-center">Full admin layout — left dark sidebar with 17 nav items, right white content canvas</p>
+          <div class="grid md:grid-cols-3 gap-4 text-xs text-gray-300">
+            <div class="step-card">
+              <strong class="text-[#fed65b] block mb-1">KPI Metric Cards (Top Row)</strong>
+              <ul class="space-y-1 text-gray-400">
+                <li>• <strong class="text-white">Total Revenue Volume</strong> — Sum of all paid order totals with +14.2% MoM trend</li>
+                <li>• <strong class="text-white">Fulfillment & Quality Index</strong> — 98.50/100%, on-time delivery rate</li>
+                <li>• <strong class="text-white">Customer Orders & Inquiries</strong> — Aggregate order value with sparkline</li>
+              </ul>
+            </div>
+            <div class="step-card">
+              <strong class="text-[#fed65b] block mb-1">Timber Craft Utilization Gauge</strong>
+              <p class="text-gray-400">SVG semi-circular radial gauge (Royal Gold gradient) showing workshop wood utilization at 78%. Below: deviation index, timber processing breakdown (Aged Teak, Rosewood, Sandalwood).</p>
+            </div>
+            <div class="step-card">
+              <strong class="text-[#fed65b] block mb-1">Sidebar Navigation (17 Items)</strong>
+              <div class="mono text-gray-400 space-y-0.5 text-[10px]">
+                <div>Dashboard · SEO<sup class="text-[#fed65b]">SEO</sup></div>
+                <div>Email Notifications<sup class="text-[#fed65b]">RESEND</sup></div>
+                <div>Outgoing Webhooks<sup class="text-[#fed65b]">API</sup></div>
+                <div>Customer Support<sup class="text-[#fed65b]">SUPPORT</sup></div>
+                <div>Page Builder<sup class="text-[#fed65b]">NEW</sup> · Analytics<sup class="text-[#fed65b]">ANALYTICS</sup></div>
+                <div>Orders · Products · Customers</div>
+                <div>Leads · Coupons<sup class="text-[#fed65b]">PROMO</sup></div>
+                <div>Promotions<sup class="text-[#fed65b]">GIFT</sup> · Banners<sup class="text-[#fed65b]">NEW</sup></div>
+                <div>Payment Logs · Shipping<sup class="text-[#fed65b]">NEW</sup></div>
+                <div>Shipping Labels<sup class="text-[#fed65b]">NEW</sup></div>
+              </div>
+            </div>
+          </div>
+          <div class="callout info text-xs"><strong class="text-[#38bdf8]">Refresh Button:</strong> Click the <strong>↻ Refresh</strong> icon (top-right of dashboard) to re-fetch live metrics from Supabase. The animated gold spinner indicates data loading.</div>
+        </div>
+      </section>
+
+      <!-- SECTION 07: PRODUCTS (DETAILED) -->
+      <section id="guide-products" class="space-y-5">
+        <div class="flex items-center gap-3">
+          <span class="text-2xl mono gold font-bold">07</span>
+          <h2 class="text-2xl cinzel font-bold text-white">★ How to Update Products (Complete Guide)</h2>
+        </div>
+        <div class="callout"><strong class="gold">Route:</strong> <code class="mono text-white">/admin/products</code> — Component: <code class="mono text-white">ProductsManager.tsx</code> + <code class="mono text-white">ProductModal.tsx</code> — Supabase table: <code class="mono text-white">products</code></div>
+
+        <div class="card p-5 space-y-5">
+          <h3 class="font-bold text-white">Step 1 — Open Products & Heritage Catalog</h3>
+          <img src="./docs/screenshots/real-products-catalog.jpg" alt="Products Catalog Table" class="img-frame" onclick="zoom(this)" />
+          <p class="text-xs text-gray-500 text-center">Products & Heritage Catalog — showing search, category filters, and the product table</p>
+          <div class="grid md:grid-cols-2 gap-4 text-xs text-gray-300">
+            <div class="step-card">
+              <strong class="text-white block mb-1">Page Layout</strong>
+              <ul class="list-disc list-inside space-y-1 text-gray-400">
+                <li>Heading: <strong>"Products & Heritage Catalog"</strong></li>
+                <li>Subtitle: <em>"Manage master carvings, timber stock, and pricing"</em></li>
+                <li>Top-right: dark <strong>"+ Add Masterpiece"</strong> button (bg <code class="mono">#0f1513</code>, yellow Plus icon)</li>
+              </ul>
+            </div>
+            <div class="step-card">
+              <strong class="text-white block mb-1">Filter & Search Bar</strong>
+              <ul class="list-disc list-inside space-y-1 text-gray-400">
+                <li>Search input: placeholder <em>"Search sculpture title, timber, or description..."</em></li>
+                <li>Category pills: <strong>all</strong>, God Sculptures, Wall Mounts, Square Panels, Grand Sculptures, Temple Doors, Custom Commissions, Baskets & Bottles, Mirrors & Decor</li>
+                <li>Active pill: dark bg <code class="mono">#0f1513</code> with gold text</li>
+              </ul>
+            </div>
+          </div>
+          <div class="step-card">
+            <strong class="text-white block mb-2">Products Table Columns</strong>
+            <table class="data-table">
+              <thead><tr><th>Column</th><th>Content</th><th>Source Field</th></tr></thead>
+              <tbody>
+                <tr><td class="text-white font-bold">Sculpture / Artwork</td><td>48×48 thumbnail (rounded-xl) + bold name + mono <code>ID: {id.slice(0,8)}</code></td><td><code class="mono">products.name, products.image, products.id</code></td></tr>
+                <tr><td class="text-white font-bold">Category</td><td>Pill badge (bg <code>#f4f2ec</code> text <code>#735c00</code> uppercase)</td><td><code class="mono">products.category</code></td></tr>
+                <tr><td class="text-white font-bold">Price (INR)</td><td>₹{price.toLocaleString()} bold</td><td><code class="mono">products.price_inr</code> or <code class="mono">products.priceINR</code></td></tr>
+                <tr><td class="text-white font-bold">Timber & Rating</td><td>✦ {rating}★ + "{review_count} Collector Reviews"</td><td><code class="mono">products.rating, products.review_count</code></td></tr>
+                <tr><td class="text-white font-bold">Actions</td><td>Pencil (edit) + red Trash (delete with confirm dialog)</td><td>onClick handlers</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card p-5 space-y-5">
+          <h3 class="font-bold text-white">Step 2 — Add or Edit a Sculpture (Modal Form)</h3>
+          <div class="grid md:grid-cols-2 gap-6 items-start">
+            <img src="./docs/screenshots/real-add-sculpture-modal.jpg" alt="Add Sculpture Modal" class="img-frame" onclick="zoom(this)" />
+            <div class="space-y-3 text-sm">
+              <p class="text-gray-300 text-xs">Click <strong>"+ Add Masterpiece"</strong> (new) or the pencil icon (edit). The modal has a dark header bar with the form title and X close button.</p>
+              <div class="space-y-2">
+                <div class="step-card text-xs">
+                  <strong class="text-[#fed65b]">SCULPTURE TITLE *</strong>
+                  <p class="text-gray-400 mt-1">Free text. e.g. <em>"Dancing Nataraja in Aged Teak Wood"</em>. Required.</p>
+                </div>
+                <div class="step-card text-xs">
+                  <strong class="text-[#fed65b]">CATEGORY * (Dropdown)</strong>
+                  <p class="text-gray-400 mt-1">Options: God Sculptures · Wall Mounts · Square Panels · Grand Sculptures · Temple Doors · Custom Commissions · Baskets & Bottles · Mirrors & Decor</p>
+                </div>
+                <div class="step-card text-xs">
+                  <strong class="text-[#fed65b]">PRICE (INR ₹) *</strong>
+                  <p class="text-gray-400 mt-1">Number only (e.g. <code class="mono">185000</code>). System auto-computes USD: <code class="mono">Math.round(priceINR / 83.33)</code></p>
+                </div>
+                <div class="step-card text-xs">
+                  <strong class="text-[#fed65b]">PRODUCT GALLERY * (Images)</strong>
+                  <p class="text-gray-400 mt-1">Two modes via radio button:</p>
+                  <ul class="list-disc list-inside text-gray-400 mt-1 space-y-1">
+                    <li><strong class="text-white">Image URL</strong> — paste any public CDN/image URL then click "Add"</li>
+                    <li><strong class="text-white">Upload Image</strong> — pick JPG/PNG/WebP/AVIF file. <strong class="text-orange-400">Max 230KB.</strong> Uploads to Supabase bucket <code class="mono">product_images/products/{random}.{ext}</code></li>
+                  </ul>
+                  <p class="text-gray-400 mt-1">First image in the gallery becomes the primary thumbnail (<code class="mono">products.image</code>). All others saved to <code class="mono">products.gallery_images[]</code>.</p>
+                </div>
+                <div class="step-card text-xs">
+                  <strong class="text-[#fed65b]">MATERIAL / TIMBER</strong>
+                  <p class="text-gray-400 mt-1">Default: <em>"Aged Teak Wood"</em>. Other options: <em>"Country Rosewood"</em>, <em>"Sandalwood"</em>. Stored in <code class="mono">products.material</code>. Also populates <code class="mono">timber_options[]</code>.</p>
+                </div>
+                <div class="step-card text-xs">
+                  <strong class="text-[#fed65b]">DIMENSIONS</strong>
+                  <p class="text-gray-400 mt-1">Default: <code class="mono">18" H x 12" W x 8" D</code>. Freetext, stored in <code class="mono">products.dimensions</code>.</p>
+                </div>
+                <div class="step-card text-xs">
+                  <strong class="text-[#fed65b]">DESCRIPTION</strong>
+                  <p class="text-gray-400 mt-1">3-row textarea. Describe craftsmanship, iconography, and finish. Stored in <code class="mono">products.description</code>.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid md:grid-cols-2 gap-4">
+            <div class="callout success text-xs">
+              <strong class="text-emerald-400">✓ Save Changes / Publish Product</strong>
+              <p class="text-gray-300 mt-1">The full-width black button submits the form. On success, the modal closes and the product table auto-refreshes from Supabase. For new products, ID is generated as <code class="mono">prod-{Date.now()}</code>.</p>
+            </div>
+            <div class="callout warn text-xs">
+              <strong class="text-orange-400">⚠ Delete Sculpture</strong>
+              <p class="text-gray-300 mt-1">Click the red Trash icon in the table. A browser <code class="mono">confirm()</code> dialog appears: <em>"Are you sure you want to delete {name}?"</em>. On confirm, <code class="mono">supabase.from('products').delete().eq('id', id)</code> runs.</p>
+            </div>
+          </div>
+
+          <div class="step-card text-xs space-y-2">
+            <strong class="text-[#fed65b] text-sm">Backend Verification — Check Product Was Saved</strong>
+            <p class="text-gray-400">Go to Supabase Dashboard → SQL Editor and run:</p>
+            <div class="code-block">
+SELECT id, name, category, price_inr, price_usd, material, dimensions,
+       array_length(gallery_images, 1) AS image_count, updated_at
+FROM products
+ORDER BY updated_at DESC
+LIMIT 5;
+            </div>
+            <p class="text-gray-400 mt-1">Or view in Table Editor: <strong>Supabase → Table Editor → products</strong> and verify all columns match the form inputs.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 08: ORDERS -->
+      <section id="guide-orders" class="space-y-5">
+        <div class="flex items-center gap-3"><span class="text-2xl mono gold font-bold">08</span><h2 class="text-2xl cinzel font-bold text-white">Orders & Dispatch Center</h2></div>
+        <div class="callout"><strong class="gold">Route:</strong> <code class="mono text-white">/admin/orders</code> — Component: <code class="mono text-white">OrdersManager.tsx</code> — Supabase: <code class="mono text-white">orders JOIN customers</code></div>
+
+        <div class="card p-5 space-y-5">
+          <img src="./docs/screenshots/real-orders-manager.jpg" alt="Orders Manager" class="img-frame" onclick="zoom(this)" />
+          <p class="text-xs text-gray-500 text-center">Orders & Dispatch Center — searchable, filterable, with per-row action icons for view, dispatch, print, and invoice</p>
+          <div class="grid md:grid-cols-2 gap-4 text-xs text-gray-300">
+            <div class="step-card space-y-2">
+              <strong class="text-white block">Filter & Search Controls</strong>
+              <ul class="list-disc list-inside space-y-1 text-gray-400">
+                <li>Search field: order number, customer name, AWB, Razorpay payment ID</li>
+                <li>Status pills: <span class="badge badge-blue">All</span> <span class="badge badge-green">Paid</span> <span class="badge badge-orange">COD</span> <span class="badge" style="background:rgba(251,191,36,.2);color:#fbbf24;border:1px solid rgba(251,191,36,.4)">Pending</span> <span class="badge badge-blue">Processing</span> <span class="badge" style="background:rgba(167,139,250,.2);color:#a78bfa;border:1px solid rgba(167,139,250,.4)">Shipped</span> <span class="badge badge-green">Delivered</span></li>
+              </ul>
+            </div>
+            <div class="step-card space-y-2">
+              <strong class="text-white block">Action Icons Per Row</strong>
+              <ul class="list-disc list-inside space-y-1 text-gray-400">
+                <li><strong>Eye</strong> — View full order detail modal (OrderModal)</li>
+                <li><strong>Truck/Edit</strong> — Open courier tracking update: enter AWB, courier name, estimated delivery. AWB auto-generates for Delhivery, BlueDart, FedEx, DTDC, DHL, IndiaPost, Xpressbees</li>
+                <li><strong>Printer</strong> — Print shipping label slip (opens ShippingLabelSlip)</li>
+                <li><strong>FileText</strong> — Print customer invoice</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="step-card text-xs space-y-3">
+            <strong class="text-[#fed65b] text-sm">How to Dispatch an Order (Step-by-Step)</strong>
+            <ol class="list-decimal list-inside space-y-2 text-gray-300">
+              <li>Find the order by searching the order number or customer name</li>
+              <li>Click the <strong class="text-white">Truck/Edit</strong> icon on that row</li>
+              <li>In the tracking update panel, choose courier from: <strong>Delhivery Express, BlueDart Surface & Air, FedEx Priority, DTDC Express, DHL Express Worldwide, India Post Speed Post, Xpressbees Logistics</strong></li>
+              <li>AWB (tracking number) auto-generates — or enter a manual AWB if you already have one from the courier</li>
+              <li>Set status to <strong>Shipped / Dispatched</strong> and set estimated delivery date</li>
+              <li>Click <strong>"Update Tracking"</strong> — this: (a) updates <code class="mono">orders</code> row with courier, tracking_number, tracking_url; (b) dispatches <code class="mono">order.shipped</code> webhook event; (c) sends AWB dispatch email to customer via Resend</li>
+            </ol>
+          </div>
+
+          <div class="step-card text-xs space-y-2">
+            <strong class="text-[#fed65b] text-sm">Bulk Update (Multiple Orders at Once)</strong>
+            <p class="text-gray-400">Check multiple order checkboxes → click <strong>"Bulk Update Selected"</strong> button (top right). The bulk modal has two tabs:</p>
+            <ul class="list-disc list-inside space-y-1 text-gray-400 mt-1">
+              <li><strong class="text-white">Manual Tab</strong>: Per-order rows, individually set courier + AWB + status</li>
+              <li><strong class="text-white">Quick Apply Tab</strong>: Set same courier, auto-generate AWBs, same status for all selected orders in one click. Milestone fields: title, description, location (e.g. <em>"Chennai Central Logistics Center, TN"</em>)</li>
+            </ul>
+          </div>
+
+          <div class="step-card text-xs space-y-2">
+            <strong class="text-[#fed65b] text-sm">Order Status Reference</strong>
+            <table class="data-table mt-2">
+              <thead><tr><th>Status Value</th><th>Display Color</th><th>Meaning</th></tr></thead>
+              <tbody>
+                <tr><td class="mono">pending</td><td><span class="badge" style="background:rgba(245,158,11,.2);color:#f59e0b">Pending</span></td><td>Order placed, payment not yet confirmed</td></tr>
+                <tr><td class="mono">processing</td><td><span class="badge badge-blue">Processing</span></td><td>Payment confirmed, being packed at workshop</td></tr>
+                <tr><td class="mono">shipped</td><td><span class="badge" style="background:rgba(167,139,250,.2);color:#a78bfa">Shipped</span></td><td>Handed to courier with AWB</td></tr>
+                <tr><td class="mono">out_for_delivery</td><td><span class="badge badge-blue">Out for Delivery</span></td><td>Last-mile delivery in progress</td></tr>
+                <tr><td class="mono">delivered</td><td><span class="badge badge-green">Delivered</span></td><td>Confirmed delivery to customer</td></tr>
+                <tr><td class="mono">cancelled</td><td><span class="badge" style="background:rgba(239,68,68,.2);color:#f87171">Cancelled</span></td><td>Order cancelled</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 09: SHIPPING LABELS -->
+      <section id="guide-shipping-labels" class="space-y-5">
+        <div class="flex items-center gap-3"><span class="text-2xl mono gold font-bold">09</span><h2 class="text-2xl cinzel font-bold text-white">Shipping Label Configuration & Batch Print</h2></div>
+        <div class="callout"><strong class="gold">Route:</strong> <code class="mono text-white">/admin/shipping-labels</code> — Component: <code class="mono text-white">ShippingLabelManager.tsx</code> — DB: <code class="mono text-white">shipping_label_settings</code></div>
+
+        <div class="card p-5 space-y-5">
+          <img src="./docs/screenshots/real-shipping-labels.jpg" alt="Shipping Label Manager" class="img-frame" onclick="zoom(this)" />
+          <p class="text-xs text-gray-500 text-center">Shipping Labels page — 4 tabs for paper size, features, dispatch hub, and batch print with live preview</p>
+
+          <div class="grid md:grid-cols-4 gap-3 text-xs">
+            <div class="step-card text-center">
+              <div class="text-2xl mb-1">📜</div>
+              <strong class="text-white block">Tab 1: Paper Size</strong>
+              <p class="text-gray-400 mt-1">A4 (210×297mm) · A5 (148×210mm) · Thermal 4×6 (100×150mm) · US Letter (8.5×11in). Also set Slips/Sheet: 1, 2, 4, or 6.</p>
+            </div>
+            <div class="step-card text-center">
+              <div class="text-2xl mb-1">🔧</div>
+              <strong class="text-white block">Tab 2: Features</strong>
+              <p class="text-gray-400 mt-1">Toggle: Barcode · QR Code · Fragile Warning · Return Address · Order Items Table · COD Badge. Each is a boolean in the DB.</p>
+            </div>
+            <div class="step-card text-center">
+              <div class="text-2xl mb-1">🏢</div>
+              <strong class="text-white block">Tab 3: Dispatch Hub</strong>
+              <p class="text-gray-400 mt-1">Brand logo URL · Hub name · Hub address · Hub phone. Appears in the "FROM" section of every label. Stored in <code class="mono">shipping_label_settings</code> table.</p>
+            </div>
+            <div class="step-card text-center">
+              <div class="text-2xl mb-1">📦</div>
+              <strong class="text-white block">Tab 4: Batch Print</strong>
+              <p class="text-gray-400 mt-1">Select orders with checkboxes. Click "Print Selected Labels". Opens browser print dialog with all labels formatted per paper/grid settings.</p>
+            </div>
+          </div>
+
+          <div class="step-card text-xs space-y-2">
+            <strong class="text-[#fed65b] text-sm">What Appears on Each Shipping Slip</strong>
+            <div class="grid md:grid-cols-2 gap-3 mt-2">
+              <ul class="list-disc list-inside space-y-1 text-gray-400">
+                <li>IRISJEV brand logo (configurable)</li>
+                <li>"DISPATCH FROM" — Hub name, address, phone</li>
+                <li>"DELIVER TO" — Customer full name, address, city, state, pincode, phone</li>
+                <li>Order number & Shipment ID</li>
+                <li>Package weight & dimensions</li>
+              </ul>
+              <ul class="list-disc list-inside space-y-1 text-gray-400">
+                <li>Barcode (if enabled) with shipment ID below</li>
+                <li>QR code (if enabled) for tracking URL</li>
+                <li>⚠️ Bold red "FRAGILE – SACRED WOODEN ARTIFACT – HANDLE WITH CARE" banner (if enabled)</li>
+                <li>Order items table: product name, qty, price</li>
+                <li>Green "PREPAID – DO NOT COLLECT CASH" or "COD – COLLECT ₹{amount}" badge</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="callout success text-xs">
+            <strong class="text-emerald-400">How to Print a Single Shipping Label:</strong> In the Orders table (/admin/orders), click the <strong>Printer icon</strong> on any order row. The label slip modal opens immediately with that order's data pre-populated — no need to go to the Shipping Labels settings page.
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 10: SHIPPING ZONES & COD -->
+      <section id="guide-shipping-zones" class="space-y-5">
+        <div class="flex items-center gap-3"><span class="text-2xl mono gold font-bold">10</span><h2 class="text-2xl cinzel font-bold text-white">Shipping Zones & COD / Prepaid Rules</h2></div>
+        <div class="callout"><strong class="gold">Route:</strong> <code class="mono text-white">/admin/shipping</code> — Component: <code class="mono text-white">ShippingManager.tsx</code> — DB: <code class="mono text-white">shipping_settings</code></div>
+        <div class="card p-5 space-y-4 text-xs text-gray-300">
+          <p class="text-sm">The shipping engine is a JSONB-stored rule set. The shipping settings are saved as a single row in the <code class="mono text-white">shipping_settings</code> table. Changes reflect immediately on the customer checkout page.</p>
+          <div class="grid md:grid-cols-3 gap-4">
+            <div class="step-card space-y-2">
+              <strong class="text-[#fed65b] block">Zone Profiles (3 Default)</strong>
+              <table class="data-table">
+                <thead><tr><th>Zone</th><th>States</th><th>Base Charge</th><th>ETA</th></tr></thead>
+                <tbody>
+                  <tr><td>South India Express</td><td>TN, KA, KL, AP, TS, PY</td><td>₹350</td><td>2-3 days</td></tr>
+                  <tr><td>Standard All-India</td><td>All 36 states/UTs</td><td>₹350</td><td>4-6 days</td></tr>
+                  <tr><td>Remote & Special Zones</td><td>NE, J&K, Islands</td><td>₹500</td><td>7-10 days</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="step-card space-y-2">
+              <strong class="text-[#fed65b] block">Pincode Wildcard Matching</strong>
+              <p class="text-gray-400">Example wildcards for South India zone:</p>
+              <div class="code-block text-[10px]">600*, 601*, 602*, 603*, 620*, 625*, 641*, 560*, 570*, 575*, 500*, 530*, 520*</div>
+              <p class="text-gray-400 mt-1">Add any 3-digit prefix with * to include all 6-digit pincodes in that range.</p>
+            </div>
+            <div class="step-card space-y-2">
+              <strong class="text-[#fed65b] block">COD & Prepaid Settings</strong>
+              <ul class="list-disc list-inside space-y-1 text-gray-400">
+                <li><strong class="text-white">COD:</strong> Enable/disable, set handling fee, min/max order amount, restricted pincodes</li>
+                <li><strong class="text-white">Prepaid:</strong> Set instant discount % (e.g. 5%) or flat ₹ discount, trust badge text</li>
+                <li>Customer sees both options at checkout with real-time price difference displayed</li>
+              </ul>
+            </div>
+          </div>
+          <div class="step-card text-xs space-y-1">
+            <strong class="text-[#fed65b]">Backend Verification:</strong>
+            <div class="code-block mt-1">SELECT id, settings FROM shipping_settings WHERE id = 1;</div>
+            <p class="text-gray-400">The <code class="mono">settings</code> column is a JSONB object containing <code class="mono">isShippingEngineActive</code>, <code class="mono">profiles[]</code>, <code class="mono">cod</code>, and <code class="mono">prepaid</code> keys.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 11: COUPONS -->
+      <section id="guide-coupons" class="space-y-5">
+        <div class="flex items-center gap-3"><span class="text-2xl mono gold font-bold">11</span><h2 class="text-2xl cinzel font-bold text-white">Coupons & Heritage Discount Engine</h2></div>
+        <div class="callout"><strong class="gold">Route:</strong> <code class="mono text-white">/admin/coupons</code> — Component: <code class="mono text-white">CouponsManager.tsx</code> — DB: <code class="mono text-white">coupons</code>, <code class="mono text-white">coupon_usages</code></div>
+        <div class="card p-5 space-y-5 text-xs text-gray-300">
+          <p class="text-sm">3 tabs: <strong>Coupon Directory</strong> (create/edit/delete coupons), <strong>Coupon Simulator</strong> (test a coupon before publishing), <strong>Usage History</strong> (see all redemptions).</p>
+
+          <div class="step-card space-y-3">
+            <strong class="text-[#fed65b] text-sm">Creating a New Coupon — All Fields Explained</strong>
+            <table class="data-table">
+              <thead><tr><th>Field</th><th>Options / Format</th><th>DB Column</th></tr></thead>
+              <tbody>
+                <tr><td class="text-white font-bold">Coupon Code</td><td>UPPERCASE letters/numbers. Use "Generate" for random codes like HERITAGE-XF7K. Max 20 chars.</td><td><code class="mono">coupons.code</code></td></tr>
+                <tr><td class="text-white font-bold">Discount Type</td><td><strong>Percentage</strong> (e.g. 15%), <strong>Fixed</strong> (e.g. ₹2,500 off), <strong>Free Shipping</strong></td><td><code class="mono">coupons.discount_type</code></td></tr>
+                <tr><td class="text-white font-bold">Discount Value</td><td>Number — 15 for 15%, 2500 for ₹2,500, 0 for free shipping</td><td><code class="mono">coupons.discount_value</code></td></tr>
+                <tr><td class="text-white font-bold">Max Discount Amount</td><td>Cap for percentage discounts. e.g. set max ₹10,000 so 15% on ₹1 Lakh doesn't exceed ₹10,000</td><td><code class="mono">coupons.max_discount_amount</code></td></tr>
+                <tr><td class="text-white font-bold">Min Cart Amount</td><td>Minimum subtotal before coupon applies. e.g. ₹50,000 for premium-only discount</td><td><code class="mono">coupons.min_cart_amount</code></td></tr>
+                <tr><td class="text-white font-bold">Customer Eligibility</td><td><strong>All customers</strong> / <strong>First Order Only</strong> / <strong>Repeat Orders Only</strong> / <strong>Custom Range</strong> (set min/max previous orders)</td><td><code class="mono">coupons.customer_order_eligibility</code></td></tr>
+                <tr><td class="text-white font-bold">Max Total Uses</td><td>Leave blank for unlimited. e.g. 1000 limits to 1000 total redemptions</td><td><code class="mono">coupons.max_usage_count</code></td></tr>
+                <tr><td class="text-white font-bold">Max Uses Per Customer</td><td>Default 1 (one-time use). Set 3 for 3 uses per customer allowed</td><td><code class="mono">coupons.max_usage_per_customer</code></td></tr>
+                <tr><td class="text-white font-bold">Start Date</td><td>Coupon inactive before this date. Leave as now() to activate immediately</td><td><code class="mono">coupons.start_date</code></td></tr>
+                <tr><td class="text-white font-bold">Expiry Date</td><td>Coupon invalid after this. Required for seasonal coupons like DIWALI25</td><td><code class="mono">coupons.expiry_date</code></td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="step-card space-y-2">
+            <strong class="text-[#fed65b] text-sm">Coupon Simulator (Test Before Publishing)</strong>
+            <p class="text-gray-400">In the "Coupon Simulator" tab, enter: <strong>Coupon Code</strong>, <strong>Cart Subtotal</strong> (e.g. 85000), <strong>Customer Email</strong>, <strong>Order Count</strong> (how many previous orders), <strong>Test Date</strong>. Click "Run Simulation" → shows whether the coupon is valid, the discount amount, and the exact rejection reason if invalid.</p>
+          </div>
+
+          <div class="step-card space-y-2">
+            <strong class="text-[#fed65b] text-sm">Pre-configured Coupons (Examples)</strong>
+            <table class="data-table">
+              <thead><tr><th>Code</th><th>Type</th><th>Value</th><th>Eligibility</th><th>Expiry</th></tr></thead>
+              <tbody>
+                <tr><td class="mono font-bold text-white">WELCOME10</td><td>Percentage</td><td>10% (max ₹5,000)</td><td>First order only</td><td>31 Dec 2025</td></tr>
+                <tr><td class="mono font-bold text-white">FESTIVE15</td><td>Percentage</td><td>15% (max ₹15,000)</td><td>Repeat orders (≥2 prev)</td><td>Seasonal</td></tr>
+                <tr><td class="mono font-bold text-white">FREESHIP</td><td>Free Shipping</td><td>₹0 shipping</td><td>All customers</td><td>Unlimited</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 12: PROMO BANNERS -->
+      <section id="guide-banners" class="space-y-5">
+        <div class="flex items-center gap-3"><span class="text-2xl mono gold font-bold">12</span><h2 class="text-2xl cinzel font-bold text-white">Promotional Banners Manager</h2></div>
+        <div class="callout"><strong class="gold">Route:</strong> <code class="mono text-white">/admin/promotional-banners</code> — Component: <code class="mono text-white">PromoBannersManager.tsx</code> — DB: <code class="mono text-white">promo_banners</code></div>
+        <div class="card p-5 space-y-4 text-xs text-gray-300">
+          <p class="text-sm">The banner editor has a 5-tab drawer: Content → Style → Animation → Placement → Schedule. Banners display in real-time on the storefront once saved and activated.</p>
+          <div class="grid md:grid-cols-2 gap-4">
+            <div class="step-card space-y-2">
+              <strong class="text-[#fed65b] block">10 Style Presets</strong>
+              <table class="data-table">
+                <thead><tr><th>Preset ID</th><th>Name</th></tr></thead>
+                <tbody>
+                  <tr><td class="mono">royal_gold</td><td>👑 Royal Gold & Ebony — dark bg #0f1513, gold text</td></tr>
+                  <tr><td class="mono">dark_luxury</td><td>🖤 Dark Luxury Velvet — charcoal #18181b, white text</td></tr>
+                  <tr><td class="mono">emerald_mint</td><td>🌿 Emerald Royal Mint — forest green #14472c</td></tr>
+                  <tr><td class="mono">sunset_glow</td><td>🌅 Sunset Amber Glow — mahogany #5c2a12</td></tr>
+                  <tr><td class="mono">glassmorphism</td><td>🔮 Frosted Glassmorphism — blur + white border</td></tr>
+                  <tr><td class="mono">neon_cyber</td><td>⚡ Neon Cyber Amber — #09090b + amber glow</td></tr>
+                  <tr><td class="mono">minimal_clean</td><td>📄 Minimalist Royal Clean — ivory #fcfaf7</td></tr>
+                  <tr><td class="mono">coral_blush</td><td>🌸 Coral Heritage Blush — rosewood #5c2429</td></tr>
+                  <tr><td class="mono">wooden_classic</td><td>🪵 Classic Sandalwood Grain — #1c130e + gold trim</td></tr>
+                  <tr><td class="mono">gradient_ocean</td><td>🌊 Gradient Ocean Wave — peacock teal #093554</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="space-y-3">
+              <div class="step-card space-y-2">
+                <strong class="text-[#fed65b] block">8 Animation Types</strong>
+                <div class="mono text-gray-400 space-y-0.5 text-[10px]">
+                  <div><code>pulse_glow</code> — Breathing aura glow</div>
+                  <div><code>slide_in_left</code> — Smooth slide entrance</div>
+                  <div><code>fade_zoom</code> — Gentle scale zoom on hover</div>
+                  <div><code>shimmer_shine</code> — Light sweep animation</div>
+                  <div><code>bounce_gentle</code> — Subtle vertical float</div>
+                  <div><code>floating_3d</code> — 3D tilt perspective</div>
+                  <div><code>marquee_scroll</code> — Continuous ticker scroll</div>
+                  <div><code>none</code> — Static, no animation</div>
+                </div>
+              </div>
+              <div class="step-card space-y-2">
+                <strong class="text-[#fed65b] block">5 Placement Targets</strong>
+                <div class="mono text-gray-400 space-y-0.5 text-[10px]">
+                  <div><code>home_hero</code> — Homepage hero section top</div>
+                  <div><code>header_marquee</code> — Storefront header announcement bar</div>
+                  <div><code>checkout_top</code> — Top of checkout order summary</div>
+                  <div><code>cart_drawer</code> — Inside sliding cart drawer</div>
+                  <div><code>all</code> — All placement slots simultaneously</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="step-card text-xs space-y-2">
+            <strong class="text-[#fed65b]">Schedule Feature</strong>
+            <p class="text-gray-400">Set <code class="mono">start_date</code> and <code class="mono">expiry_date</code> for time-boxed campaigns (Diwali, Christmas, New Year sale). The <code class="mono">isBannerScheduleActive()</code> function in <code class="mono">promoBannerEngine.ts</code> handles automatic activation/deactivation.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 13: PAGE BUILDER -->
+      <section id="guide-pagebuilder" class="space-y-5">
+        <div class="flex items-center gap-3"><span class="text-2xl mono gold font-bold">13</span><h2 class="text-2xl cinzel font-bold text-white">Page Builder & Hero Customizer</h2></div>
+        <div class="callout"><strong class="gold">Route:</strong> <code class="mono text-white">/admin/page-builder</code> — DB: <code class="mono text-white">page_content</code> table (section TEXT, content JSONB)</div>
+        <div class="card p-5 space-y-4 text-xs text-gray-300">
+          <p class="text-sm">Modify the homepage hero, hero images, CTA buttons, badge text, and background theme without code. Changes saved to Supabase and reflect immediately on storefront refresh.</p>
+          <div class="grid md:grid-cols-3 gap-3">
+            <div class="step-card"><strong class="text-[#fed65b] block mb-1">5 Hero Layouts</strong><div class="space-y-0.5 text-gray-400 mono text-[10px]"><div>classic_split — headline left, image right</div><div>fullscreen_bg — edge-to-edge backdrop</div><div>centered_minimal — museum exhibition style</div><div>floating_card — floating glass card overlay</div><div>dual_sculpture_grid — side-by-side sculptures</div></div></div>
+            <div class="step-card"><strong class="text-[#fed65b] block mb-1">5 Background Themes</strong><div class="space-y-0.5 text-gray-400 mono text-[10px]"><div>royal_ebony — deep ebony black</div><div>sandalwood_woodgrain — warm timber texture</div><div>imperial_emerald — deep forest green</div><div>midnight_velvet — navy midnight blue</div><div>warm_amber — rich amber & mahogany</div></div></div>
+            <div class="step-card"><strong class="text-[#fed65b] block mb-1">4 Font Styles</strong><div class="space-y-0.5 text-gray-400 mono text-[10px]"><div>serif_heritage — Cinzel / Playfair</div><div>classic_roman — Cormorant / Times</div><div>modern_luxury — Outfit / Inter</div><div>bold_minimal — Space Grotesk bold</div></div></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 14: SUPPORT DESK -->
+      <section id="guide-support" class="space-y-5">
+        <div class="flex items-center gap-3"><span class="text-2xl mono gold font-bold">14</span><h2 class="text-2xl cinzel font-bold text-white">Customer Support Desk</h2></div>
+        <div class="callout"><strong class="gold">Route:</strong> <code class="mono text-white">/admin/support-tickets</code> — DB: <code class="mono text-white">support_tickets</code> (messages JSONB[])</div>
+        <div class="card p-5 space-y-4 text-xs text-gray-300">
+          <div class="grid md:grid-cols-2 gap-4">
+            <div class="step-card space-y-2">
+              <strong class="text-[#fed65b] block">Ticket Categories</strong>
+              <ul class="list-disc list-inside space-y-0.5 text-gray-400">
+                <li>Order & Shipment</li>
+                <li>Product & Craftsmanship</li>
+                <li>Bespoke Custom Commission</li>
+                <li>Returns & Replacement</li>
+                <li>Payment & Billing</li>
+                <li>General Inquiry</li>
+              </ul>
+            </div>
+            <div class="step-card space-y-2">
+              <strong class="text-[#fed65b] block">Priority Levels & Status Flow</strong>
+              <table class="data-table">
+                <thead><tr><th>Priority</th><th>Status</th></tr></thead>
+                <tbody>
+                  <tr><td>Low · Medium · High · <span style="color:#f87171">Urgent</span></td><td>open → in_progress → resolved → closed</td></tr>
+                </tbody>
+              </table>
+              <p class="text-gray-400 mt-1">Admin replies are stored in <code class="mono">support_tickets.messages[]</code> as a JSONB array of <code class="mono">{sender, sender_name, message, created_at}</code>. Replying in the admin UI auto-dispatches a customer notification email via Resend.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 15: WEBHOOKS & EMAIL -->
+      <section id="guide-webhooks" class="space-y-5">
+        <div class="flex items-center gap-3"><span class="text-2xl mono gold font-bold">15</span><h2 class="text-2xl cinzel font-bold text-white">Outgoing Webhooks & Resend Email Automation</h2></div>
+        <div class="card p-5 space-y-4 text-xs text-gray-300">
+          <div class="grid md:grid-cols-2 gap-4">
+            <div class="step-card space-y-2">
+              <strong class="text-[#fed65b] block text-sm">📡 Webhook Events (webhookDispatcher.ts)</strong>
+              <table class="data-table">
+                <thead><tr><th>Event Name</th><th>Triggered When</th></tr></thead>
+                <tbody>
+                  <tr><td class="mono text-emerald-400">order.created</td><td>Customer places a new order</td></tr>
+                  <tr><td class="mono text-emerald-400">order.shipped</td><td>Admin marks order as shipped + AWB set</td></tr>
+                  <tr><td class="mono text-emerald-400">payment.success</td><td>Razorpay webhook confirms payment captured</td></tr>
+                  <tr><td class="mono text-emerald-400">lead.created</td><td>Bespoke custom commission form submitted</td></tr>
+                </tbody>
+              </table>
+              <p class="text-gray-400 mt-2">Configure outgoing webhooks at <code class="mono">/admin/webhooks</code>. Each webhook has: URL, secret key (for HMAC signature), events to subscribe, and custom headers.</p>
+            </div>
+            <div class="step-card space-y-2">
+              <strong class="text-[#fed65b] block text-sm">✉️ Resend Email Templates (resendEmailEngine.ts)</strong>
+              <table class="data-table">
+                <thead><tr><th>Function</th><th>Recipient</th><th>Content</th></tr></thead>
+                <tbody>
+                  <tr><td class="mono">sendOrderConfirmationEmail()</td><td>Customer</td><td>Itemized order summary, Razorpay payment ID</td></tr>
+                  <tr><td class="mono">sendWelcomeDiscountEmail()</td><td>New customer</td><td>Welcome + WELCOME10 coupon code</td></tr>
+                  <tr><td class="mono">sendOrderShippedEmail()</td><td>Customer</td><td>AWB number + courier tracking link</td></tr>
+                  <tr><td class="mono">sendContactInquiryEmail()</td><td>Customer + Admin</td><td>Contact form acknowledgement</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 16: SEO & ANALYTICS -->
+      <section id="guide-seo" class="space-y-5">
+        <div class="flex items-center gap-3"><span class="text-2xl mono gold font-bold">16</span><h2 class="text-2xl cinzel font-bold text-white">SEO, GEO & Traffic Analytics</h2></div>
+        <div class="callout"><strong class="gold">Route:</strong> <code class="mono text-white">/admin/seo</code> — Component: <code class="mono text-white">SeoSettingsManager.tsx</code> — DB: <code class="mono text-white">seo_settings</code></div>
+        <div class="card p-5 space-y-4 text-xs text-gray-300">
+          <img src="./docs/screenshots/admin-analytics-seo.jpg" alt="SEO and Analytics" class="img-frame" onclick="zoom(this)" />
+          <div class="grid md:grid-cols-3 gap-3 mt-4">
+            <div class="step-card space-y-2">
+              <strong class="text-[#fed65b] block">SEO Settings Tabs</strong>
+              <div class="mono text-gray-400 space-y-0.5 text-[10px]">
+                <div><code>google</code> — Meta title, description, canonical URL, keywords[]</div>
+                <div><code>social</code> — OpenGraph & Twitter card images/descriptions</div>
+                <div><code>schema</code> — JSON-LD structured data preview (Product, Org, Breadcrumb)</div>
+                <div><code>robots</code> — robots.txt editor</div>
+                <div><code>sitemap</code> — XML sitemap with all product/category URLs</div>
+                <div><code>llms</code> — Generate llms.txt & llms-full.txt for AI crawlers</div>
+              </div>
+            </div>
+            <div class="step-card space-y-2">
+              <strong class="text-[#fed65b] block">GEO AI Files Generated</strong>
+              <ul class="list-disc list-inside space-y-1 text-gray-400">
+                <li><code class="mono">public/llms.txt</code> — Concise site overview for AI</li>
+                <li><code class="mono">public/llms-full.txt</code> — Full product catalog for AI</li>
+                <li><code class="mono">public/sitemap.xml</code> — All routes with lastmod dates</li>
+                <li><code class="mono">public/robots.txt</code> — Crawler access rules</li>
+              </ul>
+            </div>
+            <div class="step-card space-y-2">
+              <strong class="text-[#fed65b] block">Page View Analytics</strong>
+              <p class="text-gray-400">Route: <code class="mono">/admin/sales-analytics</code>. Tracks: page views, cart adds, conversion events. All stored in <code class="mono">page_views</code> table. Privacy-friendly, no external tracking libraries.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 17: DEPLOYMENT -->
+      <section id="deployment" class="space-y-5">
+        <div class="flex items-center gap-3"><span class="text-2xl mono gold font-bold">17</span><h2 class="text-2xl cinzel font-bold text-white">Docker & Dokploy Deployment</h2></div>
+        <div class="card p-5 space-y-4">
+          <div class="grid md:grid-cols-2 gap-4">
+            <div class="code-block text-[10px] mono text-gray-300 space-y-1">
+<span class="text-[#fed65b]"># docker-compose.yml</span>
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:80"
+    environment:
+      - VITE_SUPABASE_URL=${VITE_SUPABASE_URL}
+      - VITE_SUPABASE_ANON_KEY=${VITE_SUPABASE_ANON_KEY}
+    restart: unless-stopped
+            </div>
+            <div class="code-block text-[10px] mono text-gray-300 space-y-1">
+<span class="text-[#fed65b]"># Required .env Variables</span>
+VITE_SUPABASE_URL=https://kimkttzdx...supabase.co
+VITE_SUPABASE_ANON_KEY=eyJhbGciOiJI...
+RAZORPAY_KEY_ID=rzp_live_...
+RAZORPAY_KEY_SECRET=••••••••••••••••
+RESEND_API_KEY=re_123456789...
+
+<span class="text-[#fed65b]"># Dev server</span>
+npm run dev    <span class="text-gray-500"># starts on port 3000</span>
+npm run build  <span class="text-gray-500"># production bundle</span>
+npm run lint   <span class="text-gray-500"># TypeScript type check</span>
+            </div>
+          </div>
+          <div class="callout info text-xs">
+            <strong class="text-[#38bdf8]">Dokploy Guide:</strong> See <code class="mono text-white">DOKPLOY.md</code> in the project root for full step-by-step Dokploy VPS deployment instructions including domain setup, SSL, and environment variable configuration.
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 18: VERIFICATION CHECKLIST -->
+      <section id="verification" class="space-y-5">
+        <div class="flex items-center gap-3"><span class="text-2xl mono gold font-bold">18</span><h2 class="text-2xl cinzel font-bold text-white">Testing & Verification Checklist</h2></div>
+        <div class="card p-5 overflow-x-auto">
+          <table class="data-table">
+            <thead>
+              <tr><th>#</th><th>Module</th><th>Test Scenario</th><th>What to Verify</th><th>Status</th></tr>
+            </thead>
+            <tbody>
+              <tr><td class="mono text-gray-500">01</td><td class="font-bold text-white">Admin Login</td><td>Email+password login at /admin/login</td><td>Redirects to /admin dashboard, session persists in <code class="mono">irisjev_admin_auth_token</code></td><td><span class="badge badge-green">PASSED</span></td></tr>
+              <tr><td class="mono text-gray-500">02</td><td class="font-bold text-white">Add Product</td><td>Add new sculpture with 3 images + Teak specs + ₹1,85,000</td><td>Row in <code class="mono">products</code> table, images in Supabase Storage, visible on storefront immediately</td><td><span class="badge badge-green">PASSED</span></td></tr>
+              <tr><td class="mono text-gray-500">03</td><td class="font-bold text-white">Edit Product</td><td>Change price from ₹1,45,000 → ₹1,85,000</td><td><code class="mono">products.price_inr</code> updated, <code class="mono">price_usd</code> auto-recalculated, storefront shows new price</td><td><span class="badge badge-green">PASSED</span></td></tr>
+              <tr><td class="mono text-gray-500">04</td><td class="font-bold text-white">Delete Product</td><td>Delete a test sculpture</td><td>confirm() dialog appears, row removed from DB, disappears from catalog</td><td><span class="badge badge-green">PASSED</span></td></tr>
+              <tr><td class="mono text-gray-500">05</td><td class="font-bold text-white">Checkout (Prepaid)</td><td>Place order via Razorpay test card</td><td>Order row in DB with <code class="mono">payment_status=paid</code>, <code class="mono">webhook_verified=true</code>, order confirmation email sent</td><td><span class="badge badge-green">PASSED</span></td></tr>
+              <tr><td class="mono text-gray-500">06</td><td class="font-bold text-white">Checkout (COD)</td><td>Place COD order</td><td>Order row with <code class="mono">payment_method=cod</code>, <code class="mono">payment_status=COD</code></td><td><span class="badge badge-green">PASSED</span></td></tr>
+              <tr><td class="mono text-gray-500">07</td><td class="font-bold text-white">Shipping Label</td><td>Print shipping label for an order</td><td>A4 label renders with IRISJEV brand, customer address, barcode, QR, FRAGILE banner, COD/Prepaid badge</td><td><span class="badge badge-green">PASSED</span></td></tr>
+              <tr><td class="mono text-gray-500">08</td><td class="font-bold text-white">Coupon: WELCOME10</td><td>Apply on first-order customer with ₹1,40,000 cart</td><td>10% = ₹14,000 discount applied. <code class="mono">coupon_usages</code> row created. Second application on same email rejected.</td><td><span class="badge badge-green">PASSED</span></td></tr>
+              <tr><td class="mono text-gray-500">09</td><td class="font-bold text-white">Promo Banner</td><td>Create "Royal Gold" banner targeting cart_drawer</td><td>Banner visible in Cart Drawer on storefront. Pulse glow animation plays.</td><td><span class="badge badge-green">PASSED</span></td></tr>
+              <tr><td class="mono text-gray-500">10</td><td class="font-bold text-white">SEO / GEO</td><td>Check /llms.txt and JSON-LD in page source</td><td>Valid Product schema, Organization schema, BreadcrumbList. All products indexed in llms.txt.</td><td><span class="badge badge-green">PASSED</span></td></tr>
+              <tr><td class="mono text-gray-500">11</td><td class="font-bold text-white">Dual-Auth Isolation</td><td>Login as customer on storefront, then log in as admin</td><td>Two separate sessions coexist. Logging out customer does NOT log out admin.</td><td><span class="badge badge-green">PASSED</span></td></tr>
+              <tr><td class="mono text-gray-500">12</td><td class="font-bold text-white">Email (Resend)</td><td>Complete a prepaid order</td><td>Order confirmation HTML email arrives in customer inbox within 30s.</td><td><span class="badge badge-green">PASSED</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- FOOTER -->
+      <footer class="pt-8 pb-4 border-t border-[#2b3a35] flex flex-col sm:flex-row items-center justify-between gap-3 text-xs mono text-gray-500">
+        <div>
+          <div class="text-white font-bold cinzel text-sm">IRISJEV WOODEN CRAFTS</div>
+          <div class="text-gray-500 text-[10px] mt-0.5">Confidential Project Submission & Operator Guide — v1.4.0 — Sep 2026</div>
+        </div>
+        <div class="flex items-center gap-4">
+          <a href="#overview" class="hover:text-[#fed65b] transition-colors">Back to Top ↑</a>
+          <button onclick="window.print()" class="text-[#fed65b] hover:underline cursor-pointer">⎙ Print PDF</button>
+        </div>
+      </footer>
+    </main>
+  </div>
+
+  <!-- LIGHTBOX ZOOM MODAL -->
+  <div id="lightbox" class="fixed inset-0 bg-black/92 backdrop-blur z-50 hidden items-center justify-center p-4 cursor-zoom-out" onclick="closeLB()">
+    <div class="relative max-w-7xl w-full" onclick="event.stopPropagation()">
+      <button onclick="closeLB()" class="absolute -top-9 right-0 text-white text-xl font-bold hover:text-[#fed65b] cursor-pointer">✕ Close</button>
+      <img id="lbImg" src="" alt="" class="w-full h-auto rounded-xl border border-[#2b3a35] shadow-2xl object-contain max-h-[90vh]" />
+    </div>
+  </div>
+
+  <script>
+    function zoom(img) {
+      document.getElementById('lbImg').src = img.src;
+      document.getElementById('lightbox').classList.replace('hidden','flex');
+    }
+    function closeLB() {
+      document.getElementById('lightbox').classList.replace('flex','hidden');
+    }
+    document.addEventListener('keydown', e => { if(e.key==='Escape') closeLB(); });
+
+    function filterNav(q) {
+      document.querySelectorAll('#tocNav a').forEach(a => {
+        a.style.display = a.textContent.toLowerCase().includes(q.toLowerCase()) ? 'flex' : 'none';
+      });
+    }
+
+    // Highlight active nav link on scroll
+    const sections = document.querySelectorAll('section[id]');
+    const navLinks = document.querySelectorAll('#tocNav a');
+    window.addEventListener('scroll', () => {
+      let cur = '';
+      sections.forEach(s => { if (window.scrollY >= s.offsetTop - 120) cur = s.id; });
+      navLinks.forEach(a => {
+        a.classList.remove('active');
+        if (a.getAttribute('href') === '#' + cur) a.classList.add('active');
+      });
+    }, { passive: true });
+  </script>
+</body>
+</html>
