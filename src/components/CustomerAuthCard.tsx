@@ -366,7 +366,7 @@ export const CustomerAuthCard: React.FC<CustomerAuthCardProps> = ({
   };
 
   return (
-    <div className="w-full max-w-[430px] bg-white rounded-xs border border-[#e4e2e2] shadow-xl overflow-hidden font-body-md text-[#1c1b1b] mx-auto animate-fadeIn">
+    <div className="w-full max-w-[430px] max-h-[85vh] sm:max-h-[90vh] overflow-y-auto bg-white rounded-xs border border-[#e4e2e2] shadow-xl font-body-md text-[#1c1b1b] mx-auto animate-fadeIn custom-scrollbar">
       {/* Top Segmented Navigation Tabs */}
       {activeTab !== 'track' ? (
         <div className="flex border-b border-[#e4e2e2] bg-[#fbf9f8]">

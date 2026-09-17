@@ -282,9 +282,12 @@ export interface PromoBanner {
   updated_at?: string;
 }
 
-export type HeroLayout = 'classic_split' | 'fullscreen_bg' | 'centered_minimal' | 'floating_card' | 'dual_sculpture_grid';
+export type HeroLayout = 'classic_split' | 'fullscreen_bg' | 'centered_minimal' | 'floating_card' | 'dual_sculpture_grid' | 'animated_heritage_collage';
 export type HeroFontStyle = 'serif_heritage' | 'classic_roman' | 'modern_luxury' | 'bold_minimal';
 export type HeroBgTheme = 'royal_ebony' | 'sandalwood_woodgrain' | 'imperial_emerald' | 'midnight_velvet' | 'warm_amber';
+export type CollageAnimationStyle = 'cinematic_fade' | 'slow_zoom' | 'ken_burns' | 'gentle_parallax' | 'mixed_cinematic';
+export type CollageSpeed = 'slow' | 'normal' | 'fast';
+export type CollageOverlay = 'none' | 'light' | 'medium' | 'dark';
 
 export interface HeroSettings {
   headline: string;
@@ -302,6 +305,12 @@ export interface HeroSettings {
   overlayOpacity: number; // 0 to 90
   textAlign?: 'left' | 'center' | 'right';
   secondaryImageUrl?: string;
+  // Animated Heritage Collage Configuration
+  collageImages?: string[];
+  collageAnimationStyle?: CollageAnimationStyle;
+  collageSpeed?: CollageSpeed;
+  collageOverlay?: CollageOverlay;
+  collageBorderRadius?: number;
 }
 
 export type ShippingLabelPaperSize = 'A4' | 'A5' | 'Thermal_4x6' | 'Letter';

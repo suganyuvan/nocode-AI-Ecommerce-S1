@@ -19,6 +19,17 @@ export const DEFAULT_HERO_SETTINGS: HeroSettings = {
   bgTheme: 'royal_ebony',
   overlayOpacity: 30,
   textAlign: 'left',
+  collageImages: [
+    'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=800&q=80',
+  ],
+  collageAnimationStyle: 'mixed_cinematic',
+  collageSpeed: 'normal',
+  collageOverlay: 'none',
+  collageBorderRadius: 16,
 };
 
 export const getLocalHeroSettings = (): HeroSettings => {

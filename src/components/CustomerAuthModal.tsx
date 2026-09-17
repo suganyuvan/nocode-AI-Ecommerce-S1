@@ -21,15 +21,16 @@ export const CustomerAuthModal: React.FC<CustomerAuthModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 sm:p-6 animate-fadeIn">
-      {/* Backdrop */}
-      <div 
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" 
-        onClick={onClose}
-      />
+    <div className="fixed inset-0 z-[120] overflow-y-auto animate-fadeIn">
+      <div className="min-h-full flex items-center justify-center p-4 sm:p-6 py-12">
+        {/* Backdrop */}
+        <div 
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity" 
+          onClick={onClose}
+        />
 
-      {/* Modal Container */}
-      <div className="relative w-full max-w-[420px] z-10">
+        {/* Modal Container */}
+        <div className="relative w-full max-w-[420px] z-10 mt-auto mb-auto">
         {/* Floating Close Button */}
         <button
           onClick={onClose}
@@ -48,6 +49,7 @@ export const CustomerAuthModal: React.FC<CustomerAuthModalProps> = ({
           onCloseModal={onClose}
         />
       </div>
+    </div>
     </div>
   );
 };

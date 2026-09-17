@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Product, ActiveTab } from '../types';
 import { SeoSettingsRecord, JsonLd } from '../types/seo';
 import { supabase } from '../utils/supabaseClient';
@@ -25,7 +26,7 @@ import {
 } from '../services/seo';
 
 interface SeoHeadProps {
-  activeTab: ActiveTab;
+  activeTab?: ActiveTab;
   selectedProduct?: Product | null;
 }
 
@@ -56,6 +57,8 @@ export function SeoHead({ activeTab, selectedProduct }: SeoHeadProps) {
     loadSeoSettings();
   }, []);
 
+  const location = useLocation();
+
   // 2. Compute dynamic metadata and JSON-LD structured data on route/tab change
   useEffect(() => {
     const baseUrl = seoSettings.canonical_base_url || SITE_URL;
@@ -63,10 +66,79 @@ export function SeoHead({ activeTab, selectedProduct }: SeoHeadProps) {
     let description = seoSettings.meta_description || SITE_DESCRIPTION;
     let ogImage = seoSettings.og_image_url || OG_IMAGE_DEFAULT;
     let ogType: 'website' | 'article' | 'product' = 'website';
-    let path = '/';
+    let path = location.pathname || '/';
     let jsonLdPayload: JsonLd[] = [];
 
-    switch (activeTab) {
+    const currentPath = location.pathname;
+
+    if (currentPath === '/shop') {
+      path = '/shop';
+      title = 'Heritage Handcrafted Collections | Swarna Wooden Crafts';
+      description =
+        'Explore sanctified wooden sculptures, intricate mandala panels, deity idols, and bespoke temple carvings hand-chiseled from authentic Indian teakwood & rosewood.';
+      jsonLdPayload = [
+        websiteJsonLd(baseUrl),
+        breadcrumbListJsonLd(
+          [
+            { name: 'Home', url: baseUrl },
+            { name: 'Shop Collections', url: `${baseUrl}/shop` }
+          ],
+          baseUrl
+        )
+      ];
+    } else if (currentPath.startsWith('/product/') && selectedProduct) {
+      path = `/product/${selectedProduct.id}`;
+      title = `${selectedProduct.name} - Solid Wood Handcrafted Masterpiece`;
+      description =
+        selectedProduct.shortDescription ||
+        selectedProduct.description ||
+        `Certified authentic hand-carved ${selectedProduct.name} from Swarna Wooden Crafts. Sanctified, beeswax polished, and crated for worldwide insured delivery.`;
+      ogImage = selectedProduct.image || ogImage;
+      ogType = 'product';
+
+      jsonLdPayload = [
+        productJsonLd(
+          {
+            id: selectedProduct.id,
+            name: selectedProduct.name,
+            category: selectedProduct.category,
+            priceINR: selectedProduct.priceINR,
+            priceUSD: selectedProduct.priceUSD,
+            image: selectedProduct.image,
+            galleryImages: selectedProduct.galleryImages,
+            description: selectedProduct.description,
+            shortDescription: selectedProduct.shortDescription,
+            dimensions: selectedProduct.dimensions,
+            material: selectedProduct.material,
+            rating: selectedProduct.rating,
+            reviewCount: selectedProduct.reviewCount
+          },
+          baseUrl
+        ),
+        breadcrumbListJsonLd(
+          [
+            { name: 'Home', url: baseUrl },
+            { name: selectedProduct.category || 'Sculptures', url: `${baseUrl}/shop` },
+            { name: selectedProduct.name, url: `${baseUrl}/product/${selectedProduct.id}` }
+          ],
+          baseUrl
+        )
+      ];
+    } else if (currentPath.startsWith('/pages/')) {
+      const slugName = currentPath.replace('/pages/', '').replace(/-/g, ' ');
+      path = currentPath;
+      title = `${slugName.charAt(0).toUpperCase() + slugName.slice(1)} | Swarna Wooden Crafts`;
+      description = `Read about ${slugName} at Swarna Wooden Crafts. Heirloom temple-grade sculptures & bespoke heritage woodcrafts.`;
+      jsonLdPayload = [
+        breadcrumbListJsonLd(
+          [
+            { name: 'Home', url: baseUrl },
+            { name: slugName, url: `${baseUrl}${currentPath}` }
+          ],
+          baseUrl
+        )
+      ];
+    } else switch (activeTab) {
       case 'home':
         path = '/';
         title = seoSettings.site_title || SITE_TITLE_DEFAULT;

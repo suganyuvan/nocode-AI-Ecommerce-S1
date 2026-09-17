@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { ActiveTab, Currency, Customer } from '../types';
 import irisjevLogo from '../assets/images/swarna_wooden_crafts_logo.jpg';
 import { PromotionalBanner } from './PromotionalBanner';
 
 interface HeaderProps {
-
-  activeTab: ActiveTab;
+  activeTab?: ActiveTab;
   setActiveTab: (tab: ActiveTab) => void;
   currency: Currency;
   setCurrency: (c: Currency) => void;
@@ -23,7 +22,7 @@ interface HeaderProps {
 
 
 export const Header: React.FC<HeaderProps> = ({
-  activeTab,
+  activeTab = 'home',
   setActiveTab,
   currency,
   setCurrency,
@@ -37,7 +36,8 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenAuthModal,
   onOpenTrackOrder,
 }) => {
-
+  const location = useLocation();
+  const pathname = location.pathname;
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
@@ -77,55 +77,60 @@ export const Header: React.FC<HeaderProps> = ({
       {/* Main Navbar */}
       <nav className="flex justify-between items-center px-4 md:px-8 py-4 max-w-[1200px] mx-auto">
         <div className="flex items-center gap-8">
-          <button
+          <Link
+            to="/"
             onClick={() => setActiveTab('home')}
             className="flex items-center cursor-pointer shrink-0"
           >
             <img src={irisjevLogo} alt="Swarna Wooden Crafts" className="h-10 sm:h-14 md:h-16 object-contain mix-blend-multiply" />
-          </button>
+          </Link>
           
           {/* Desktop Navigation Links */}
           <div className="hidden md:flex items-center gap-8 font-label-caps uppercase tracking-widest text-[12px]">
-            <button
+            <Link
+              to="/"
               onClick={() => setActiveTab('home')}
               className={`transition-colors cursor-pointer ${
-                activeTab === 'home'
+                pathname === '/' || activeTab === 'home'
                   ? 'text-[#000000] font-bold border-b border-[#000000] pb-1'
                   : 'text-[#444748] hover:text-[#000000]'
               }`}
             >
               Home
-            </button>
-            <button
+            </Link>
+            <Link
+              to="/shop"
               onClick={() => setActiveTab('shop')}
               className={`transition-colors cursor-pointer ${
-                activeTab === 'shop'
+                pathname === '/shop' || activeTab === 'shop'
                   ? 'text-[#000000] font-bold border-b border-[#000000] pb-1'
                   : 'text-[#444748] hover:text-[#000000]'
               }`}
             >
               Shop Collection
-            </button>
-            <button
+            </Link>
+            <Link
+              to="/pages/temple-projects"
               onClick={() => setActiveTab('temple-projects')}
               className={`transition-colors cursor-pointer ${
-                activeTab === 'temple-projects'
+                pathname === '/pages/temple-projects' || activeTab === 'temple-projects'
                   ? 'text-[#000000] font-bold border-b border-[#000000] pb-1'
                   : 'text-[#444748] hover:text-[#000000]'
               }`}
             >
               Temple Projects
-            </button>
-            <button
+            </Link>
+            <Link
+              to="/pages/about-us"
               onClick={() => setActiveTab('about')}
               className={`transition-colors cursor-pointer ${
-                activeTab === 'about'
+                pathname === '/pages/about-us' || pathname === '/about' || activeTab === 'about'
                   ? 'text-[#000000] font-bold border-b border-[#000000] pb-1'
                   : 'text-[#444748] hover:text-[#000000]'
               }`}
             >
               About
-            </button>
+            </Link>
             <button
               onClick={onOpenBespoke}
               className="text-[#735c00] font-bold hover:opacity-80 transition-opacity cursor-pointer flex items-center gap-1"
@@ -133,20 +138,19 @@ export const Header: React.FC<HeaderProps> = ({
               <span className="material-symbols-outlined text-sm">edit_square</span>
               Custom Orders
             </button>
-            <button
+            <Link
+              to="/track"
               onClick={() => setActiveTab('track')}
-              className={`transition-colors cursor-pointer flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold ${
-                activeTab === 'track'
-                  ? 'bg-[#853c4d] text-white shadow-xs'
-                  : 'bg-[#f5e9eb] text-[#853c4d] hover:bg-[#ebd5da]'
+              className={`transition-colors cursor-pointer flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${
+                pathname === '/track' || activeTab === 'track'
+                  ? 'bg-[#1c1b1b] text-[#fed65b] shadow-xs border border-[#735c00]/40'
+                  : 'bg-[#f4efe6] text-[#735c00] hover:bg-[#e0d6c3] border border-[#e0d6c3]'
               }`}
             >
               <span className="material-symbols-outlined text-sm">local_shipping</span>
               <span>Track Order</span>
-            </button>
-
+            </Link>
           </div>
-
         </div>
 
 
@@ -267,7 +271,8 @@ export const Header: React.FC<HeaderProps> = ({
             </span>
             <span>{customer ? `My Account (${customer.full_name})` : 'Sign In / My Orders (10% Off)'}</span>
           </button>
-          <button
+          <Link
+            to="/"
             onClick={() => {
               setActiveTab('home');
               setMobileMenuOpen(false);
@@ -275,8 +280,9 @@ export const Header: React.FC<HeaderProps> = ({
             className="block w-full text-left py-2 text-[#000000] font-bold border-b border-[#e9e8e7]"
           >
             Home
-          </button>
-          <button
+          </Link>
+          <Link
+            to="/shop"
             onClick={() => {
               setActiveTab('shop');
               setMobileMenuOpen(false);
@@ -284,8 +290,9 @@ export const Header: React.FC<HeaderProps> = ({
             className="block w-full text-left py-2 text-[#444748] border-b border-[#e9e8e7]"
           >
             Shop Curated Collection
-          </button>
-          <button
+          </Link>
+          <Link
+            to="/pages/temple-projects"
             onClick={() => {
               setActiveTab('temple-projects');
               setMobileMenuOpen(false);
@@ -293,8 +300,9 @@ export const Header: React.FC<HeaderProps> = ({
             className="block w-full text-left py-2 text-[#444748] border-b border-[#e9e8e7]"
           >
             Temple Projects & Mandapams
-          </button>
-          <button
+          </Link>
+          <Link
+            to="/pages/about-us"
             onClick={() => {
               setActiveTab('about');
               setMobileMenuOpen(false);
@@ -302,8 +310,9 @@ export const Header: React.FC<HeaderProps> = ({
             className="block w-full text-left py-2 text-[#444748] border-b border-[#e9e8e7]"
           >
             About Swarna Wooden Crafts
-          </button>
-          <button
+          </Link>
+          <Link
+            to="/pages/wholesale-export"
             onClick={() => {
               setActiveTab('wholesale-export');
               setMobileMenuOpen(false);
@@ -311,7 +320,7 @@ export const Header: React.FC<HeaderProps> = ({
             className="block w-full text-left py-2 text-[#444748] border-b border-[#e9e8e7]"
           >
             Wholesale & Export Leads
-          </button>
+          </Link>
           <button
             onClick={() => {
               onOpenBespoke();

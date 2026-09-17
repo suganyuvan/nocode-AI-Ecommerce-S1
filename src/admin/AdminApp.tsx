@@ -29,6 +29,13 @@ export function AdminApp() {
   const navigate = useNavigate();
 
   useEffect(() => {
+    const isDemo = localStorage.getItem('irisjev_admin_demo') === 'true';
+    if (isDemo) {
+      setSession({ user: { id: 'admin-demo-id', email: 'admin@irisjev.com' } });
+      setLoading(false);
+      return;
+    }
+
     adminSupabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setLoading(false);

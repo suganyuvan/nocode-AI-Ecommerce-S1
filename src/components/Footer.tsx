@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { ActiveTab } from '../types';
 import irisjevLogo from '../assets/images/swarna_wooden_crafts_logo.jpg';
 
 interface FooterProps {
-  setActiveTab: (tab: ActiveTab) => void;
+  setActiveTab?: (tab: ActiveTab) => void;
 }
 
 export const Footer: React.FC<FooterProps> = ({ setActiveTab }) => {
@@ -31,12 +32,12 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab }) => {
             Preserving Ancient Artistry for the modern connoisseur. Swarna Wooden Crafts (Est. 1995) produces heirloom temple-grade sculptures, mandapams, and luxury woodcrafts.
           </p>
           <div className="flex justify-center md:justify-start gap-4 text-[#000000]">
-            <a href="#instagram" onClick={(e) => { e.preventDefault(); setActiveTab('home'); }} className="hover:opacity-70 transition-opacity">
+            <Link to="/" className="hover:opacity-70 transition-opacity">
               <span className="material-symbols-outlined">photo_camera</span>
-            </a>
-            <a href="#contact" onClick={(e) => { e.preventDefault(); setActiveTab('contact'); }} className="hover:opacity-70 transition-opacity">
+            </Link>
+            <Link to="/contact" className="hover:opacity-70 transition-opacity">
               <span className="material-symbols-outlined">mail</span>
-            </a>
+            </Link>
             <a href="#share" onClick={(e) => { e.preventDefault(); alert("App URL copied to clipboard!"); }} className="hover:opacity-70 transition-opacity">
               <span className="material-symbols-outlined">share</span>
             </a>
@@ -50,29 +51,29 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab }) => {
           </h5>
           <ul className="space-y-3 font-body-md text-sm text-[#444748]">
             <li>
-              <button onClick={() => setActiveTab('shop')} className="hover:text-[#000000] transition-colors cursor-pointer">
+              <Link to="/shop" className="hover:text-[#000000] transition-colors cursor-pointer">
                 God Sculptures
-              </button>
+              </Link>
             </li>
             <li>
-              <button onClick={() => setActiveTab('shop')} className="hover:text-[#000000] transition-colors cursor-pointer">
+              <Link to="/shop" className="hover:text-[#000000] transition-colors cursor-pointer">
                 Wall Mounts & Panels
-              </button>
+              </Link>
             </li>
             <li>
-              <button onClick={() => setActiveTab('temple-projects')} className="hover:text-[#000000] transition-colors cursor-pointer">
+              <Link to="/pages/temple-projects" className="hover:text-[#000000] transition-colors cursor-pointer">
                 Temple Mandapams
-              </button>
+              </Link>
             </li>
             <li>
-              <button onClick={() => setActiveTab('about')} className="hover:text-[#000000] transition-colors cursor-pointer">
+              <Link to="/pages/about-us" className="hover:text-[#000000] transition-colors cursor-pointer">
                 Our Master Carvers
-              </button>
+              </Link>
             </li>
             <li>
-              <button onClick={() => setActiveTab('wholesale-export')} className="hover:text-[#000000] transition-colors cursor-pointer">
+              <Link to="/pages/wholesale-export" className="hover:text-[#000000] transition-colors cursor-pointer">
                 Wholesale & Export
-              </button>
+              </Link>
             </li>
           </ul>
         </div>
@@ -84,19 +85,19 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab }) => {
           </h5>
           <ul className="space-y-3 font-body-md text-sm text-[#444748]">
             <li>
-              <button onClick={() => setActiveTab('care-guide')} className="hover:text-[#000000] transition-colors cursor-pointer">
+              <Link to="/pages/care-guide" className="hover:text-[#000000] transition-colors cursor-pointer">
                 Timber Care & Preservation
-              </button>
+              </Link>
             </li>
             <li>
-              <button onClick={() => setActiveTab('track')} className="hover:text-[#853c4d] transition-colors cursor-pointer text-left font-bold text-[#853c4d] flex items-center gap-1">
+              <Link to="/track" className="hover:text-[#1c1b1b] transition-colors cursor-pointer text-left font-bold text-[#735c00] flex items-center gap-1">
                 <span>🚚 Track Order & AWBs</span>
-              </button>
+              </Link>
             </li>
             <li>
-              <button onClick={() => setActiveTab('shipping')} className="hover:text-[#000000] transition-colors cursor-pointer text-left">
+              <Link to="/pages/shipping-policy" className="hover:text-[#000000] transition-colors cursor-pointer text-left">
                 Shipping & White-Glove Transit
-              </button>
+              </Link>
             </li>
 
             <li>
@@ -147,12 +148,13 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab }) => {
       <div className="max-w-[1200px] mx-auto px-6 py-6 border-t border-[#c4c7c7]/40 flex flex-col md:flex-row justify-between items-center text-[11px] font-label-caps text-[#444748]/80 uppercase tracking-wider">
         <span>© 2026 Swarna Wooden Crafts. Crafting Divinity.</span>
         <div className="flex flex-wrap gap-4 md:gap-6 mt-3 md:mt-0 justify-center">
-          <button onClick={() => setActiveTab('privacy')} className="hover:text-[#000000] cursor-pointer">Privacy Policy</button>
-          <button onClick={() => setActiveTab('terms')} className="hover:text-[#000000] cursor-pointer">Terms of Service</button>
-          <button onClick={() => setActiveTab('refund')} className="hover:text-[#000000] cursor-pointer">Cancellation & Refund</button>
+          <Link to="/pages/privacy-policy" className="hover:text-[#000000] cursor-pointer">Privacy Policy</Link>
+          <Link to="/pages/terms-and-conditions" className="hover:text-[#000000] cursor-pointer">Terms of Service</Link>
+          <Link to="/pages/refund-policy" className="hover:text-[#000000] cursor-pointer">Cancellation & Refund</Link>
           <span className="hover:text-[#000000] cursor-pointer">Heritage Registry</span>
         </div>
       </div>
     </footer>
   );
 };
+

@@ -2,6 +2,7 @@ import React from 'react';
 import { HeroSettings, Product, ActiveTab } from '../types';
 import { formatPrice } from '../utils/currency';
 import { ArrowRight, Sparkles, ShoppingBag, ShieldCheck, Award } from 'lucide-react';
+import { AnimatedHeritageCollageHero } from './AnimatedHeritageCollageHero';
 
 interface HeroSectionProps {
   settings: HeroSettings;
@@ -241,7 +242,21 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
     );
   }
 
-  // 5. CLASSIC SPLIT HERO LAYOUT (DEFAULT)
+  // 5. ANIMATED HERITAGE COLLAGE HERO LAYOUT
+  if (settings.layout === 'animated_heritage_collage') {
+    return (
+      <AnimatedHeritageCollageHero
+        settings={settings}
+        products={products}
+        onSelectProduct={onSelectProduct}
+        onAddToCart={onAddToCart}
+        setActiveTab={setActiveTab}
+        onOpenBespoke={onOpenBespoke}
+      />
+    );
+  }
+
+  // 6. CLASSIC SPLIT HERO LAYOUT (DEFAULT)
   return (
     <section className={`relative overflow-hidden px-4 md:px-8 py-8 md:py-16 ${themeClass}`}>
       <div className="max-w-[1200px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">

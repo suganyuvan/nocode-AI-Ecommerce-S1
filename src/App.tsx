@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter, Routes, Route, useSearchParams } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useSearchParams, useNavigate, useLocation, useParams, Navigate } from 'react-router-dom';
 import { AdminApp } from './admin/AdminApp';
 import { Product, CartItem, Currency, ActiveTab, BespokeInquiry, PageContent, StoreSettings, Customer } from './types';
 import { supabase } from './utils/supabaseClient';
@@ -14,7 +14,6 @@ import { CustomerAuthModal } from './components/CustomerAuthModal';
 import { WhatsAppButton } from './components/WhatsAppButton';
 import { TrackOrderModal } from './components/TrackOrderModal';
 import { SeoHead } from './components/SeoHead';
-
 
 import { HomeView } from './views/HomeView';
 import { ShopView } from './views/ShopView';
@@ -31,18 +30,92 @@ import { RefundView } from './views/RefundView';
 import { ShippingView } from './views/ShippingView';
 import { ContactView } from './views/ContactView';
 import { TrackOrderView } from './views/TrackOrderView';
+import { DynamicPageView } from './views/DynamicPageView';
 import { trackPageViewEvent, trackCartAdd } from './utils/pageViewAnalyticsEngine';
 import { sendContactInquiryEmail, sendWelcomeDiscountEmail } from './utils/resendEmailEngine';
 import { dispatchWebhookEvent } from './utils/webhookDispatcher';
 
+const TAB_TO_PATH: Record<string, string> = {
+  home: '/',
+  shop: '/shop',
+  'product-detail': '/shop',
+  'temple-projects': '/pages/temple-projects',
+  about: '/pages/about-us',
+  'wholesale-export': '/pages/wholesale-export',
+  'care-guide': '/pages/care-guide',
+  checkout: '/checkout',
+  account: '/account',
+  terms: '/pages/terms-and-conditions',
+  privacy: '/pages/privacy-policy',
+  refund: '/pages/refund-policy',
+  shipping: '/pages/shipping-policy',
+  contact: '/contact',
+  track: '/track',
+};
+
+function ProductDetailRouteWrapper({
+  products,
+  onAddToCart,
+  onToggleWishlist,
+  wishlistIds,
+  currency,
+  setActiveTab
+}: {
+  products: Product[];
+  onAddToCart: (product: Product, timber?: string) => void;
+  onToggleWishlist: (product: Product) => void;
+  wishlistIds: string[];
+  currency: Currency;
+  setActiveTab: (tab: ActiveTab) => void;
+}) {
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const product = products.find((p) => p.id === id) || products[0];
+
+  if (!product) {
+    return (
+      <div className="max-w-[800px] mx-auto py-20 text-center space-y-4">
+        <h2 className="font-display-lg text-2xl font-bold">Sculpture Masterpiece Not Found</h2>
+        <button
+          onClick={() => navigate('/shop')}
+          className="bg-[#1c1b1b] text-white px-6 py-2.5 text-xs font-label-caps uppercase tracking-widest font-bold"
+        >
+          Return to Shop Collection
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <ProductDetailView
+      product={product}
+      onAddToCart={onAddToCart}
+      onToggleWishlist={onToggleWishlist}
+      isWishlisted={wishlistIds.includes(product.id)}
+      currency={currency}
+      setActiveTab={setActiveTab}
+    />
+  );
+}
+
 export function Storefront() {
   const [searchParams] = useSearchParams();
-  const [activeTab, setActiveTab] = useState<ActiveTab>('home');
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const [activeTab, setActiveTabState] = useState<ActiveTab>('home');
   const [products, setProducts] = useState<Product[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [pageContent, setPageContent] = useState<PageContent[]>([]);
   const [storeSettings, setStoreSettings] = useState<StoreSettings | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  const setActiveTab = (tab: ActiveTab) => {
+    setActiveTabState(tab);
+    if (TAB_TO_PATH[tab]) {
+      navigate(TAB_TO_PATH[tab]);
+    }
+  };
 
   // Customer Account & Auth States
   const [customer, setCustomer] = useState<Customer | null>(() => {
@@ -63,7 +136,6 @@ export function Storefront() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authModalMode, setAuthModalMode] = useState<'promo' | 'login'>('login');
   const [isTrackModalOpen, setIsTrackModalOpen] = useState(false);
-
 
   // Trigger Welcome Promo / OTP signup on first visit if not logged in
   useEffect(() => {
@@ -208,31 +280,26 @@ export function Storefront() {
     fetchData();
   }, []);
 
-  // Listen to URL search parameters (?tab=... and ?id=...) for deep linking and search indexing
+  // Backwards compatibility redirect for legacy URL search parameters (?tab=... and ?id=...)
   useEffect(() => {
     const tabParam = searchParams.get('tab') as ActiveTab | null;
     const idParam = searchParams.get('id');
 
-    if (tabParam) {
-      setActiveTab(tabParam);
+    if (tabParam === 'product-detail' && idParam) {
+      navigate(`/product/${idParam}`, { replace: true });
+    } else if (tabParam && TAB_TO_PATH[tabParam]) {
+      navigate(TAB_TO_PATH[tabParam], { replace: true });
     }
-    if (idParam && products.length > 0) {
-      const match = products.find((p) => p.id === idParam);
-      if (match) {
-        setSelectedProduct(match);
-      }
-    }
-  }, [searchParams, products]);
+  }, [searchParams, navigate]);
 
   useEffect(() => {
-    trackPageViewEvent(activeTab);
-  }, [activeTab]);
+    trackPageViewEvent(location.pathname);
+  }, [location.pathname]);
 
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [wishlistIds, setWishlistIds] = useState<string[]>(['ganesha-sculpture-01']);
   const [currency, setCurrency] = useState<Currency>('INR');
   const [inquiries, setInquiries] = useState<BespokeInquiry[]>([]);
-  const [invoiceData, setInvoiceData] = useState<any>(null);
 
   // Modals & Drawers
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -269,7 +336,6 @@ export function Storefront() {
         })
         .filter(Boolean) as CartItem[];
 
-      // If no regular products remain, clear any free gifts too
       const hasRegularItems = updated.some((item) => !item.isGift);
       if (!hasRegularItems) {
         return [];
@@ -281,7 +347,6 @@ export function Storefront() {
   const handleRemoveCartItem = (productId: string) => {
     setCartItems((prev) => {
       const updated = prev.filter((item) => item.product.id !== productId);
-      // If no regular products remain, clear any free gifts too
       const hasRegularItems = updated.some((item) => !item.isGift);
       if (!hasRegularItems) {
         return [];
@@ -302,7 +367,8 @@ export function Storefront() {
   // Select product for detail view
   const handleSelectProduct = (product: Product) => {
     setSelectedProduct(product);
-    setActiveTab('product-detail');
+    setActiveTabState('product-detail');
+    navigate(`/product/${product.id}`);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -310,7 +376,6 @@ export function Storefront() {
   const handleBespokeInquirySubmit = (inquiry: BespokeInquiry) => {
     setInquiries((prev) => [inquiry, ...prev]);
 
-    // Send confirmation to customer and notification to admin via Resend
     sendContactInquiryEmail({
       name: inquiry.customerName,
       email: inquiry.customerEmail,
@@ -366,111 +431,107 @@ export function Storefront() {
         onOpenTrackOrder={() => setIsTrackModalOpen(true)}
       />
 
-
-      {/* Main Screen Views */}
+      {/* Main Screen Views with React Router */}
       <main className="flex-1 pb-20 md:pb-0">
-        {activeTab === 'home' && (
-          <HomeView
-            setActiveTab={setActiveTab}
-            onSelectProduct={handleSelectProduct}
-            onAddToCart={handleAddToCart}
-            currency={currency}
-            products={products}
-            pageContent={pageContent}
+        <Routes>
+          <Route
+            path="/"
+            element={
+              <HomeView
+                setActiveTab={setActiveTab}
+                onSelectProduct={handleSelectProduct}
+                onAddToCart={handleAddToCart}
+                currency={currency}
+                products={products}
+                pageContent={pageContent}
+              />
+            }
           />
-        )}
-
-        {activeTab === 'shop' && (
-          <ShopView
-            products={products}
-            onSelectProduct={handleSelectProduct}
-            onAddToCart={handleAddToCart}
-            onToggleWishlist={handleToggleWishlist}
-            wishlistIds={wishlistIds}
-            currency={currency}
+          <Route
+            path="/shop"
+            element={
+              <ShopView
+                products={products}
+                onSelectProduct={handleSelectProduct}
+                onAddToCart={handleAddToCart}
+                onToggleWishlist={handleToggleWishlist}
+                wishlistIds={wishlistIds}
+                currency={currency}
+              />
+            }
           />
-        )}
-
-        {activeTab === 'product-detail' && selectedProduct && (
-          <ProductDetailView
-            product={selectedProduct}
-            onAddToCart={handleAddToCart}
-            onToggleWishlist={handleToggleWishlist}
-            isWishlisted={wishlistIds.includes(selectedProduct.id)}
-            currency={currency}
-            setActiveTab={setActiveTab}
+          <Route path="/collections" element={<Navigate to="/shop" replace />} />
+          <Route
+            path="/product/:id"
+            element={
+              <ProductDetailRouteWrapper
+                products={products}
+                onAddToCart={handleAddToCart}
+                onToggleWishlist={handleToggleWishlist}
+                wishlistIds={wishlistIds}
+                currency={currency}
+                setActiveTab={setActiveTab}
+              />
+            }
           />
-        )}
-
-        {activeTab === 'temple-projects' && (
-          <TempleProjectsView
-            setActiveTab={setActiveTab}
+          <Route path="/about" element={<Navigate to="/pages/about-us" replace />} />
+          <Route path="/contact" element={<ContactView />} />
+          <Route path="/track" element={<TrackOrderView />} />
+          <Route
+            path="/account"
+            element={
+              <MyAccountView
+                customer={customer}
+                currency={currency}
+                cartItems={cartItems}
+                wishlist={wishlistProducts}
+                products={products}
+                setActiveTab={setActiveTab}
+                onOpenAuthModal={() => {
+                  setAuthModalMode('login');
+                  setIsAuthModalOpen(true);
+                }}
+                onLoginSuccess={(c) => setCustomer(c)}
+                onLogout={async () => {
+                  localStorage.removeItem('irisjev_customer_user');
+                  sessionStorage.removeItem('irisjev_saved_delivery_info');
+                  localStorage.removeItem('irisjev_saved_delivery_info');
+                  try {
+                    await supabase.auth.signOut();
+                  } catch (e) {}
+                  setCustomer(null);
+                  navigate('/');
+                }}
+              />
+            }
           />
-        )}
-
-        {activeTab === 'about' && (
-          <AboutView
-            setActiveTab={setActiveTab}
+          <Route
+            path="/checkout"
+            element={
+              <CheckoutView
+                cartItems={cartItems}
+                currency={currency}
+                customer={customer}
+                onClearCart={() => setCartItems([])}
+                setActiveTab={setActiveTab}
+                onUpdateQuantity={handleUpdateCartQuantity}
+                onRemoveItem={handleRemoveCartItem}
+              />
+            }
           />
-        )}
-
-        {activeTab === 'wholesale-export' && <WholesaleExportView />}
-
-        {activeTab === 'care-guide' && <CareGuideView />}
-
-        {activeTab === 'account' && (
-          <MyAccountView
-            customer={customer}
-            currency={currency}
-            cartItems={cartItems}
-            wishlist={wishlistProducts}
-            products={products}
-            setActiveTab={setActiveTab}
-            onOpenAuthModal={() => {
-              setAuthModalMode('login');
-              setIsAuthModalOpen(true);
-            }}
-            onLoginSuccess={(c) => {
-              setCustomer(c);
-            }}
-            onLogout={async () => {
-              localStorage.removeItem('irisjev_customer_user');
-              sessionStorage.removeItem('irisjev_saved_delivery_info');
-              localStorage.removeItem('irisjev_saved_delivery_info');
-              try {
-                await supabase.auth.signOut();
-              } catch (e) {}
-              setCustomer(null);
-              setActiveTab('home');
-            }}
+          <Route
+            path="/pages/:slug"
+            element={<DynamicPageView onOpenBespoke={() => setIsBespokeOpen(true)} />}
           />
-        )}
-
-        {activeTab === 'checkout' && (
-          <CheckoutView 
-            cartItems={cartItems}
-            currency={currency}
-            customer={customer}
-            onClearCart={() => setCartItems([])}
-            setActiveTab={setActiveTab}
-            onUpdateQuantity={handleUpdateCartQuantity}
-            onRemoveItem={handleRemoveCartItem}
+          <Route
+            path="*"
+            element={<DynamicPageView onOpenBespoke={() => setIsBespokeOpen(true)} />}
           />
-        )}
-
-        {activeTab === 'terms' && <TermsView />}
-        {activeTab === 'privacy' && <PrivacyView />}
-        {activeTab === 'refund' && <RefundView />}
-        {activeTab === 'shipping' && <ShippingView />}
-        {activeTab === 'contact' && <ContactView />}
-        {activeTab === 'track' && <TrackOrderView />}
+        </Routes>
       </main>
 
-
       {/* Footer */}
-      <Footer
-        setActiveTab={setActiveTab}
-      />
+      <Footer setActiveTab={setActiveTab} />
 
       {/* Mobile Fixed Bottom Bar */}
       <MobileBottomNav
@@ -508,7 +569,7 @@ export function Storefront() {
         onAddToCart={handleAddToCart}
         onCheckout={() => {
           setIsCartOpen(false);
-          setActiveTab('checkout');
+          navigate('/checkout');
           window.scrollTo({ top: 0, behavior: 'smooth' });
         }}
       />
@@ -535,9 +596,9 @@ export function Storefront() {
         onLoginSuccess={(c) => {
           setCustomer(c);
         }}
-        onTrackOrder={(query) => {
+        onTrackOrder={() => {
           setIsAuthModalOpen(false);
-          setActiveTab('track');
+          navigate('/track');
         }}
       />
       <TrackOrderModal
@@ -545,7 +606,6 @@ export function Storefront() {
         onClose={() => setIsTrackModalOpen(false)}
       />
       <WhatsAppButton />
-
     </div>
   );
 }
