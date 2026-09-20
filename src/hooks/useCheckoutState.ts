@@ -20,6 +20,7 @@ import { validateCoupon, recordCouponUsage } from '../utils/couponEngine';
 import { getSavedAddressList, saveAddressToBook } from '../utils/addressBookManager';
 import { dispatchWebhookEvent } from '../utils/webhookDispatcher';
 import { sendOrderConfirmationEmail } from '../utils/resendEmailEngine';
+import { sendOrderConfirmationWhatsApp } from '../utils/whatsappCloudApiEngine';
 import { trackCheckoutStart } from '../utils/pageViewAnalyticsEngine';
 
 export interface UseCheckoutStateProps {
@@ -864,6 +865,18 @@ export const useCheckoutState = ({ cartItems, currency, onClearCart, setActiveTa
         shippingAddress: formattedAddressStr,
       }).catch(err => console.warn('Resend email trigger notice:', err));
 
+      // Send luxury WhatsApp order confirmation via Meta WhatsApp Cloud API
+      if (customerPhone) {
+        sendOrderConfirmationWhatsApp({
+          recipientPhone: customerPhone,
+          recipientName: customerName,
+          orderNumber,
+          totalAmount: finalTotalINR,
+          currency,
+          itemsCount: cartItems.length,
+        }).catch(err => console.warn('WhatsApp Cloud API trigger notice:', err));
+      }
+
       // 5. If COD, complete order directly without Razorpay
       if (paymentMethod === 'cod') {
         await supabase
@@ -963,6 +976,38 @@ export const useCheckoutState = ({ cartItems, currency, onClearCart, setActiveTa
 
             // Clear Cart
             onClearCart();
+
+            // Send payment confirmation email via Resend Engine
+            sendOrderConfirmationEmail({
+              orderNumber,
+              customerName,
+              customerEmail,
+              customerPhone,
+              items: cartItems.map(i => ({
+                name: i.isGift ? `${i.product.name} (Free Gift)` : i.product.name,
+                quantity: i.quantity,
+                selectedTimber: i.selectedTimber,
+                unitPrice: i.isGift ? 0 : i.product.priceINR
+              })),
+              totalAmount: finalTotalINR,
+              subtotal: rawTotalINR,
+              discountAmount: totalDiscountINR,
+              shippingCharge: baseShippingCharge,
+              paymentMethod: `Prepaid (Razorpay Paid: ${response.razorpay_payment_id})`,
+              shippingAddress: formattedAddressStr,
+            }).catch(err => console.warn('Payment confirmed email trigger notice:', err));
+
+            // Send payment confirmation WhatsApp alert via Meta Cloud API Engine
+            if (customerPhone) {
+              sendOrderConfirmationWhatsApp({
+                recipientPhone: customerPhone,
+                recipientName: customerName,
+                orderNumber,
+                totalAmount: finalTotalINR,
+                currency,
+                itemsCount: cartItems.length,
+              }).catch(err => console.warn('Payment confirmed WhatsApp trigger notice:', err));
+            }
 
             // Dispatch order.paid webhook event
             dispatchWebhookEvent('order.paid', {

@@ -23,7 +23,7 @@ export const PrivacyView: React.FC = () => {
           <p>We only share information with your consent, to comply with laws, to provide you with services, to protect your rights, or to fulfill business obligations.</p>
 
           <h2 className="text-xl font-serif mt-8 mb-4">4. Contact Us</h2>
-          <p>If you have questions or comments about this policy, you may email us at support@swarnawoodencrafts.com or by post to:</p>
+          <p>If you have questions or comments about this policy, you may email us at support@irisjev.com or by post to:</p>
           <p>
             Swarna Wooden Crafts<br/>
             24, Temple Street, Chennai, Tamil Nadu – 600024

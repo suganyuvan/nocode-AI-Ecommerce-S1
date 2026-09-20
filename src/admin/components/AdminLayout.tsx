@@ -20,7 +20,8 @@ import {
   TrendingUp,
   LifeBuoy,
   Webhook,
-  Globe
+  Globe,
+  MessageSquare
 } from 'lucide-react';
 
 import { adminSupabase } from '../../utils/supabaseClient';
@@ -37,6 +38,7 @@ export function AdminLayout() {
 
   const navItems = [
     { name: 'Dashboard', path: '/admin', icon: LayoutDashboard },
+    { name: 'WhatsApp Business API', path: '/admin/whatsapp', icon: MessageSquare, badge: 'META' },
     { name: 'SEO & GEO Center', path: '/admin/seo', icon: Globe, badge: 'SEO' },
     { name: 'Email Notifications', path: '/admin/emails', icon: Mail, badge: 'RESEND' },
     { name: 'Outgoing Webhooks', path: '/admin/webhooks', icon: Webhook, badge: 'API' },

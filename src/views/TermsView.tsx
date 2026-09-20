@@ -17,10 +17,10 @@ export const TermsView: React.FC = () => {
           <h2 className="text-xl font-serif mt-8 mb-4">1. About Swarna Wooden Crafts</h2>
           <p>Swarna Wooden Crafts is an online store offering physical products to customers in India.</p>
           <ul className="list-disc pl-6 mb-6">
-            <li><strong>Legal/Business Name:</strong> Swarna Wooden Crafts Retail Ventures</li>
+            <li><strong>Legal/Business Name:</strong> Irisjev Swarna Wooden Crafts</li>
             <li><strong>Registered/Business Address:</strong> 24, Temple Street, Chennai, Tamil Nadu – 600024</li>
-            <li><strong>Email:</strong> support@swarnawoodencrafts.com</li>
-            <li><strong>Phone:</strong> +91 90000 12345</li>
+            <li><strong>Email:</strong> support@irisjev.com</li>
+            <li><strong>Phone / WhatsApp:</strong> +91 86084 49937</li>
             <li><strong>GSTIN:</strong> 33MOCKSwarna Wooden Crafts1234Z1</li>
           </ul>
 
@@ -72,8 +72,8 @@ export const TermsView: React.FC = () => {
           <h2 className="text-xl font-serif mt-8 mb-4">17. Contact</h2>
           <p>For questions regarding these Terms & Conditions:</p>
           <ul className="list-disc pl-6">
-            <li><strong>Email:</strong> support@swarnawoodencrafts.com</li>
-            <li><strong>Phone:</strong> +91 90000 12345</li>
+            <li><strong>Email:</strong> support@irisjev.com</li>
+            <li><strong>Phone / WhatsApp:</strong> +91 86084 49937</li>
             <li><strong>Address:</strong> 24, Temple Street, Chennai, Tamil Nadu – 600024</li>
           </ul>
         </div>

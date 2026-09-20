@@ -97,8 +97,8 @@ export const ContactView: React.FC = () => {
               <Mail className="w-4 h-4 text-[#fed65b] mt-0.5 shrink-0" />
               <div>
                 <strong className="block text-[11px] font-label-caps uppercase text-[#747878] tracking-widest">Email Concierge</strong>
-                <a href="mailto:support@swarnawoodencrafts.com" className="text-white hover:text-[#fed65b] transition-colors">
-                  support@swarnawoodencrafts.com
+                <a href="mailto:support@irisjev.com" className="text-white hover:text-[#fed65b] transition-colors">
+                  support@irisjev.com
                 </a>
               </div>
             </div>
@@ -107,7 +107,9 @@ export const ContactView: React.FC = () => {
               <Phone className="w-4 h-4 text-[#fed65b] mt-0.5 shrink-0" />
               <div>
                 <strong className="block text-[11px] font-label-caps uppercase text-[#747878] tracking-widest">Phone / WhatsApp</strong>
-                <span className="text-white">+91 90000 12345</span>
+                <a href="https://wa.me/918608449937" target="_blank" rel="noopener noreferrer" className="text-white hover:text-[#fed65b] transition-colors font-bold">
+                  +91 86084 49937
+                </a>
               </div>
             </div>
 

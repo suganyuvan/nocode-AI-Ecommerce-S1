@@ -338,7 +338,7 @@ export function TrackOrderView() {
 
               <div className="flex items-center gap-2 shrink-0">
                 <a
-                  href="https://wa.me/918610554711"
+                  href="https://wa.me/918608449937?text=Hello!%20I%20have%20a%20question%20about%20my%20delivery"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="bg-[#25d366] text-white font-bold px-4 py-2.5 rounded-xl text-xs flex items-center gap-1.5 hover:bg-[#20bd5a] transition-all cursor-pointer shadow-xs"
@@ -348,7 +348,7 @@ export function TrackOrderView() {
                 </a>
 
                 <a
-                  href="mailto:support@swarnawoodencrafts.com"
+                  href="mailto:support@irisjev.com?subject=Delivery%20Inquiry"
                   className="bg-[#313030] hover:bg-[#444748] text-white font-bold px-4 py-2.5 rounded-xl text-xs flex items-center gap-1.5 transition-all cursor-pointer border border-[#735c00]/40"
                 >
                   <Mail className="w-4 h-4 text-white" />

@@ -26,7 +26,7 @@ export const RefundView: React.FC = () => {
           <p>You will be responsible for paying for your own shipping costs for returning your item unless the item arrived damaged or defective.</p>
 
           <h2 className="text-xl font-serif mt-8 mb-4">5. Contact Us</h2>
-          <p>If you have any questions on how to return your item to us, contact us at support@swarnawoodencrafts.com.</p>
+          <p>If you have any questions on how to return your item to us, contact us at support@irisjev.com.</p>
         </div>
       </div>
     </div>

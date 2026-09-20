@@ -2,8 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../utils/supabaseClient';
 import { sendWelcomeDiscountEmail } from '../utils/resendEmailEngine';
 import { dispatchWebhookEvent } from '../utils/webhookDispatcher';
+import { Customer } from '../types';
 
-export const PromoPopup: React.FC = () => {
+interface PromoPopupProps {
+  customer?: Customer | null;
+}
+
+export const PromoPopup: React.FC<PromoPopupProps> = ({ customer }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -12,24 +17,22 @@ export const PromoPopup: React.FC = () => {
   const [isSubmitted, setIsSubmitted] = useState(false);
 
   useEffect(() => {
-    // Clear the local storage flag on reload so it shows again
-    localStorage.removeItem('irisjev_promo_seen');
-
-    // Check if the user has already seen or submitted the popup
-    const hasSeenPopup = localStorage.getItem('irisjev_promo_seen');
-
-    if (!hasSeenPopup) {
-      const timer = setTimeout(() => {
-        setIsOpen(true);
-      }, 1000); // Show after 4 seconds
-
-      return () => clearTimeout(timer);
+    // If a customer is logged in, do not show the promo popup
+    if (customer) {
+      setIsOpen(false);
+      return;
     }
-  }, []);
+
+    // Whenever opening the website without login data, show the promo popup after 1 second
+    const timer = setTimeout(() => {
+      setIsOpen(true);
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [customer]);
 
   const handleClose = () => {
     setIsOpen(false);
-    localStorage.setItem('irisjev_promo_seen', 'true');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

@@ -354,7 +354,7 @@ export const TrackOrderModal: React.FC<TrackOrderModalProps> = ({ isOpen, onClos
 
                 <div className="flex items-center gap-2 shrink-0">
                   <a
-                    href="https://wa.me/918610554711"
+                    href="https://wa.me/918608449937?text=Hello!%20I%20have%20a%20question%20about%20my%20delivery"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="bg-white text-[#0f1513] font-extrabold px-4 py-2.5 rounded-xl text-xs flex items-center gap-1.5 hover:bg-gray-100 transition-all cursor-pointer shadow-xs"
@@ -364,7 +364,7 @@ export const TrackOrderModal: React.FC<TrackOrderModalProps> = ({ isOpen, onClos
                   </a>
 
                   <a
-                    href="mailto:support@irisjev.com"
+                    href="mailto:support@irisjev.com?subject=Delivery%20Inquiry"
                     className="bg-[#7a3443] hover:bg-[#632936] text-white font-extrabold px-4 py-2.5 rounded-xl text-xs flex items-center gap-1.5 transition-all cursor-pointer border border-white/20"
                   >
                     <Mail className="w-4 h-4 text-white" />

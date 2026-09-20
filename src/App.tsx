@@ -33,6 +33,7 @@ import { TrackOrderView } from './views/TrackOrderView';
 import { DynamicPageView } from './views/DynamicPageView';
 import { trackPageViewEvent, trackCartAdd } from './utils/pageViewAnalyticsEngine';
 import { sendContactInquiryEmail, sendWelcomeDiscountEmail } from './utils/resendEmailEngine';
+import { sendBespokeInquiryWhatsApp } from './utils/whatsappCloudApiEngine';
 import { dispatchWebhookEvent } from './utils/webhookDispatcher';
 
 const TAB_TO_PATH: Record<string, string> = {
@@ -137,14 +138,13 @@ export function Storefront() {
   const [authModalMode, setAuthModalMode] = useState<'promo' | 'login'>('login');
   const [isTrackModalOpen, setIsTrackModalOpen] = useState(false);
 
-  // Trigger Welcome Promo / OTP signup on first visit if not logged in
+  // Trigger Welcome 10% OFF Promo Register Modal whenever visiting without login data
   useEffect(() => {
-    const hasSeen = localStorage.getItem('irisjev_promo_seen');
-    if (!hasSeen && !customer) {
+    if (!customer) {
       const timer = setTimeout(() => {
         setAuthModalMode('promo');
         setIsAuthModalOpen(true);
-      }, 1500);
+      }, 1200);
       return () => clearTimeout(timer);
     }
   }, [customer]);
@@ -384,6 +384,14 @@ export function Storefront() {
       inquiryType: 'Bespoke Custom Wood Commission'
     }).catch(err => console.warn('Bespoke email inquiry notice:', err));
 
+    if (inquiry.customerPhone) {
+      sendBespokeInquiryWhatsApp({
+        recipientPhone: inquiry.customerPhone,
+        recipientName: inquiry.customerName,
+        inquiryDetails: inquiry.details,
+      }).catch(err => console.warn('Bespoke WhatsApp notice:', err));
+    }
+
     dispatchWebhookEvent('lead.created', {
       name: inquiry.customerName,
       email: inquiry.customerEmail,
@@ -496,6 +504,7 @@ export function Storefront() {
                   localStorage.removeItem('irisjev_customer_user');
                   sessionStorage.removeItem('irisjev_saved_delivery_info');
                   localStorage.removeItem('irisjev_saved_delivery_info');
+                  localStorage.removeItem('irisjev_promo_seen');
                   try {
                     await supabase.auth.signOut();
                   } catch (e) {}
