@@ -297,9 +297,25 @@ export function Storefront() {
   }, [location.pathname]);
 
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
-  const [wishlistIds, setWishlistIds] = useState<string[]>(['ganesha-sculpture-01']);
+  const [wishlistIds, setWishlistIds] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem('swarna_wishlist_ids_v2');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
   const [currency, setCurrency] = useState<Currency>('INR');
   const [inquiries, setInquiries] = useState<BespokeInquiry[]>([]);
+
+  // Sync wishlistIds to localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem('swarna_wishlist_ids_v2', JSON.stringify(wishlistIds));
+    } catch (e) {
+      console.warn('Failed to persist wishlist:', e);
+    }
+  }, [wishlistIds]);
 
   // Modals & Drawers
   const [isSearchOpen, setIsSearchOpen] = useState(false);

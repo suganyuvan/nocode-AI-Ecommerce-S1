@@ -3,7 +3,7 @@ import { supabase } from './supabaseClient';
 export const WHATSAPP_CONFIG = {
   phoneNumberId: import.meta.env.VITE_WHATSAPP_PHONE_NUMBER_ID || '1442648035597125',
   businessAccountId: import.meta.env.VITE_WHATSAPP_BUSINESS_ACCOUNT_ID || '831276670043386',
-  accessToken: import.meta.env.VITE_WHATSAPP_ACCESS_TOKEN || 'EAGVuKyv1to0BStGGnU5WCf7LiANF2wHQrdsnGGgEzT4pUkwDYY9cK5ST2jrZC98ZCVmmfMaz4buvTtKwDZCeLycfZAorZAl6fxZBECZCFwQgD5eiuZBk5abmsj24gnT9wPOaNPqV3xmOf968nYUAQmlZBdEOAVyKJbrhV2pypcqYiV8FjZAPxPfmGLnDnBgbzUuh3Ai1AqZBOr39hSNejwo4JEFxA1gzqHP2BhjyIzU',
+  accessToken: import.meta.env.VITE_WHATSAPP_ACCESS_TOKEN || '',
   graphApiVersion: 'v21.0',
 };
 
@@ -40,6 +40,15 @@ export async function sendWhatsAppApiPayload(
   const phoneId = customPhoneId || WHATSAPP_CONFIG.phoneNumberId;
   const token = customToken || WHATSAPP_CONFIG.accessToken;
   const url = `https://graph.facebook.com/${WHATSAPP_CONFIG.graphApiVersion}/${phoneId}/messages`;
+
+  if (!token) {
+    console.error('Meta WhatsApp Cloud API Error: Missing Access Token (VITE_WHATSAPP_ACCESS_TOKEN)');
+    return {
+      success: false,
+      recipientPhone: payload.to,
+      error: 'Missing Meta WhatsApp Access Token. Please configure VITE_WHATSAPP_ACCESS_TOKEN in your environment.',
+    };
+  }
 
   try {
     const response = await fetch(url, {
@@ -101,6 +110,8 @@ export async function sendWhatsAppApiPayload(
   }
 }
 
+export const BUSINESS_PHONE_NUMBER = '918608449937';
+
 /**
  * Send custom text message via Meta WhatsApp Cloud API
  */
@@ -111,19 +122,31 @@ export async function sendWhatsAppTextMessage(params: {
 }): Promise<WhatsAppSendResult> {
   const formattedPhone = cleanPhoneNumber(params.to);
   if (!formattedPhone) {
-    return { success: false, error: 'Invalid phone number' };
+    return { success: false, error: 'Invalid recipient phone number' };
   }
 
-  const payload = {
+  // Prevent sending API messages to business's own WABA phone number
+  if (formattedPhone === BUSINESS_PHONE_NUMBER) {
+    return {
+      success: false,
+      recipientPhone: formattedPhone,
+      error: 'Cannot send WhatsApp Cloud API message to the business sender number itself (+91 8608449937). Please select a customer phone number.',
+    };
+  }
+
+  const payload: any = {
     messaging_product: 'whatsapp',
     recipient_type: 'individual',
     to: formattedPhone,
     type: 'text',
     text: {
-      preview_url: !!params.previewUrl,
       body: params.body,
     },
   };
+
+  if (params.previewUrl) {
+    payload.text.preview_url = true;
+  }
 
   return sendWhatsAppApiPayload(payload);
 }

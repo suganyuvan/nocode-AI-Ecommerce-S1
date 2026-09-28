@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../../utils/supabaseClient';
 import {
   WHATSAPP_CONFIG,
+  BUSINESS_PHONE_NUMBER,
   sendWhatsAppTextMessage,
   sendWhatsAppTemplateMessage,
   sendOrderConfirmationWhatsApp,
@@ -161,17 +162,170 @@ const APPROVED_TEMPLATES: WhatsAppTemplate[] = [
   },
 ];
 
+export interface WhatsAppErrorDetails {
+  isError: boolean;
+  code?: number;
+  message: string;
+  is24hWindowError: boolean;
+}
+
+export function parseWhatsAppErrorDetails(log: any): WhatsAppErrorDetails {
+  if (!log) return { isError: false, message: '', is24hWindowError: false };
+
+  let errorRaw = log.error_details;
+  if (!errorRaw && log.status === 'failed' && log.payload?.errors) {
+    errorRaw = log.payload.errors;
+  }
+  if (!errorRaw && typeof log.payload === 'string') {
+    errorRaw = log.payload;
+  }
+  if (!errorRaw && log.payload?.error) {
+    errorRaw = log.payload.error;
+  }
+
+  if (!errorRaw) {
+    return { isError: false, message: '', is24hWindowError: false };
+  }
+
+  let parsed: any = null;
+  if (typeof errorRaw === 'object') {
+    parsed = errorRaw;
+  } else if (typeof errorRaw === 'string') {
+    try {
+      parsed = JSON.parse(errorRaw);
+    } catch (e) {
+      parsed = errorRaw;
+    }
+  }
+
+  // Handle array e.g. [{"code":131047,"title":"Re-engagement message", ...}]
+  if (Array.isArray(parsed) && parsed.length > 0) {
+    const err = parsed[0];
+    const code = err.code;
+    const details = err.error_data?.details || err.message || err.title || 'WhatsApp Cloud API Delivery Failure';
+    const is24h = code === 131047 || String(details).toLowerCase().includes('24 hours') || String(details).toLowerCase().includes('re-engagement');
+
+    if (is24h) {
+      return {
+        isError: true,
+        code: 131047,
+        message: '⚠️ 24-Hour Customer Window Expired: Over 24 hours have passed since customer last replied to this number. Free-form text messages are blocked by Meta. Send an approved Meta WhatsApp Template to re-engage.',
+        is24hWindowError: true,
+      };
+    }
+
+    return {
+      isError: true,
+      code,
+      message: `⚠️ Meta API Error ${code ? `(#${code})` : ''}: ${details}`,
+      is24hWindowError: false,
+    };
+  }
+
+  // Handle object e.g. { code: 131047, message: "..." }
+  if (parsed && typeof parsed === 'object') {
+    const code = parsed.code || parsed.error?.code;
+    const details = parsed.error_data?.details || parsed.message || parsed.error?.message || (typeof parsed === 'string' ? parsed : JSON.stringify(parsed));
+    const is24h = code === 131047 || String(details).toLowerCase().includes('24 hours') || String(details).toLowerCase().includes('re-engagement');
+
+    if (is24h) {
+      return {
+        isError: true,
+        code: 131047,
+        message: '⚠️ 24-Hour Customer Window Expired: Over 24 hours have passed since customer last replied to this number. Free-form text messages are blocked by Meta. Send an approved Meta WhatsApp Template to re-engage.',
+        is24hWindowError: true,
+      };
+    }
+
+    return {
+      isError: true,
+      code,
+      message: `⚠️ Meta API Error ${code ? `(#${code})` : ''}: ${details}`,
+      is24hWindowError: false,
+    };
+  }
+
+  // Handle plain string
+  const str = String(parsed);
+  const is24h = str.includes('131047') || str.toLowerCase().includes('24 hours') || str.toLowerCase().includes('re-engagement');
+  if (is24h) {
+    return {
+      isError: true,
+      code: 131047,
+      message: '⚠️ 24-Hour Customer Window Expired: Over 24 hours have passed since customer last replied to this number. Free-form text messages are blocked by Meta. Send an approved Meta WhatsApp Template to re-engage.',
+      is24hWindowError: true,
+    };
+  }
+
+  return {
+    isError: true,
+    message: `⚠️ ${str}`,
+    is24hWindowError: false,
+  };
+}
+
+export function extractLogMessageText(log: any): string {
+  if (!log) return '';
+
+  // Check if log represents a failed message or contains error_details
+  if (log.status === 'failed' || log.error_details) {
+    const errInfo = parseWhatsAppErrorDetails(log);
+    if (errInfo.isError && errInfo.message) {
+      return errInfo.message;
+    }
+  }
+
+  const payload = log.payload;
+
+  if (typeof payload?.text === 'string') return payload.text;
+  if (typeof payload?.text?.body === 'string') return payload.text.body;
+  if (typeof payload?.raw?.text?.body === 'string') return payload.raw.text.body;
+  if (typeof payload?.body === 'string') return payload.body;
+  if (typeof payload?.text === 'object' && payload?.text?.body) return String(payload.text.body);
+
+  if (payload?.template?.name) {
+    return `[Template Sent: ${payload.template.name}]`;
+  }
+
+  if (typeof log.error_details === 'string' && log.error_details) {
+    const errInfo = parseWhatsAppErrorDetails(log);
+    return errInfo.message || log.error_details;
+  }
+
+  if (typeof payload === 'string') {
+    if (payload.startsWith('[') || payload.startsWith('{')) {
+      const errInfo = parseWhatsAppErrorDetails({ error_details: payload });
+      if (errInfo.isError) return errInfo.message;
+    }
+    return payload;
+  }
+
+  return `[${log.message_type || log.status || 'WhatsApp Message'}]`;
+}
+
 export function WhatsAppSettingsManager() {
-  const [activeTab, setActiveTab] = useState<'simulator' | 'messenger' | 'logs' | 'automations'>('simulator');
+  const [activeTab, setActiveTab] = useState<'simulator' | 'messenger' | 'logs' | 'automations' | 'chat'>('simulator');
 
   // Selected Template & Params State
   const [selectedTemplate, setSelectedTemplate] = useState<WhatsAppTemplate>(APPROVED_TEMPLATES[0]);
   const [paramValues, setParamValues] = useState<Record<string, string>>(APPROVED_TEMPLATES[0].defaultParams);
-  const [recipientPhone, setRecipientPhone] = useState('9094251268');
+  const [recipientPhone, setRecipientPhone] = useState('8608449937');
 
   // Direct Messenger State
-  const [directPhone, setDirectPhone] = useState('+91 9094251268');
+  const [directPhone, setDirectPhone] = useState('+91 8608449937');
   const [directMessageText, setDirectMessageText] = useState('Hello from Swarna Wooden Crafts! Your custom wood sculpture inquiry has been received.');
+
+  // Live Customer Chat Window States
+  const [selectedChatPhone, setSelectedChatPhone] = useState<string | null>(null);
+  const [chatReplyText, setChatReplyText] = useState('');
+  const [sendingChatReply, setSendingChatReply] = useState(false);
+  const [chatSearchQuery, setChatSearchQuery] = useState('');
+  const [chatNotice, setChatNotice] = useState<string | null>(null);
+
+  // Live Customer Chat Re-engagement Template States
+  const [chatSendMode, setChatSendMode] = useState<'text' | 'template'>('text');
+  const [chatTemplate, setChatTemplate] = useState<WhatsAppTemplate>(APPROVED_TEMPLATES[0]);
+  const [chatTemplateParams, setChatTemplateParams] = useState<Record<string, string>>(APPROVED_TEMPLATES[0].defaultParams);
 
   // Dispatch State
   const [sending, setSending] = useState(false);
@@ -192,6 +346,18 @@ export function WhatsAppSettingsManager() {
   const [autoOrderConfirm, setAutoOrderConfirm] = useState(true);
   const [autoShippingUpdate, setAutoShippingUpdate] = useState(true);
   const [autoBespokeInquiry, setAutoBespokeInquiry] = useState(true);
+
+  // Live polling for incoming messages when chat tab is active
+  useEffect(() => {
+    let interval: any;
+    if (activeTab === 'chat') {
+      fetchLogs();
+      interval = setInterval(() => {
+        fetchLogs();
+      }, 4000);
+    }
+    return () => clearInterval(interval);
+  }, [activeTab]);
 
   // Switch template & reset parameters
   const handleSelectTemplate = (tpl: WhatsAppTemplate) => {
@@ -259,13 +425,12 @@ export function WhatsAppSettingsManager() {
   };
 
   useEffect(() => {
-    const isSetupDone = localStorage.getItem('irisjev_whatsapp_db_setup') === 'true';
-    if (isSetupDone) {
+    fetchLogs();
+    const interval = setInterval(() => {
       fetchLogs();
-    } else {
-      setTableMissing(true);
-    }
-  }, []);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, [activeTab]);
 
   const fetchLogs = async () => {
     setLoadingLogs(true);
@@ -274,7 +439,7 @@ export function WhatsAppSettingsManager() {
         .from('whatsapp_logs')
         .select('*')
         .order('created_at', { ascending: false })
-        .limit(20);
+        .limit(200);
 
       if (error) {
         if (error.code === '42P01' || error.message?.includes('404') || error.message?.includes('does not exist')) {
@@ -287,7 +452,7 @@ export function WhatsAppSettingsManager() {
         localStorage.setItem('irisjev_whatsapp_db_setup', 'true');
       }
     } catch (err) {
-      setTableMissing(true);
+      console.error('Failed to fetch whatsapp_logs:', err);
     } finally {
       setLoadingLogs(false);
     }
@@ -445,6 +610,174 @@ export function WhatsAppSettingsManager() {
   };
 
   const combinedLogs = [...localLogs, ...logs].filter((v, i, a) => a.findIndex(t => t.id === v.id) === i);
+
+  // Group logs into unique customer conversations by phone number
+  const conversationsMap: Record<string, { phone: string; messages: any[]; lastMessage: any; unreadCount: number }> = {};
+
+  combinedLogs.forEach((log) => {
+    const rawPhone = log.recipient_phone || log.payload?.from || log.payload?.to || log.payload?.recipient_id || '';
+    const cleanPhone = cleanPhoneNumber(rawPhone);
+    if (!cleanPhone || cleanPhone === BUSINESS_PHONE_NUMBER) return;
+
+    if (!conversationsMap[cleanPhone]) {
+      conversationsMap[cleanPhone] = {
+        phone: cleanPhone,
+        messages: [],
+        lastMessage: log,
+        unreadCount: 0,
+      };
+    }
+
+    conversationsMap[cleanPhone].messages.push(log);
+    const isUnread = log.status === 'received' || log.message_type === 'inbound_customer_reply';
+    if (isUnread) {
+      conversationsMap[cleanPhone].unreadCount += 1;
+    }
+  });
+
+  const conversationList = Object.values(conversationsMap).map(conv => ({
+    ...conv,
+    messages: conv.messages.sort((a, b) => new Date(a.created_at || Date.now()).getTime() - new Date(b.created_at || Date.now()).getTime()),
+    lastMessage: conv.messages[conv.messages.length - 1],
+  })).sort((a, b) => new Date(b.lastMessage?.created_at || Date.now()).getTime() - new Date(a.lastMessage?.created_at || Date.now()).getTime());
+
+  const filteredConversations = conversationList.filter(c => 
+    !chatSearchQuery.trim() || 
+    c.phone.includes(chatSearchQuery.trim()) || 
+    extractLogMessageText(c.lastMessage).toLowerCase().includes(chatSearchQuery.trim().toLowerCase())
+  );
+
+  const activeConversation = conversationList.find(c => c.phone === selectedChatPhone) || (conversationList.length > 0 ? conversationList[0] : null);
+
+  const totalInboundCount = combinedLogs.filter(l => (l.status === 'received' || l.message_type === 'inbound_customer_reply') && cleanPhoneNumber(l.recipient_phone) !== BUSINESS_PHONE_NUMBER).length;
+
+  // Switch template & reset parameters in Chat panel
+  const handleSelectChatTemplate = (tpl: WhatsAppTemplate) => {
+    setChatTemplate(tpl);
+    setChatTemplateParams({ ...tpl.defaultParams });
+  };
+
+  // Send Direct Text Reply to selected customer
+  const handleSendChatReply = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    const targetPhone = selectedChatPhone || activeConversation?.phone || (conversationList.length > 0 ? conversationList[0].phone : '');
+    if (!targetPhone || !chatReplyText.trim()) {
+      setChatNotice('Please select a customer conversation thread to reply.');
+      return;
+    }
+
+    setSendingChatReply(true);
+    setChatNotice(null);
+
+    const bodyText = chatReplyText.trim();
+    const result = await sendWhatsAppTextMessage({
+      to: targetPhone,
+      body: bodyText,
+    });
+
+    setSendingChatReply(false);
+
+    if (result.success) {
+      setChatReplyText('');
+      setChatNotice('Reply transmitted to Meta WhatsApp API successfully!');
+      setTimeout(() => setChatNotice(null), 3500);
+
+      const newLocal = {
+        id: `local-reply-${Date.now()}`,
+        recipient_phone: targetPhone,
+        message_type: 'direct_text_reply',
+        status: 'sent',
+        message_id: result.messageId || 'wamid.local_reply',
+        created_at: new Date().toISOString(),
+        payload: { text: bodyText, type: 'text' },
+      };
+      setLocalLogs((prev) => [newLocal, ...prev]);
+      fetchLogs();
+    } else {
+      const errInfo = parseWhatsAppErrorDetails({ error_details: result.error });
+      if (errInfo.is24hWindowError || result.error?.includes('131047')) {
+        setChatSendMode('template');
+        setChatNotice('⚠️ Message failed (Error 131047): 24-hour customer window expired. Auto-switched to Approved Template mode for re-engagement.');
+      } else {
+        setChatNotice(`Failed to send reply: ${errInfo.message || result.error || 'Meta API error'}`);
+      }
+    }
+  };
+
+  // Send Approved Template Reply to selected customer (re-engagement outside 24h window)
+  const handleSendChatTemplateReply = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    const targetPhone = selectedChatPhone || activeConversation?.phone || (conversationList.length > 0 ? conversationList[0].phone : '');
+    if (!targetPhone) {
+      setChatNotice('Please select a customer conversation thread.');
+      return;
+    }
+
+    setSendingChatReply(true);
+    setChatNotice(null);
+
+    const bodyParams = chatTemplate.paramLabels.map((p) => ({
+      type: 'text',
+      text: chatTemplateParams[p.key] || p.key,
+    }));
+
+    const components = bodyParams.length > 0 ? [{ type: 'body', parameters: bodyParams }] : undefined;
+
+    const result = await sendWhatsAppTemplateMessage({
+      to: targetPhone,
+      templateName: chatTemplate.name,
+      languageCode: chatTemplate.language || 'en',
+      components,
+    });
+
+    setSendingChatReply(false);
+
+    if (result.success) {
+      setChatNotice(`✅ Approved Template "${chatTemplate.name}" dispatched to Meta WhatsApp API!`);
+      setTimeout(() => setChatNotice(null), 4000);
+
+      const newLocal = {
+        id: `local-template-reply-${Date.now()}`,
+        recipient_phone: targetPhone,
+        message_type: `template_${chatTemplate.name}`,
+        status: 'sent',
+        message_id: result.messageId || 'wamid.local_tpl_reply',
+        created_at: new Date().toISOString(),
+        payload: { template: { name: chatTemplate.name }, components },
+      };
+      setLocalLogs((prev) => [newLocal, ...prev]);
+      fetchLogs();
+    } else {
+      const errInfo = parseWhatsAppErrorDetails({ error_details: result.error });
+      setChatNotice(`Failed to send template: ${errInfo.message || result.error || 'Meta API error'}`);
+    }
+  };
+
+  // Helper to simulate an inbound customer reply directly into chat thread
+  const handleSimulateInboundCustomerMessage = async () => {
+    const targetPhone = selectedChatPhone || activeConversation?.phone;
+    if (!targetPhone) return;
+
+    const sampleInboundText = "Namaste! I am checking on my custom wood sculpture order delivery status.";
+    const newInbound = {
+      recipient_phone: targetPhone,
+      message_type: 'inbound_customer_reply',
+      status: 'received',
+      message_id: `wamid.simulated_inbound_${Date.now()}`,
+      payload: { text: sampleInboundText, type: 'text' },
+      created_at: new Date().toISOString(),
+    };
+
+    try {
+      await supabase.from('whatsapp_logs').insert([newInbound]);
+      setLocalLogs((prev) => [newInbound, ...prev]);
+      setChatNotice('✅ Inbound customer message simulated & added to chat thread!');
+      setTimeout(() => setChatNotice(null), 3500);
+      fetchLogs();
+    } catch (err) {
+      console.error('Failed to simulate inbound message:', err);
+    }
+  };
 
   return (
     <div className="space-y-6 animate-fadeIn font-sans pb-16 bg-[#090d0b] text-[#e1e3e0] min-h-screen p-4 sm:p-6 rounded-3xl">
@@ -667,6 +1000,26 @@ export function WhatsAppSettingsManager() {
         >
           <Settings className="w-4 h-4" />
           <span>AUTOMATIONS & SETTINGS</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => {
+            setActiveTab('chat');
+            fetchLogs();
+          }}
+          className={`py-3 flex items-center gap-2 border-b-2 font-extrabold cursor-pointer transition-all relative ${activeTab === 'chat'
+              ? 'border-[#10b981] text-[#34d399]'
+              : 'border-transparent text-gray-400 hover:text-white'
+            }`}
+        >
+          <MessageSquare className="w-4 h-4 text-[#34d399]" />
+          <span>LIVE CUSTOMER CHAT</span>
+          {totalInboundCount > 0 && (
+            <span className="bg-[#10b981] text-black text-[10px] font-extrabold px-1.5 py-0.2 rounded-full ml-1">
+              {totalInboundCount}
+            </span>
+          )}
         </button>
       </div>
 
@@ -1209,6 +1562,419 @@ export function WhatsAppSettingsManager() {
               </div>
 
             </div>
+          </div>
+
+        </div>
+      )}
+
+      {/* 5. TAB CONTENT 5: LIVE CUSTOMER CHAT WINDOW */}
+      {activeTab === 'chat' && (
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 pt-2 animate-fadeIn min-h-[580px]">
+          
+          {/* LEFT COLUMN: CONVERSATIONS LIST (4 COLS) */}
+          <div className="lg:col-span-4 bg-[#0f1714] p-4 rounded-3xl border border-[#1b2b24] shadow-xl flex flex-col">
+            
+            {/* Search Bar & Header */}
+            <div className="pb-3 border-b border-[#1b2b24] space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-label-caps uppercase tracking-wider text-gray-300 font-bold flex items-center gap-1.5">
+                  <MessageSquare className="w-4 h-4 text-[#34d399]" />
+                  <span>Conversations ({conversationList.length})</span>
+                </span>
+                <button
+                  type="button"
+                  onClick={fetchLogs}
+                  className="text-gray-400 hover:text-white p-1 rounded-md transition-colors cursor-pointer"
+                  title="Refresh Conversations"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 ${loadingLogs ? 'animate-spin' : ''}`} />
+                </button>
+              </div>
+
+              <input
+                type="text"
+                value={chatSearchQuery}
+                onChange={(e) => setChatSearchQuery(e.target.value)}
+                placeholder="Search phone number..."
+                className="w-full bg-[#0b1410] border border-[#1b2b24] text-white px-3 py-2 rounded-xl text-xs focus:outline-none focus:border-[#10b981] font-mono"
+              />
+            </div>
+
+            {/* Conversations List Scrollable */}
+            <div className="flex-1 overflow-y-auto space-y-2 pt-3 custom-scrollbar max-h-[480px]">
+              {filteredConversations.length === 0 ? (
+                <div className="p-8 text-center text-gray-500 text-xs">
+                  <Bot className="w-8 h-8 mx-auto mb-2 text-gray-600 opacity-50" />
+                  <p>No WhatsApp customer conversations found.</p>
+                  <p className="text-[11px] text-gray-600 mt-1">Send a live test message or submit a website inquiry to initialize chat.</p>
+                </div>
+              ) : (
+                filteredConversations.map((conv) => {
+                  const isSelected = selectedChatPhone === conv.phone;
+                  const lastMsg = conv.lastMessage;
+                  const lastText = extractLogMessageText(lastMsg);
+                  const isIncoming = lastMsg?.status === 'received' || lastMsg?.message_type === 'inbound_customer_reply';
+
+                  return (
+                    <div
+                      key={conv.phone}
+                      onClick={() => setSelectedChatPhone(conv.phone)}
+                      className={`p-3.5 rounded-2xl border transition-all cursor-pointer flex justify-between items-start gap-3 ${
+                        isSelected
+                          ? 'bg-[#14261f] border-[#10b981] shadow-md'
+                          : 'bg-[#0b1410] border-[#1b2b24] hover:border-gray-700'
+                      }`}
+                    >
+                      <div className="space-y-1 min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono text-xs font-bold text-white tracking-wide truncate">
+                            +{conv.phone}
+                          </span>
+                          {isIncoming && (
+                            <span className="bg-purple-950 text-purple-300 border border-purple-700/50 text-[9px] font-bold px-1.5 py-0.2 rounded-full">
+                              INBOUND
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-[11px] text-gray-400 truncate">
+                          {lastText}
+                        </p>
+                      </div>
+
+                      <div className="text-right shrink-0">
+                        <span className="text-[10px] text-gray-500 block font-mono">
+                          {new Date(lastMsg?.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                        {conv.unreadCount > 0 && (
+                          <span className="inline-block mt-1 w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+
+          </div>
+
+          {/* RIGHT COLUMN: ACTIVE CHAT WINDOW (8 COLS) */}
+          <div className="lg:col-span-8 bg-[#0f1714] rounded-3xl border border-[#1b2b24] shadow-xl flex flex-col overflow-hidden min-h-[520px]">
+            {activeConversation ? (
+              <>
+                {(() => {
+                  const inboundMsgs = activeConversation.messages.filter(l => l.status === 'received' || l.message_type === 'inbound_customer_reply' || l.message_type === 'inbound_text');
+                  const lastInbound = inboundMsgs.length > 0 ? inboundMsgs[inboundMsgs.length - 1] : null;
+                  const hoursSinceInbound = lastInbound ? (Date.now() - new Date(lastInbound.created_at).getTime()) / (1000 * 60 * 60) : Infinity;
+                  const has24hFail = activeConversation.messages.some(l => parseWhatsAppErrorDetails(l).is24hWindowError);
+                  const isOutside24hWindow = !lastInbound || hoursSinceInbound > 24 || has24hFail;
+
+                  return (
+                    <>
+                      {/* Chat Header */}
+                      <div className="p-4 bg-[#0b1410] border-b border-[#1b2b24] flex flex-wrap justify-between items-center gap-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-2xl bg-[#05291b] border border-[#10b981]/30 text-[#34d399] flex items-center justify-center font-bold">
+                            <Smartphone className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <h3 className="font-mono text-sm font-bold text-white flex items-center gap-2">
+                              <span>+{activeConversation.phone}</span>
+                              {isOutside24hWindow ? (
+                                <span className="bg-amber-950 text-amber-300 border border-amber-800/40 text-[9px] px-2 py-0.5 rounded-full font-bold flex items-center gap-1">
+                                  <AlertCircle className="w-3 h-3 text-amber-400" />
+                                  <span>24h Window Expired</span>
+                                </span>
+                              ) : (
+                                <span className="bg-emerald-950 text-emerald-300 border border-emerald-800/40 text-[9px] px-2 py-0.5 rounded-full font-bold flex items-center gap-1">
+                                  <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+                                  <span>24h Window Active</span>
+                                </span>
+                              )}
+                            </h3>
+                            <p className="text-[11px] text-gray-400">
+                              Swarna Wooden Crafts Concierge Session
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={handleSimulateInboundCustomerMessage}
+                            className="bg-purple-950 hover:bg-purple-900 text-purple-300 border border-purple-700/50 text-xs font-bold px-3 py-1.5 rounded-xl transition-all flex items-center gap-1.5 cursor-pointer"
+                            title="Test & verify incoming customer message rendering in UI"
+                          >
+                            <Bot className="w-3.5 h-3.5 text-purple-300" />
+                            <span>Simulate Inbound Reply</span>
+                          </button>
+                          <a
+                            href={`https://wa.me/${activeConversation.phone}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="bg-[#05291b] hover:bg-[#083d29] text-[#34d399] border border-[#10b981]/30 text-xs font-bold px-3 py-1.5 rounded-xl transition-all flex items-center gap-1.5"
+                          >
+                            <ExternalLink className="w-3.5 h-3.5" />
+                            <span>Open in WhatsApp</span>
+                          </a>
+                        </div>
+                      </div>
+
+                      {/* 24-Hour Window Warning Banner */}
+                      {isOutside24hWindow && (
+                        <div className="bg-[#241709] border-b border-amber-500/30 px-4 py-2.5 flex flex-wrap justify-between items-center gap-2 text-xs text-amber-200">
+                          <div className="flex items-center gap-2">
+                            <AlertCircle className="w-4 h-4 text-amber-400 shrink-0" />
+                            <span>
+                              <strong>Meta 24-Hour Window Inactive:</strong> Free-form text replies will fail (Error 131047). Use approved WhatsApp templates to re-engage this customer.
+                            </span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setChatSendMode('template')}
+                            className="px-3 py-1 bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-[10px] rounded-lg transition-all cursor-pointer uppercase tracking-wider shrink-0"
+                          >
+                            Use Approved Template
+                          </button>
+                        </div>
+                      )}
+
+                      {/* Chat Thread Messages Area */}
+                      <div className="flex-1 p-5 overflow-y-auto space-y-3.5 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] bg-repeat opacity-95 custom-scrollbar min-h-[320px] max-h-[380px]">
+                        {activeConversation.messages.map((log, msgIdx) => {
+                          const isCustomer = log.status === 'received' || log.message_type === 'inbound_customer_reply' || log.message_type === 'inbound_text';
+                          const errInfo = (log.status === 'failed' || log.error_details) ? parseWhatsAppErrorDetails(log) : null;
+                          const isFailed = !!errInfo?.isError;
+                          const msgText = extractLogMessageText(log);
+                          const timeStr = new Date(log.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+                          return (
+                            <div
+                              key={log.id ? `${log.id}-${msgIdx}` : `msg-${msgIdx}-${log.created_at || Date.now()}`}
+                              className={`flex flex-col ${isCustomer ? 'items-start' : 'items-end'}`}
+                            >
+                              <div
+                                className={`max-w-[85%] p-3.5 rounded-2xl text-xs shadow-md space-y-2 ${
+                                  isFailed
+                                    ? 'bg-[#3b151b] border border-red-500/50 text-red-100 rounded-tr-none'
+                                    : isCustomer
+                                    ? 'bg-[#182620] border border-[#243d33] text-[#e4f5ed] rounded-tl-none'
+                                    : 'bg-[#054d32] border border-[#0d7a52] text-white rounded-tr-none'
+                                }`}
+                              >
+                                <div className="flex items-center justify-between gap-4 border-b border-white/10 pb-1 text-[10px] font-bold opacity-80">
+                                  <span className="flex items-center gap-1.5">
+                                    {isFailed ? (
+                                      <>
+                                        <AlertCircle className="w-3.5 h-3.5 text-red-400" />
+                                        <span className="text-red-300 font-extrabold uppercase">Delivery Failed</span>
+                                      </>
+                                    ) : isCustomer ? (
+                                      'Customer Inquiry'
+                                    ) : (
+                                      'Swarna Crafts Concierge'
+                                    )}
+                                  </span>
+                                  <span className="font-mono">{timeStr}</span>
+                                </div>
+
+                                <p className="whitespace-pre-wrap leading-relaxed text-xs pt-1 font-body-md">
+                                  {msgText}
+                                </p>
+
+                                {isFailed && errInfo?.is24hWindowError && (
+                                  <div className="pt-2 border-t border-red-500/30 flex items-center justify-between gap-2">
+                                    <span className="text-[11px] text-amber-300 font-medium">
+                                      💡 Send an approved Meta template to re-engage.
+                                    </span>
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setChatSendMode('template');
+                                        setChatNotice('Switched to Approved Template mode for re-engagement.');
+                                      }}
+                                      className="px-2.5 py-1 bg-amber-500 hover:bg-amber-400 text-black text-[10px] font-extrabold rounded-lg transition-all cursor-pointer shrink-0"
+                                    >
+                                      Send Template
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      {/* Reply Feedback Notice */}
+                      {chatNotice && (
+                        <div className="px-4 py-2 bg-emerald-950/90 border-t border-emerald-800/40 text-emerald-200 text-xs font-bold flex items-center gap-2">
+                          <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                          <span>{chatNotice}</span>
+                        </div>
+                      )}
+
+                      {/* Mode Switcher Tabs + Reply Box */}
+                      <div className="p-4 bg-[#0b1410] border-t border-[#1b2b24] space-y-3">
+                        {/* Mode Switcher */}
+                        <div className="flex items-center gap-2 border-b border-[#1b2b24] pb-3">
+                          <button
+                            type="button"
+                            onClick={() => setChatSendMode('text')}
+                            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                              chatSendMode === 'text'
+                                ? 'bg-[#10b981] text-black font-extrabold shadow-sm'
+                                : 'bg-[#0f1714] text-gray-400 hover:text-white border border-[#1b2b24]'
+                            }`}
+                          >
+                            <Send className="w-3.5 h-3.5" />
+                            <span>💬 Direct Free-Form Reply</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => setChatSendMode('template')}
+                            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                              chatSendMode === 'template'
+                                ? 'bg-[#10b981] text-black font-extrabold shadow-sm'
+                                : 'bg-[#0f1714] text-gray-400 hover:text-white border border-[#1b2b24]'
+                            }`}
+                          >
+                            <FileText className="w-3.5 h-3.5" />
+                            <span>📋 Approved Template (Re-engagement)</span>
+                          </button>
+                        </div>
+
+                        {/* MODE 1: DIRECT FREE-FORM TEXT REPLY */}
+                        {chatSendMode === 'text' && (
+                          <form onSubmit={handleSendChatReply} className="space-y-3">
+                            <div className="flex items-center justify-between text-[11px] text-gray-400">
+                              <span className="font-bold flex items-center gap-1.5 text-gray-300">
+                                <Sparkles className="w-3.5 h-3.5 text-[#34d399]" />
+                                <span>Quick Reply Snippets:</span>
+                              </span>
+                              <div className="flex flex-wrap gap-1.5">
+                                <button
+                                  type="button"
+                                  onClick={() => setChatReplyText('Namaste! Thank you for contacting Swarna Wooden Crafts. Our master carvers are reviewing your inquiry.')}
+                                  className="bg-[#14261f] hover:bg-[#1f3a30] text-[#34d399] border border-[#10b981]/30 px-2 py-1 rounded-md text-[10px] font-bold transition-colors cursor-pointer"
+                                >
+                                  💬 Greeting
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setChatReplyText(`Your order is currently being handcrafted with white-glove precision. Track status at: https://swarnawoodencrafts.com/track`)}
+                                  className="bg-[#14261f] hover:bg-[#1f3a30] text-[#34d399] border border-[#10b981]/30 px-2 py-1 rounded-md text-[10px] font-bold transition-colors cursor-pointer"
+                                >
+                                  📦 Order Update
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setChatReplyText('We offer premium Grade-A Teakwood, Sandalwood, and Rosewood timber for custom deity sculptures. What size do you require?')}
+                                  className="bg-[#14261f] hover:bg-[#1f3a30] text-[#34d399] border border-[#10b981]/30 px-2 py-1 rounded-md text-[10px] font-bold transition-colors cursor-pointer"
+                                >
+                                  🪵 Timber Options
+                                </button>
+                              </div>
+                            </div>
+
+                            <div className="flex items-end gap-3">
+                              <textarea
+                                rows={2}
+                                value={chatReplyText}
+                                onChange={(e) => setChatReplyText(e.target.value)}
+                                placeholder={`Type WhatsApp reply to +${activeConversation.phone}...`}
+                                className="flex-1 bg-[#0f1714] border border-[#1b2b24] text-white p-3 rounded-2xl text-xs focus:outline-none focus:border-[#10b981] resize-none font-body-md"
+                              />
+
+                              <button
+                                type="submit"
+                                disabled={sendingChatReply || !chatReplyText.trim()}
+                                className="bg-[#10b981] hover:bg-[#059669] disabled:opacity-50 text-black font-extrabold px-5 py-3.5 rounded-2xl text-xs flex items-center gap-2 transition-all cursor-pointer shadow-lg shrink-0"
+                              >
+                                {sendingChatReply ? (
+                                  <RefreshCw className="w-4 h-4 animate-spin text-black" />
+                                ) : (
+                                  <>
+                                    <Send className="w-4 h-4 text-black" />
+                                    <span>SEND REPLY</span>
+                                  </>
+                                )}
+                              </button>
+                            </div>
+                          </form>
+                        )}
+
+                        {/* MODE 2: APPROVED TEMPLATE RE-ENGAGEMENT */}
+                        {chatSendMode === 'template' && (
+                          <form onSubmit={handleSendChatTemplateReply} className="space-y-3 pt-1">
+                            <div className="space-y-1">
+                              <label className="text-[11px] font-bold text-gray-300 uppercase tracking-wider block">
+                                Choose Approved Meta WhatsApp Template:
+                              </label>
+                              <select
+                                value={chatTemplate.id}
+                                onChange={(e) => {
+                                  const tpl = APPROVED_TEMPLATES.find((t) => t.id === e.target.value);
+                                  if (tpl) handleSelectChatTemplate(tpl);
+                                }}
+                                className="w-full bg-[#0f1714] border border-[#1b2b24] text-white px-3 py-2.5 rounded-xl text-xs font-bold focus:outline-none focus:border-[#10b981] cursor-pointer"
+                              >
+                                {APPROVED_TEMPLATES.map((tpl) => (
+                                  <option key={tpl.id} value={tpl.id}>
+                                    {tpl.name} ({tpl.category}) — {tpl.description}
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+
+                            {/* Parameter Fields */}
+                            {chatTemplate.paramLabels.length > 0 && (
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-[#070d0a] p-3 rounded-xl border border-[#1b2b24]">
+                                {chatTemplate.paramLabels.map((p) => (
+                                  <div key={p.key} className="space-y-1">
+                                    <div className="flex justify-between text-[10px]">
+                                      <label className="font-bold text-gray-300">{p.label}</label>
+                                    </div>
+                                    <input
+                                      type="text"
+                                      value={chatTemplateParams[p.key] || ''}
+                                      onChange={(e) => setChatTemplateParams((prev) => ({ ...prev, [p.key]: e.target.value }))}
+                                      className="w-full px-2.5 py-1.5 bg-[#0b1410] border border-[#1b2b24] rounded-lg text-xs font-bold text-white focus:outline-none focus:border-[#10b981]"
+                                    />
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+
+                            <button
+                              type="submit"
+                              disabled={sendingChatReply}
+                              className="w-full bg-[#10b981] hover:bg-[#059669] text-black font-extrabold px-5 py-3 rounded-xl text-xs flex items-center justify-center gap-2 transition-all cursor-pointer shadow-lg disabled:opacity-50 uppercase tracking-wider"
+                            >
+                              {sendingChatReply ? (
+                                <RefreshCw className="w-4 h-4 animate-spin text-black" />
+                              ) : (
+                                <>
+                                  <Send className="w-4 h-4 text-black" />
+                                  <span>Dispatch Approved Template Message to +{activeConversation.phone}</span>
+                                </>
+                              )}
+                            </button>
+                          </form>
+                        )}
+                      </div>
+                    </>
+                  );
+                })()}
+              </>
+            ) : (
+              <div className="flex-1 flex flex-col items-center justify-center p-12 text-center text-gray-500">
+                <MessageSquare className="w-12 h-12 mb-3 text-gray-600 opacity-40" />
+                <h4 className="text-sm font-bold text-gray-300">Select a Conversation</h4>
+                <p className="text-xs text-gray-500 mt-1 max-w-xs">
+                  Choose a customer phone number from the left panel to open the active WhatsApp chat thread.
+                </p>
+              </div>
+            )}
           </div>
 
         </div>

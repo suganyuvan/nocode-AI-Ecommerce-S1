@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { ShieldCheck, Edit3, Truck, Search, User, Heart, ShoppingBag, Menu, X, LogIn } from 'lucide-react';
 import { ActiveTab, Currency, Customer } from '../types';
 import irisjevLogo from '../assets/images/swarna_wooden_crafts_logo.jpg';
 import { PromotionalBanner } from './PromotionalBanner';
@@ -68,8 +69,8 @@ export const Header: React.FC<HeaderProps> = ({
             className="text-[10px] uppercase font-bold px-2 py-0.5 rounded-xs transition-colors bg-[#fed65b]/20 text-[#fed65b] hover:bg-[#fed65b] hover:text-[#1c1b1b] border border-[#fed65b]/40 flex items-center gap-1 cursor-pointer"
             title="Access Master Admin Portal (/admin)"
           >
-            <span className="material-symbols-outlined text-xs">admin_panel_settings</span>
-            Admin Portal
+            <ShieldCheck className="w-3.5 h-3.5 text-[#fed65b]" />
+            <span>Admin Portal</span>
           </Link>
         </div>
       </div>
@@ -133,10 +134,10 @@ export const Header: React.FC<HeaderProps> = ({
             </Link>
             <button
               onClick={onOpenBespoke}
-              className="text-[#735c00] font-bold hover:opacity-80 transition-opacity cursor-pointer flex items-center gap-1"
+              className="text-[#735c00] font-bold hover:opacity-80 transition-opacity cursor-pointer flex items-center gap-1.5"
             >
-              <span className="material-symbols-outlined text-sm">edit_square</span>
-              Custom Orders
+              <Edit3 className="w-3.5 h-3.5 text-[#735c00]" />
+              <span>Custom Orders</span>
             </button>
             <Link
               to="/track"
@@ -147,7 +148,7 @@ export const Header: React.FC<HeaderProps> = ({
                   : 'bg-[#f4efe6] text-[#735c00] hover:bg-[#e0d6c3] border border-[#e0d6c3]'
               }`}
             >
-              <span className="material-symbols-outlined text-sm">local_shipping</span>
+              <Truck className="w-3.5 h-3.5" />
               <span>Track Order</span>
             </Link>
           </div>
@@ -159,10 +160,10 @@ export const Header: React.FC<HeaderProps> = ({
           {/* Search Trigger */}
           <button
             onClick={onOpenSearch}
-            className="p-1 hover:opacity-70 transition-opacity cursor-pointer flex items-center gap-1"
+            className="p-1 hover:opacity-70 transition-opacity cursor-pointer flex items-center gap-1.5"
             title="Search collection"
           >
-            <span className="material-symbols-outlined">search</span>
+            <Search className="w-4 h-4 text-[#444748]" />
             <span className="hidden lg:inline text-[11px] font-label-caps uppercase tracking-wider text-[#444748]">
               Search
             </span>
@@ -203,10 +204,10 @@ export const Header: React.FC<HeaderProps> = ({
           ) : (
             <button
               onClick={onOpenAuthModal}
-              className="p-1 hover:opacity-70 transition-opacity cursor-pointer flex items-center gap-1"
+              className="p-1 hover:opacity-70 transition-opacity cursor-pointer flex items-center gap-1.5"
               title="Sign In / My Orders"
             >
-              <span className="material-symbols-outlined">account_circle</span>
+              <User className="w-4 h-4 text-[#444748]" />
               <span className="hidden lg:inline text-[11px] font-label-caps uppercase tracking-wider text-[#444748]">
                 Sign In
               </span>
@@ -216,10 +217,10 @@ export const Header: React.FC<HeaderProps> = ({
           {/* Wishlist Icon */}
           <button
             onClick={onOpenWishlist}
-            className="relative p-1 hover:opacity-70 transition-opacity cursor-pointer"
+            className="relative p-1 hover:opacity-70 transition-opacity cursor-pointer flex items-center justify-center"
             title="Wishlist"
           >
-            <span className="material-symbols-outlined">favorite</span>
+            <Heart className="w-5 h-5 text-[#444748]" />
             {wishlistCount > 0 && (
               <span className="absolute -top-1 -right-1 bg-[#735c00] text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
                 {wishlistCount}
@@ -230,10 +231,10 @@ export const Header: React.FC<HeaderProps> = ({
           {/* Cart Icon */}
           <button
             onClick={onOpenCart}
-            className="relative p-1 hover:opacity-70 transition-opacity cursor-pointer"
+            className="relative p-1 hover:opacity-70 transition-opacity cursor-pointer flex items-center justify-center"
             title="Shopping Cart"
           >
-            <span className="material-symbols-outlined">shopping_bag</span>
+            <ShoppingBag className="w-5 h-5 text-[#444748]" />
             {cartCount > 0 && (
               <span className="absolute -top-1 -right-1 bg-[#1c1b1b] text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
                 {cartCount}
@@ -246,7 +247,7 @@ export const Header: React.FC<HeaderProps> = ({
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             className="md:hidden p-1 text-[#000000]"
           >
-            <span className="material-symbols-outlined">{mobileMenuOpen ? 'close' : 'menu'}</span>
+            {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
         </div>
       </nav>
