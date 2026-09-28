@@ -18,6 +18,11 @@ export default defineConfig(() => {
       // Disable file watching when DISABLE_HMR is true to save CPU during agent edits.
       watch: process.env.DISABLE_HMR === 'true' ? null : {},
       proxy: {
+        '/.netlify/functions': {
+          target: 'http://localhost:8888',
+          changeOrigin: true,
+          secure: false,
+        },
         '/api/resend': {
           target: 'https://api.resend.com',
           changeOrigin: true,

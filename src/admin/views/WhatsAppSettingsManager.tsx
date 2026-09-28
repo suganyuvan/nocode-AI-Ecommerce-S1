@@ -332,7 +332,6 @@ export function WhatsAppSettingsManager() {
   const [resultNotice, setResultNotice] = useState<{ type: 'success' | 'error'; message: string; rawResponse?: any } | null>(null);
 
   // Credentials & Tokens
-  const [showToken, setShowToken] = useState(false);
   const [copiedToken, setCopiedToken] = useState(false);
   const [copiedSql, setCopiedSql] = useState(false);
 

@@ -54,30 +54,32 @@ export async function dispatchWebhookEvent(eventName: string, data: any) {
         let status: 'success' | 'failed' = 'failed';
 
         try {
-          const headers: Record<string, string> = {
-            'Content-Type': 'application/json',
-            'X-Irisjev-Event': eventName,
-            'X-Irisjev-Delivery': `del-${Date.now()}`,
-            'X-Irisjev-Signature': wh.secret_key ? `sha256=${wh.secret_key}` : 'unsigned',
-            ...(wh.headers || {})
-          };
-
           const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+          const timeoutId = setTimeout(() => controller.abort(), 12000); // 12s timeout
 
-          const res = await fetch(wh.url, {
+          const res = await fetch('/.netlify/functions/n8n-proxy', {
             method: 'POST',
-            headers,
-            body: JSON.stringify(payload),
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              targetUrl: wh.url,
+              payload: payload,
+              eventName: eventName,
+              headers: {
+                'X-Irisjev-Signature': wh.secret_key ? `sha256=${wh.secret_key}` : 'unsigned',
+                ...(wh.headers || {})
+              }
+            }),
             signal: controller.signal,
           });
 
           clearTimeout(timeoutId);
-          responseStatus = res.status;
-          const text = await res.text();
-          responseBody = text.slice(0, 1000); // Record up to 1000 chars
+          const data = await res.json();
+          responseStatus = data.status || res.status;
+          responseBody = typeof data.body === 'string' ? data.body.slice(0, 1000) : JSON.stringify(data.body || '').slice(0, 1000);
 
-          if (res.ok) {
+          if (res.ok && data.success) {
             status = 'success';
           }
         } catch (err: any) {
@@ -147,32 +149,36 @@ export async function sendTestWebhook(
   };
 
   try {
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-      'X-Irisjev-Event': eventName,
-      'X-Irisjev-Test': 'true',
-      'X-Irisjev-Signature': secretKey ? `sha256=${secretKey}` : 'test_secret',
-    };
-
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 12000);
 
-    const res = await fetch(url, {
+    const res = await fetch('/.netlify/functions/n8n-proxy', {
       method: 'POST',
-      headers,
-      body: JSON.stringify(payload),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        targetUrl: url,
+        payload: payload,
+        eventName: eventName,
+        headers: {
+          'X-Irisjev-Test': 'true',
+          'X-Irisjev-Signature': secretKey ? `sha256=${secretKey}` : 'test_secret',
+        }
+      }),
       signal: controller.signal,
     });
 
     clearTimeout(timeoutId);
     const durationMs = Date.now() - startTime;
-    const body = await res.text();
+    const data = await res.json();
 
     return {
-      success: res.ok,
-      status: res.status,
-      body: body.slice(0, 1500),
+      success: res.ok && data.success,
+      status: data.status || res.status,
+      body: typeof data.body === 'string' ? data.body.slice(0, 1500) : JSON.stringify(data.body || '').slice(0, 1500),
       durationMs,
+      error: data.error,
     };
   } catch (err: any) {
     const durationMs = Date.now() - startTime;
@@ -181,7 +187,7 @@ export async function sendTestWebhook(
       status: 0,
       body: '',
       durationMs,
-      error: err?.message || 'Failed to connect to the target webhook URL. Please ensure CORS or server connectivity.'
+      error: err?.message || 'Failed to connect to the target webhook URL via n8n proxy server.'
     };
   }
 }

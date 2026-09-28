@@ -345,6 +345,24 @@ npm install
 npm run dev
 ```
 
+### Netlify Server-Side Configuration (Netlify Functions & Environment Variables)
+
+The application uses Netlify Functions (`netlify/functions/whatsapp-send` & `netlify/functions/n8n-proxy`) for server-side API execution:
+
+1. **Netlify Functions Directory**: `netlify/functions/`
+2. **Environment Variables**: Configure the following **Server-Side Environment Variables** in your Netlify Dashboard (**Site Settings > Environment Variables**):
+
+| Variable Name | Required | Description |
+|---|---|---|
+| `META_WHATSAPP_ACCESS_TOKEN` | Yes | Permanent Meta WhatsApp Cloud API Bearer Token |
+| `META_WHATSAPP_PHONE_NUMBER_ID` | Optional | Meta WABA Phone Number ID (Default: `1442648035597125`) |
+| `META_WHATSAPP_API_VERSION` | Optional | Meta Graph API Version (Default: `v21.0`) |
+| `N8N_WEBHOOK_URL` | Optional | Target n8n webhook URL (e.g. `https://suganadmin.app.n8n.cloud/webhook/...`) |
+| `N8N_WEBHOOK_SECRET` | Optional | Webhook signature secret key for payload verification |
+
+> [!IMPORTANT]
+> Do NOT prefix server secrets with `VITE_`. Server secrets are read securely inside Netlify Functions and are never exposed to browser bundles or network logs.
+
 ### Docker & Cloud Deployment
 - **Dockerfile**: Multi-stage build compiling static assets into Nginx on port 80.
 - **Dokploy / VPS**: Ready for deployment on Dokploy, Netlify, Vercel, or custom Docker hosts.

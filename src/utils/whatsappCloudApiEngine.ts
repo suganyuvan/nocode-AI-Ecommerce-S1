@@ -3,7 +3,6 @@ import { supabase } from './supabaseClient';
 export const WHATSAPP_CONFIG = {
   phoneNumberId: import.meta.env.VITE_WHATSAPP_PHONE_NUMBER_ID || '1442648035597125',
   businessAccountId: import.meta.env.VITE_WHATSAPP_BUSINESS_ACCOUNT_ID || '831276670043386',
-  accessToken: import.meta.env.VITE_WHATSAPP_ACCESS_TOKEN || '',
   graphApiVersion: 'v21.0',
 };
 
@@ -30,46 +29,36 @@ export interface WhatsAppSendResult {
 }
 
 /**
- * Low-level HTTP caller for Meta Graph API WhatsApp Cloud Endpoint
+ * Low-level API caller that proxies Meta Graph API requests via secure Netlify Function server-side
  */
 export async function sendWhatsAppApiPayload(
   payload: any,
-  customToken?: string,
+  _customToken?: string,
   customPhoneId?: string
 ): Promise<WhatsAppSendResult> {
-  const phoneId = customPhoneId || WHATSAPP_CONFIG.phoneNumberId;
-  const token = customToken || WHATSAPP_CONFIG.accessToken;
-  const url = `https://graph.facebook.com/${WHATSAPP_CONFIG.graphApiVersion}/${phoneId}/messages`;
-
-  if (!token) {
-    console.error('Meta WhatsApp Cloud API Error: Missing Access Token (VITE_WHATSAPP_ACCESS_TOKEN)');
-    return {
-      success: false,
-      recipientPhone: payload.to,
-      error: 'Missing Meta WhatsApp Access Token. Please configure VITE_WHATSAPP_ACCESS_TOKEN in your environment.',
-    };
-  }
+  const recipient = payload.to;
 
   try {
-    const response = await fetch(url, {
+    const response = await fetch('/.netlify/functions/whatsapp-send', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(payload),
+      body: JSON.stringify({
+        payload,
+        customPhoneId,
+      }),
     });
 
     const responseData = await response.json();
 
-    if (!response.ok) {
-      const errorMsg = responseData?.error?.message || `HTTP ${response.status}: Meta API Request Failed`;
-      console.error('Meta WhatsApp Cloud API Error:', responseData);
-      
-      // Log to Supabase audit log if available
+    if (!response.ok || !responseData.success) {
+      const errorMsg = responseData?.error || `HTTP ${response.status}: WhatsApp dispatch failed`;
+      console.error('Meta WhatsApp Cloud API Server Notice:', responseData);
+
       logWhatsAppEventToSupabase({
-        recipient_phone: payload.to,
-        message_type: payload.type,
+        recipient_phone: recipient,
+        message_type: payload.type || 'unknown',
         status: 'failed',
         error_details: errorMsg,
         payload,
@@ -77,18 +66,17 @@ export async function sendWhatsAppApiPayload(
 
       return {
         success: false,
-        recipientPhone: payload.to,
+        recipientPhone: recipient,
         error: errorMsg,
-        rawResponse: responseData,
+        rawResponse: responseData.rawResponse || responseData,
       };
     }
 
-    const messageId = responseData?.messages?.[0]?.id || 'wa-msg-ok';
+    const messageId = responseData.messageId || 'wa-msg-ok';
 
-    // Log success to Supabase
     logWhatsAppEventToSupabase({
-      recipient_phone: payload.to,
-      message_type: payload.type,
+      recipient_phone: recipient,
+      message_type: payload.type || 'unknown',
       status: 'sent',
       message_id: messageId,
       payload,
@@ -97,15 +85,27 @@ export async function sendWhatsAppApiPayload(
     return {
       success: true,
       messageId,
-      recipientPhone: payload.to,
-      rawResponse: responseData,
+      recipientPhone: recipient,
+      rawResponse: responseData.rawResponse || responseData,
     };
   } catch (err: any) {
-    console.error('WhatsApp API Fetch Error:', err);
+    console.error('WhatsApp Service Communication Error:', err);
+    const errorMsg = err.message?.includes('Failed to fetch')
+      ? 'WhatsApp service is temporarily unavailable. Please try again later.'
+      : err.message || 'Unable to send message. Please try again.';
+
+    logWhatsAppEventToSupabase({
+      recipient_phone: recipient,
+      message_type: payload.type || 'unknown',
+      status: 'failed',
+      error_details: errorMsg,
+      payload,
+    });
+
     return {
       success: false,
-      recipientPhone: payload.to,
-      error: err.message || 'Network error connecting to Meta WhatsApp Cloud API',
+      recipientPhone: recipient,
+      error: errorMsg,
     };
   }
 }
