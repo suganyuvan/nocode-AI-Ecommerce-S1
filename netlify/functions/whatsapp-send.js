@@ -8,7 +8,7 @@
  * - META_WHATSAPP_API_VERSION (Optional, defaults to v21.0)
  */
 
-exports.handler = async function (event, context) {
+export const handler = async (event, context) => {
   // CORS Headers for browser requests
   const headers = {
     'Access-Control-Allow-Origin': '*',

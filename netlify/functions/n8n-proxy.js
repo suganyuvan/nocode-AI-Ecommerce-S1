@@ -7,7 +7,7 @@
  * - N8N_WEBHOOK_SECRET
  */
 
-exports.handler = async function (event, context) {
+export const handler = async (event, context) => {
   // CORS Headers for browser requests
   const headers = {
     'Access-Control-Allow-Origin': '*',
